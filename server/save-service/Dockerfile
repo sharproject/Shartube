@@ -1,4 +1,4 @@
-FROM node:slim as ts-compiler
+FROM node:alpine as ts-compiler
 WORKDIR /home/app
 
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN yarn install
 RUN yarn run build
 
-FROM node:slim as ts-remover
+FROM node:alpine as ts-remover
 WORKDIR /home/app
 
 COPY --from=ts-compiler /home/app/package.json ./
@@ -14,7 +14,7 @@ COPY --from=ts-compiler /home/app/dist ./
 
 RUN yarn install --production
 
-FROM node:slim
+FROM node:alpine
 WORKDIR /home/app
 COPY --from=ts-remover /home/app ./
 ENV PORT=3000
