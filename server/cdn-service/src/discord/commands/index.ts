@@ -1,18 +1,26 @@
-import 'dotenv/config';
-import {Discord} from '../index';
+import "dotenv/config";
+import { Discord } from "../index";
 
 type command = {
   name: string;
   description: string;
   type: number;
-}
+};
 
-export function register(ID: string | number, command: command) {
+export async function register(
+  ID: string | number,
+  command: command,
+  token = ""
+) {
   const endpoint = `/applications/${ID}/commands`;
-  const method = 'post';
+  const method = "post";
 
-  const discord = new Discord(process.env.TOKEN || '');
-  discord.rest(endpoint, {
-    body: command,
-  }, method)
+  const discord = new Discord(token);
+  await discord.rest(
+    endpoint,
+    {
+      body: command,
+    },
+    method
+  );
 }
