@@ -1,21 +1,21 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.0.2
-
 jobs:
-  build_and_test: # this can be any name you choose
-    executor: node/default # use the default executor defined within the orb
+  run_prettier:
+    docker:
+      - image: circleci/node:17
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
       - run:
-          command: npm install
-          name: Run install
+        name: install packages
+        command: |
+          npm install --save
       - run:
-          command: npm run prettier
-          name: Make prettier
-      - persist_to_workspace:
-          root: ~/server/cdn-service
-          paths: .
+        name: prettier
+        command: |
+          npm run prettier
+
+workflows:
+  make_prettier:
+    jobs:
+      - run_prettier
