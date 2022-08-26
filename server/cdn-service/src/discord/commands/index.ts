@@ -7,7 +7,11 @@ type command = {
   type: number;
 };
 
-export function register(ID: string | number, command: command) {
+export async function register(
+  ID: string | number,
+  command: command,
+  token = ""
+) {
   const endpoint = `/applications/${ID}/commands`;
   const method = "post";
 

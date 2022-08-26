@@ -1,9 +1,9 @@
-import "dotenv";
-import fetch from "node-fetch";
+
+import "dotenv/config";
+import fetch, { Headers } from "node-fetch";
 import { type } from "../@type-api";
 import { HttpMethod } from "@augu/orchid";
 import { RestClient } from "@wumpcord/rest";
-import { Response } from 'express';
 import EventEmitter from "events";
 
 export const RegisterVersion = type.init(10);
@@ -16,10 +16,10 @@ function uuidV4() {
 }
 type options = {
   body?: any;
-  headers?: any;
+  headers?: Headers;
   files?: any;
 };
-
+ 
 declare interface Discord extends EventEmitter {
   on<U extends keyof IClientEvent>(event: U, listener: IClientEvent[U]): this;
   emit<U extends keyof IClientEvent>(
@@ -32,6 +32,7 @@ class Discord extends EventEmitter {
   token: string;
   constructor(token: string) {
     super()
+
     if (!token.startsWith("Bot")) {
       this.token = `Bot ${token}`;
     } else {
@@ -60,20 +61,18 @@ class Discord extends EventEmitter {
       fetch(`${RegisterVersion}/${endpoint}`, {
         headers: {
           Authorization: this.token,
-          "Content-Type": "application/json; charset=UTF-8",
-          "User-Agent":
-            "Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)",
+          'Content-Type': 'application/json; charset=UTF-8',
+          'User-Agent': 'Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)',
         },
-
+        
         method: method,
-        ...option,
-      }).then(re => {
+        ...option
+      }).then((re: any) => {
         const d = re as any;
         this.emit('data', JSON.stringify(d))
       });
     }
   }
 }
-
 
 export {Discord}

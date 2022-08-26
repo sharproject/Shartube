@@ -10,5 +10,12 @@
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint"],
+<<<<<<< HEAD
   "rules": {}
+=======
+  "rules": {
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+  }
+>>>>>>> 3973e4df9ff10cb8e76cd202b72b13962c1c78f9
 }

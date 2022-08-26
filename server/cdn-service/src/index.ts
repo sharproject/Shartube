@@ -1,8 +1,9 @@
-import "dotenv/config";
 
+import "dotenv/config";
 if (process.env.NODE_ENV === "production") {
   require("module-alias/register");
 }
+
 
 import http from "http";
 import express from "express";
@@ -13,12 +14,14 @@ import { Discord } from "./discord";
 import cors from 'cors';
 import bodyParser from "body-parser";
 
+
 const app = express();
-const server = http.createServer(app).listen(1688);
+const PORT = process.env.PORT || 3000 || 1688;
+const server = http.createServer(app);
 
+app.use(bodyParser.urlencoded({ extended: true, limit: "7mb" }));
+app.use(bodyParser.json({ limit: "7mb" }));
 
-app.use(bodyParser.urlencoded({ extended: true, limit: "6.5mb" }));
-app.use(bodyParser.json({ limit: "6.5mb" }));
 app.use(bodyParser.raw());
 app.use(cors())
 

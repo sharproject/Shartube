@@ -59,7 +59,7 @@ services:
       - WS_HOST=shartube-ws-server
       - WS_PORT=3012
       - UserHost=shartube-user-server
-      - UploadServer=http://shartube-upload-server:3000/upload
+      - UploadServer=http://shartube-upload-server:3000/save
     env_file:
       - ./comic/.env
     restart: always
@@ -92,9 +92,9 @@ services:
       - shartube-net
     depends_on:
       - shartube-ws-server
-    build: ./save-service
+    build: ./cdn-service
     env_file:
-      - ./save-service/.env
+      - ./cdn-service/.env
     restart: always
     expose:
       - 3000
