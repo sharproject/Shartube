@@ -1,8 +1,11 @@
-import 'dotenv';
-import fetch from 'node-fetch';
-import {type} from '../@type-api'
-import { DataLike, HttpClient, HttpMethod, middleware } from '@augu/orchid';
-import { RestClient, CDN, RestClientOptions } from '@wumpcord/rest';
+import "dotenv";
+import fetch from "node-fetch";
+import { type } from "../@type-api";
+import { HttpMethod } from "@augu/orchid";
+import { RestClient } from "@wumpcord/rest";
+import { Response } from 'express';
+import EventEmitter from "events";
+import { IClientEvent } from  '../event';
 
 export const RegisterVersion = type.init(10);
 function uuidV4() {
@@ -17,41 +20,61 @@ type options = {
   headers?: any;
   files?: any;
 };
- 
-export class Discord {
+
+declare interface Discord extends EventEmitter {
+  on<U extends keyof IClientEvent>(event: U, listener: IClientEvent[U]): this;
+  emit<U extends keyof IClientEvent>(
+    event: U,
+    ...args: Parameters<IClientEvent[U]>
+  ): boolean;
+}
+
+class Discord extends EventEmitter {
   token: string;
   constructor(token: string) {
-    if (!token.startsWith('Bot')) {
+    super()
+    if (!token.startsWith("Bot")) {
       this.token = `Bot ${token}`;
     } else {
       this.token = token;
     }
   }
-
+  public listen = this.on;
+  public add = this.emit;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public async rest(endpoint: string, option: options, method: string) {
     if (option.body) option.body = JSON.stringify(option.body);
     if (option.files) {
-      (new RestClient({ token: this.token.replace('Bot ', '') }))
+      new RestClient({ token: this.token.replace("Bot ", "") })
         .dispatch({
           method: method as HttpMethod,
           endpoint: endpoint,
           file: {
             file: option.files,
             name: `${uuidV4()}.png`,
-          }
+          },
+        }).then(re => {
+          const d = re as any;
+          this.emit('data', JSON.stringify(d))
         })
-
     } else {
-      await fetch(`${RegisterVersion}/${endpoint}`, {
+      fetch(`${RegisterVersion}/${endpoint}`, {
         headers: {
           Authorization: this.token,
-          'Content-Type': 'application/json; charset=UTF-8',
-          'User-Agent': 'Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)',
+          "Content-Type": "application/json; charset=UTF-8",
+          "User-Agent":
+            "Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)",
         },
-        
+
         method: method,
-        ...option
+        ...option,
+      }).then(re => {
+        const d = re as any;
+        this.emit('data', JSON.stringify(d))
       });
     }
   }
 }
+
+
+export {Discord}

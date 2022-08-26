@@ -3,5 +3,5 @@ export const type = {
     if (version) {
       return `https://discord.com/api/v${version}`;
     }
-  }
-}
+  },
+};
