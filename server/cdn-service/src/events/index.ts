@@ -1,5 +1,5 @@
 type data = (data: any) => any;
-export type IClientEvent = {
+type IClientEvent = {
   'data': data,
   DATA: data
 }

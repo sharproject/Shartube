@@ -5,7 +5,6 @@ import { HttpMethod } from "@augu/orchid";
 import { RestClient } from "@wumpcord/rest";
 import { Response } from 'express';
 import EventEmitter from "events";
-import { IClientEvent } from  '../event';
 
 export const RegisterVersion = type.init(10);
 function uuidV4() {
