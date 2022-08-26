@@ -1,21 +1,17 @@
 version: 2.1
-
+orbs:
+  node: circleci/node@5.0.2
 jobs:
-  run_prettier:
+  example-job:
     docker:
-      - image: circleci/node:17
+      # replace with your preferred image
+      - image: cimg/base:stable
     steps:
-      - checkout
-      - run:
-        name: install packages
-        command: |
-          npm install --save
-      - run:
-        name: prettier
-        command: |
-          npm run prettier
+      - node/install:
+          node-version: '17.5' 
+          node-install-dir: /prettier 
 
 workflows:
-  make_prettier:
+  example-workflow:
     jobs:
-      - run_prettier
+      - example-job
