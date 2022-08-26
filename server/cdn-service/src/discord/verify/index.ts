@@ -1,6 +1,5 @@
 import { verifyKey } from "discord-interactions";
 
-
 export function VerifyDiscordRequest(clientKey: string) {
   return function (
     req: any,

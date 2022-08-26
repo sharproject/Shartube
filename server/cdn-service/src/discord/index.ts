@@ -1,8 +1,10 @@
+
+import "dotenv/config";
+import fetch, { Headers } from "node-fetch";
+import { type } from "../@type-api";
 import { HttpMethod } from "@augu/orchid";
 import { RestClient } from "@wumpcord/rest";
-import "dotenv";
-import axios, { AxiosRequestHeaders } from "axios";
-import { type } from "../@type-api";
+import EventEmitter from "events";
 
 export const RegisterVersion = type.init(10);
 function uuidV4() {
@@ -13,46 +15,64 @@ function uuidV4() {
   });
 }
 type options = {
-  body?: unknown;
-  headers?: AxiosRequestHeaders;
-  files?: Buffer;
+  body?: any;
+  headers?: Headers;
+  files?: any;
 };
+ 
+declare interface Discord extends EventEmitter {
+  on<U extends keyof IClientEvent>(event: U, listener: IClientEvent[U]): this;
+  emit<U extends keyof IClientEvent>(
+    event: U,
+    ...args: Parameters<IClientEvent[U]>
+  ): boolean;
+}
 
-export class Discord {
+class Discord extends EventEmitter {
   token: string;
   constructor(token: string) {
+    super()
+
     if (!token.startsWith("Bot")) {
       this.token = `Bot ${token}`;
     } else {
       this.token = token;
     }
   }
-
-  public async rest(endpoint: string, option: options, method: HttpMethod) {
+  public listen = this.on;
+  public add = this.emit;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async rest(endpoint: string, option: options, method: string) {
     if (option.body) option.body = JSON.stringify(option.body);
     if (option.files) {
-      return await new RestClient({
-        token: this.token.replace("Bot ", ""),
-      }).dispatch({
-        method: method as HttpMethod,
-        endpoint: endpoint,
-        file: {
-          file: option.files,
-          name: `${uuidV4()}.png`,
-        },
-      });
+      new RestClient({ token: this.token.replace("Bot ", "") })
+        .dispatch({
+          method: method as HttpMethod,
+          endpoint: endpoint,
+          file: {
+            file: option.files,
+            name: `${uuidV4()}.png`,
+          },
+        }).then(re => {
+          const d = re as any;
+          this.emit('data', JSON.stringify(d))
+        })
     } else {
-      return await axios.post(`${RegisterVersion}/${endpoint}`,option.body, {
+      fetch(`${RegisterVersion}/${endpoint}`, {
         headers: {
           Authorization: this.token,
-          "Content-Type": "application/json",
-          "User-Agent":
-            "Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)",
+          'Content-Type': 'application/json; charset=UTF-8',
+          'User-Agent': 'Shartube (https://github.com/Folody-Team/Shartube, 1.0.0)',
         },
-
+        
         method: method,
         ...option
+      }).then((re: any) => {
+        const d = re as any;
+        this.emit('data', JSON.stringify(d))
       });
     }
   }
 }
+
+export {Discord}
