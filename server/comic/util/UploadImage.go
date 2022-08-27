@@ -16,11 +16,11 @@ type UploadImageResponse struct {
 func UploadSingleImage(file io.ReadSeeker, extension string) (*string, error) {
 	UploadServerUrl := os.Getenv("UploadServer")
 	if UploadServerUrl == "" {
-		UploadServerUrl = "http://localhost:3000/upload"
+		UploadServerUrl = "http://localhost:3000/save"
 	}
 	// encode file to base64
 	base64String := base64.StdEncoding.EncodeToString(ReadAll(file))
-	var jsonStr = []byte(`{"fileBase64":"` + base64String + `", "extension":"` + extension + `"}`)
+	var jsonStr = []byte(`{"message":"` + base64String + `", "extension":"` + extension + `"}`)
 	// send to upload server
 	req, err := http.NewRequest("POST", UploadServerUrl, bytes.NewBuffer(jsonStr))
 	if err != nil {

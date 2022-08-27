@@ -211,7 +211,6 @@ export default class FileUploadDataSource extends RemoteGraphQLDataSource {
       body: form as unknown as string,
       headers: Object.fromEntries(request.http.headers),
     };
-    console.log(options)
 
     const httpRequest = new Request(request.http.url, options);
     let httpResponse: Response | undefined;
