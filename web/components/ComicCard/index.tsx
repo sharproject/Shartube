@@ -1,4 +1,3 @@
-
 import styles from './styles.module.css'
 
 export function ComicCard() {
@@ -15,7 +14,7 @@ export function ComicCard() {
       <h2>Doraemon</h2>
       <span style={{
         color: '#A7ACC0'
-      }}>This is a decription</span>
+      }}>This is a description</span>
       <div style={{
         display: 'flex'
       }}>
@@ -27,9 +26,9 @@ export function ComicCard() {
           color: '#BBC1D6',
           padding: '5px 15px',
           borderRadius: '8px'
-        }} className={'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE]'}>Read</button> 
+        }} className={'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE]'}>Read</button>
       </div>
-      
+
     </div>
   )
 }

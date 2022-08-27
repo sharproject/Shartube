@@ -1,4 +1,4 @@
-import {AiOutlineSearch} from 'react-icons/ai';
+import { AiOutlineSearch } from 'react-icons/ai';
 
 type props = {
   styles: any,
@@ -25,18 +25,17 @@ export const MenuBar = ({
       backgroundColor: "#18191D",
       borderBottom: "1px solid #2E2E2E",
       justifyContent: 'space-between',
-      minHeight: '53px',
+      minHeight: '50px'
     }}>
       <div style={{
-        padding: "8.5px 8px",
+        padding: "8.5px 8px"
       }}>
         <div style={{
           display: "flex",
           height: "100%",
-          alignItems: "center",
-
+          alignItems: "center"
         }} className={styles.inputSearchContainer}>
-          <input placeholder="Search" className={styles.inputSearch}/>
+          <input placeholder="Search" className={styles.inputSearch} />
           <span style={{
             height: "100%",
             display: "flex",
@@ -45,12 +44,13 @@ export const MenuBar = ({
             padding: "0px 9px",
             borderRadius: "0px 8px 8px 0px",
             borderLeft: "1px solid #3D3D3D",
-          }} className={styles.inputSearchIconContainer}><AiOutlineSearch className={styles.inputSearchIcon}/></span>
+            textAlign: "center"
+          }} className={styles.inputSearchIconContainer}><AiOutlineSearch className={styles.inputSearchIcon} /></span>
         </div>
-        
+
       </div>
       <div style={{
-        padding: '8px',
+        padding: '8px'
       }}>
         <div style={{
           height: '100%',
@@ -59,7 +59,7 @@ export const MenuBar = ({
           background: '#25272E'
         }}></div>
       </div>
-      
+
     </div>
   )
 }
