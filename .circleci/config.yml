@@ -1,0 +1,17 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.0.2
+jobs:
+  example-job:
+    docker:
+      # replace with your preferred image
+      - image: cimg/base:stable
+    steps:
+      - node/install:
+          node-version: '17.5' 
+          node-install-dir: /prettier 
+
+workflows:
+  example-workflow:
+    jobs:
+      - example-job

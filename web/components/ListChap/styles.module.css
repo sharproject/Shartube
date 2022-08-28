@@ -1,11 +1,11 @@
-.comicCard {
+.listChap {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: url(/R.jpeg) repeat, no-repeat 0, 0;
+  background: url("https://cdn.discordapp.com/avatars/989176587469586482/eea72dae49dc1095308667d526f400d0.png") repeat, no-repeat 0, 0;
 }
 
-.defaultComicCard {
+.listChapp {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
   border: 1px solid #303036fc;
 }
 
-.comicCard h2 {
+.listChap h2 {
   font-size: 1.8rem;
   color: #e8e8eafc;
   font-weight: bold;
@@ -26,7 +26,7 @@
   height: 100%;
 }
 
-.textComicCard {
+.textlistChap {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -40,12 +40,12 @@
   font-family: sans-serif;
 }
 
-.comicCard * {
+.listChap * {
   position: relative;
   z-index: 10;
 }
 
-.comicCard::after {
+.listChap::after {
   position: absolute;
   content: " ";
   top: 0;
@@ -55,5 +55,4 @@
   z-index: 0;
   background: linear-gradient(360deg, #0E0F11 0%, rgba(11, 11, 11, 0) 179.05%);
   border-radius: 10px 10px 0px 0px;
-
 }

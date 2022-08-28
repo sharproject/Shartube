@@ -1,4 +1,3 @@
-
 import styles from './styles.module.css'
 
 export function DefaultComicCard() {
@@ -31,7 +30,7 @@ export function DefaultComicCard() {
           color: '#A7ACC0',
           marginBottom: '10px',
           padding: '10px 0'
-        }}>This is a decription</span>
+        }}>This is a description</span>
       </div>
       
       <div style={{
