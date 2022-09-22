@@ -49,6 +49,7 @@ type ComicChap struct {
 }
 
 func (ComicChap) IsCreateComicChap() {}
+func (ComicChap) IsEntity()          {}
 
 type ComicSession struct {
 	ID          string       `json:"_id" bson:"_id"`

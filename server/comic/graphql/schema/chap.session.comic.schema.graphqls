@@ -18,7 +18,7 @@ type ImageResult {
   ID: String!
   Url: String!
 }
-type ComicChap implements CreateComicChap {
+type ComicChap implements CreateComicChap @key(fields: "_id") {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!

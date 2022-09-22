@@ -124,7 +124,8 @@ type ComplexityRoot struct {
 	}
 
 	Entity struct {
-		FindUserByID func(childComplexity int, id string) int
+		FindComicChapByID func(childComplexity int, id string) int
+		FindUserByID      func(childComplexity int, id string) int
 	}
 
 	ImageResult struct {
@@ -194,6 +195,7 @@ type ComicSessionResolver interface {
 	Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.ComicChap, error)
 }
 type EntityResolver interface {
+	FindComicChapByID(ctx context.Context, id string) (*model.ComicChap, error)
 	FindUserByID(ctx context.Context, id string) (*model.User, error)
 }
 type MutationResolver interface {
@@ -561,6 +563,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DeleteResult.Success(childComplexity), true
+
+	case "Entity.findComicChapByID":
+		if e.complexity.Entity.FindComicChapByID == nil {
+			break
+		}
+
+		args, err := ec.field_Entity_findComicChapByID_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Entity.FindComicChapByID(childComplexity, args["id"].(string)), true
 
 	case "Entity.findUserByID":
 		if e.complexity.Entity.FindUserByID == nil {
@@ -935,7 +949,7 @@ type ImageResult {
   ID: String!
   Url: String!
 }
-type ComicChap implements CreateComicChap {
+type ComicChap implements CreateComicChap @key(fields: "_id") {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
@@ -1153,11 +1167,12 @@ extend type Query {
 `, BuiltIn: true},
 	{Name: "../../federation/entity.graphql", Input: `
 # a union of all types that use the @key directive
-union _Entity = User
+union _Entity = ComicChap | User
 
 # fake type to build resolver interfaces for users to implement
 type Entity {
-		findUserByID(id: ID!,): User!
+		findComicChapByID(id: ID!,): ComicChap!
+	findUserByID(id: ID!,): User!
 
 }
 
@@ -1189,6 +1204,21 @@ func (ec *executionContext) dir_inherits_args(ctx context.Context, rawArgs map[s
 		}
 	}
 	args["type"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Entity_findComicChapByID_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -3654,6 +3684,83 @@ func (ec *executionContext) fieldContext_DeleteResult_id(ctx context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Entity_findComicChapByID(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Entity_findComicChapByID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Entity().FindComicChapByID(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ComicChap)
+	fc.Result = res
+	return ec.marshalNComicChap2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComicChap(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Entity_findComicChapByID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Entity",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_ComicChap__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ComicChap_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ComicChap_updatedAt(ctx, field)
+			case "CreatedBy":
+				return ec.fieldContext_ComicChap_CreatedBy(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_ComicChap_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_ComicChap_name(ctx, field)
+			case "description":
+				return ec.fieldContext_ComicChap_description(ctx, field)
+			case "SessionID":
+				return ec.fieldContext_ComicChap_SessionID(ctx, field)
+			case "Session":
+				return ec.fieldContext_ComicChap_Session(ctx, field)
+			case "Images":
+				return ec.fieldContext_ComicChap_Images(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ComicChap", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Entity_findComicChapByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -7871,6 +7978,13 @@ func (ec *executionContext) __Entity(ctx context.Context, sel ast.SelectionSet, 
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.ComicChap:
+		return ec._ComicChap(ctx, sel, &obj)
+	case *model.ComicChap:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._ComicChap(ctx, sel, obj)
 	case model.User:
 		return ec._User(ctx, sel, &obj)
 	case *model.User:
@@ -7989,7 +8103,7 @@ func (ec *executionContext) _Comic(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var comicChapImplementors = []string{"ComicChap", "CreateComicChap"}
+var comicChapImplementors = []string{"ComicChap", "CreateComicChap", "_Entity"}
 
 func (ec *executionContext) _ComicChap(ctx context.Context, sel ast.SelectionSet, obj *model.ComicChap) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, comicChapImplementors)
@@ -8422,6 +8536,29 @@ func (ec *executionContext) _Entity(ctx context.Context, sel ast.SelectionSet) g
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Entity")
+		case "findComicChapByID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Entity_findComicChapByID(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "findUserByID":
 			field := field
 
