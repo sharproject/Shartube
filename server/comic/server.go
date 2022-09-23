@@ -47,7 +47,6 @@ func main() {
 		Client: client,
 	}}
 	c.Directives.Auth = directives.Auth
-	c.Directives.EmailInput = directives.EmailInput
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
 

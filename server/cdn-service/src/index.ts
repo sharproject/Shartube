@@ -81,10 +81,11 @@ app.post("/save", function (req, res) {
   })
 });
 server.on("listening", () => {
-  console.log("Server is listening on port 1688");
+  console.log("Server is listening on port ",PORT);
   register(process.env.APPLICATION_ID || "", {
     name: "ping",
     description: "Ping!",
     type: 1,
   });
 });
+server.listen(PORT);

@@ -159,7 +159,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 	}
 
 	comicObjectData := WsRequest{
-		Url:    "subscript/GenerationSubscript",
+		Url:    "subtitle/GenerationSubtitle",
 		Header: nil,
 		Payload: AllImages,
 		From: "comic/AddImageForChap",
@@ -280,7 +280,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 	}
 
 	comicObjectData := WsRequest{
-		Url:    "subscript/DeleteSubscript",
+		Url:    "subtitle/DeleteSubtitle",
 		Header: nil,
 		Payload: imageID,
 		From: "comic/RemoveImageForChap",
