@@ -10,13 +10,13 @@ use super::Chap::ComicChap;
 
 pub struct RootQuery;
 
-#[Object]
+#[Object(extends)]
 impl RootQuery {
     #[graphql(entity)]
-    async fn find_chap_by_id(&self, id: String) -> ComicChap {
+    pub async fn resolve_ComicChap(&self, #[graphql(key)] _id: String) -> ComicChap {
         ComicChap {
-            _id: id,
-            SubTitleIds: Option::None,
+            _id: _id.clone(),
+            id: _id.clone(),
         }
     }
 }
