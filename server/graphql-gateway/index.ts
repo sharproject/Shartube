@@ -24,6 +24,10 @@ const gateway = new ApolloGateway({
         name: "user",
         url: process.env.USER_SERVER_HOST,
       },
+      // {
+      //   name: "subtitle",
+      //   url: process.env.SUBTITLE_SERVER_HOST
+      // }
     ],
     subgraphHealthCheck: true,
   }),
@@ -36,6 +40,7 @@ const gateway = new ApolloGateway({
           "Authorization",
           options.context.token || ""
         );
+        
       },
     });
   },

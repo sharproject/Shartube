@@ -22,12 +22,15 @@ services:
     depends_on:
       - shartube-comic-server
       - shartube-user-server
+      - shartube-subtitle-server
     environment:
       - COMIC_SERVER_HOST=http://shartube-comic-server:8080/query
       - USER_SERVER_HOST=http://shartube-user-server:8080/graphql
+      - SUBTITLE_SERVER_HOST=http://shartube-subtitle-server:3000
     build: ./graphql-gateway
     env_file:
       - ./graphql-gateway/.env
+      - ./.base.env
     ports:
       - "8080:2100"
     restart: always
@@ -42,6 +45,8 @@ services:
       - 3012
     environment:
       - HOST=shartube-ws-server
+    env_file:
+      - ./.base.env
 
   shartube-comic-server:
     container_name: shartube-comic-server
@@ -62,6 +67,7 @@ services:
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
       - ./comic/.env
+      - ./.base.env
     restart: always
     expose:
       - 8080
@@ -82,6 +88,7 @@ services:
       - WS_PORT=3012
     env_file:
       - ./user/.env
+      - ./.base.env
     restart: always
     expose:
       - 8080
@@ -95,11 +102,33 @@ services:
     build: ./cdn-service
     env_file:
       - ./cdn-service/.env
+      - ./.base.env
     restart: always
     expose:
       - 3000
     environment:
       - CHANNEL_ID=990113063187390465
+  
+  shartube-subtitle-server:
+    container_name: shartube-subtitle-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-db
+    build: ./subtitle
+    environment:
+      - DB_HOST=shartube-db
+      - DB_PORT=27017
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - WS_HOST=shartube-ws-server
+      - WS_PORT=3012
+    env_file:
+      - ./subtitle/.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 3000
 
 networks:
   shartube-net:

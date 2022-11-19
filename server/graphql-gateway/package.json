@@ -33,6 +33,8 @@
     "@types/object-path": "^0.11.1",
     "nodemon": "^2.0.19",
     "ts-node": "^10.9.1",
+    "ts-prune": "^0.10.3",
+    "ts-unused-exports": "^8.0.0",
     "typescript": "^4.7.4"
   }
 }
