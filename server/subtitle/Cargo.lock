@@ -327,9 +327,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql"
-version = "4.0.13"
+version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7b4acd72d35f568664599c2cde503228b29910ca36656b653984c31c5a28cd6"
+checksum = "12f25ef01a96d5180e8deadca87b041bed49edd1f932dd7d4b1eaa1db443a3a0"
 dependencies = [
  "async-graphql-derive",
  "async-graphql-parser",
@@ -351,6 +351,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "static_assertions",
  "tempfile",
  "thiserror",
@@ -358,9 +359,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-actix-web"
-version = "4.0.13"
+version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76b24f58014f3caaca00d09c431dfbf7cc56dddaebe2467bb39b8ed7bdb908e9"
+checksum = "8794e38e3cfeca54914e34fef28d73d6bba56826ad1d3857e466860690a0241f"
 dependencies = [
  "actix",
  "actix-http",
@@ -371,15 +372,14 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "serde_json",
- "serde_urlencoded",
  "thiserror",
 ]
 
 [[package]]
 name = "async-graphql-derive"
-version = "4.0.13"
+version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cead3c5f127c89b0abb2434c250409b9fe75763ee72583d4a90a412a927c8a8"
+checksum = "798bcf08b169c7589cdaed2e297b6180657165a001efb4b5ba7a87f3a5406622"
 dependencies = [
  "Inflector",
  "async-graphql-parser",
@@ -393,9 +393,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-parser"
-version = "4.0.13"
+version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a2e30051a98bcecc8baab3f7a8b12e8e49b365afa81b598ad5dffa49d343f51"
+checksum = "b599d684b30ed8ede2600507ceb2ba60214ffb2cfc55088c4c0dd33f7656acfd"
 dependencies = [
  "async-graphql-value",
  "pest",
@@ -405,9 +405,9 @@ dependencies = [
 
 [[package]]
 name = "async-graphql-value"
-version = "4.0.13"
+version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47c8c0d67fe10c7c49c6dcc9072b7a5c6c07af3b72b6e67cfb30ee070e2e940c"
+checksum = "a81662a313c523f2b55c3735e20a5162fe7f42c0d4b0b64f6d73568dfde316ee"
 dependencies = [
  "bytes",
  "indexmap",

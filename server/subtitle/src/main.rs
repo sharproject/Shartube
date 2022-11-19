@@ -2,7 +2,7 @@ mod graphql;
 mod model;
 use crate::graphql::schema::query::RootQuery;
 use actix_cors::Cors;
-use actix_web::{guard, web, web::Data, App, HttpServer, main};
+use actix_web::{guard, main, web, web::Data, App, HttpServer};
 use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use graphql::RootSchema;
@@ -16,7 +16,6 @@ async fn main() -> std::io::Result<()> {
     let schema: RootSchema = Schema::build(RootQuery, EmptyMutation, EmptySubscription)
         .enable_federation()
         .finish();
-    println!("{}",schema.sdl());
     let address = std::net::SocketAddr::new(
         std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
         match std::env::var("PORT") {
