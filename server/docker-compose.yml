@@ -29,8 +29,6 @@ services:
     env_file:
       - ./graphql-gateway/.env
       - ./.base.env
-    ports:
-      - "8080:2100"
     restart: always
 
   shartube-ws-server:
@@ -55,10 +53,6 @@ services:
       - shartube-user-server
     build: ./comic
     environment:
-      - DB_HOST=shartube-db
-      - DB_PORT=27017
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
       - WS_HOST=shartube-ws-server
       - WS_PORT=3012
       - UserHost=shartube-user-server
@@ -78,10 +72,6 @@ services:
       - shartube-db
     build: ./user
     environment:
-      - DB_HOST=shartube-db
-      - DB_PORT=27017
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
       - WS_HOST=shartube-ws-server
       - WS_PORT=3012
     env_file:
@@ -105,7 +95,41 @@ services:
     expose:
       - 3000
     environment:
-      - CHANNEL_ID=990113063187390465
+      - CHANNEL_ID=1043368131390885968
+  
+  shartube-api-gateway:
+    container_name: shartube-api-gateway
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-graphql-gateway
+    build: ./api-gateway
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+      - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
+      - MEME_SERVER=http://shartube-meme-server:8080
+    ports:
+      - "8080:8080"
+  
+  shartube-meme-server:
+    container_name: shartube-meme-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-db
+    build: ./meme
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
 
 networks:
   shartube-net:

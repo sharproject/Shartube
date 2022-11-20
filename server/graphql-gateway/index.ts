@@ -12,7 +12,7 @@ dotenv.config({
   path: path.join(__dirname, "./.env"),
 });
 
-const port = process.env.PORT;
+const port = process.env.PORT || "2100";
 const gateway = new ApolloGateway({
   supergraphSdl: new IntrospectAndCompose({
     subgraphs: [
@@ -60,7 +60,7 @@ async function startServer() {
   app.use(multer().any());
   app.use(graphqlUploadExpress());
 
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app,path:"/" });
 
   HttpServer.listen(port, () => {
     console.log(
