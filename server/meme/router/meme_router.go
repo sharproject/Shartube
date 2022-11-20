@@ -128,5 +128,4 @@ func checkAuth(ctx *fiber.Ctx) error {
 		}
 	}
 
-	return nil
 }
