@@ -60,8 +60,8 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
-	userIDObject, err := primitive.ObjectIDFromHex(userID)
+	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateIDObject, err := primitive.ObjectIDFromHex(CreateID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if comicDoc == nil {
 		return nil, gqlerror.Errorf("comic not found")
 	}
-	if userID != comicDoc.CreatedByID {
+	if CreateID != comicDoc.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	ThumbnailUrl := ""
@@ -86,7 +86,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	sessionID, err := comicSessionModel.New(&model.CreateComicSessionInputModel{
 		Name:        input.Name,
 		Description: input.Description,
-		CreatedByID: userIDObject.Hex(),
+		CreatedByID: CreateIDObject.Hex(),
 		ComicID:     input.ComicID,
 		Thumbnail:   &ThumbnailUrl,
 	}).Save()
@@ -114,7 +114,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
 
 	comicSession, err := comicSessionModel.FindById(sessionID)
 	if err != nil {
@@ -125,7 +125,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			Message: "comic session not found",
 		}
 	}
-	if userID != comicSession.CreatedByID {
+	if CreateID != comicSession.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	return comicSessionModel.FindOneAndUpdate(bson.M{
@@ -139,7 +139,7 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
 	comicSession, err := ComicSessionModel.FindById(sessionID)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 			Message: "comic session not found",
 		}
 	}
-	if userID != comicSession.CreatedByID {
+	if CreateID != comicSession.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	success, err := deleteUtil.DeleteSession(sessionID, r.Client, true)

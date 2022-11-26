@@ -14,6 +14,7 @@ services:
     restart: always
     volumes:
       - mongoDB:/data/db
+    command: --quiet --logpath /dev/null
 
   shartube-graphql-gateway:
     container_name: shartube-graphql-gateway
@@ -29,7 +30,7 @@ services:
     env_file:
       - ./graphql-gateway/.env
       - ./.base.env
-    restart: always
+    # restart: always
 
   shartube-ws-server:
     container_name: shartube-ws-server

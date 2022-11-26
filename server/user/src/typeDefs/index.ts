@@ -1,4 +1,4 @@
-import { gql } from 'https://deno.land/x/oak_graphql/mod.ts'
+import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 
 export const TypeDefsString = `
 	type _Service {
@@ -16,7 +16,7 @@ export const TypeDefsString = `
 	
 	directive @key(fields: _FieldSet!, resolvable: Boolean = true) repeatable on OBJECT | INTERFACE
 	input RegisterUserInput {
-		username: String!
+		name: String!
 		email: String!
 		password: String!
 	}
@@ -26,26 +26,39 @@ export const TypeDefsString = `
 	}
 	type User @key(fields: "_id") {
 		_id: ID!
-		username: String!
+		name: String!
 		email: String!
 		password: String
 		createdAt: Time!
 		updatedAt: Time!
+		isTeam: Boolean
+  		member: [String]
+  		owner: String
 	}
 	type UserLoginOrRegisterResponse {
 		user: User!
 		accessToken: String!
 	}
-	union _Entity =  User 
+	union _Entity =  User
+	input CreateTeamInput{
+		name:String!
+	} 
+	input AddUserToTeamInput{
+		TeamID:String!
+		UserID:String!
+	}
 	extend type Mutation {
 		Login(input: LoginUserInput!): UserLoginOrRegisterResponse!
 		Register(input: RegisterUserInput!): UserLoginOrRegisterResponse!
+		CreateTeam(input:CreateTeamInput!): User!
+		AddUserToTeam(input:AddUserToTeamInput!):User!
+		RemoveUserInTeam(input:AddUserToTeamInput!):User
 	}
 	extend type Query {
 		_entities(representations: [_Any!]!): [_Entity]!
 		Me: User!
 	}
-`
+`;
 export const typeDefs = gql`
 	${TypeDefsString}
-`
+`;

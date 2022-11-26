@@ -1,27 +1,27 @@
-import { ApolloGateway, IntrospectAndCompose } from "@apollo/gateway";
-import { ApolloServer } from "apollo-server-express";
-import dotenv from "dotenv";
-import express from "express";
-import http from "http";
-import multer from "multer";
-import path from "path";
-import FileUploadDataSource from "./util/FileUploadDataSource";
-import { graphqlUploadExpress } from "./util/graphqlUploadExpress";
+import { ApolloGateway, IntrospectAndCompose } from '@apollo/gateway'
+import { ApolloServer } from 'apollo-server-express'
+import dotenv from 'dotenv'
+import express from 'express'
+import http from 'http'
+import multer from 'multer'
+import path from 'path'
+import FileUploadDataSource from './util/FileUploadDataSource'
+import { graphqlUploadExpress } from './util/graphqlUploadExpress'
 
 dotenv.config({
-  path: path.join(__dirname, "./.env"),
-});
+  path: path.join(__dirname, './.env'),
+})
 
-const port = process.env.PORT || "2100";
+const port = process.env.PORT || '2100'
 const gateway = new ApolloGateway({
   supergraphSdl: new IntrospectAndCompose({
     subgraphs: [
       {
-        name: "comic",
+        name: 'comic',
         url: process.env.COMIC_SERVER_HOST,
       },
       {
-        name: "user",
+        name: 'user',
         url: process.env.USER_SERVER_HOST,
       },
       // {
@@ -32,49 +32,56 @@ const gateway = new ApolloGateway({
     subgraphHealthCheck: true,
   }),
   buildService(definition) {
-    const { url, name } = definition;
+    const { url, name } = definition
     return new FileUploadDataSource({
       url,
       willSendRequest(options) {
+        if (options.context.header) {
+          Object.keys(options.context.header).map((key) => {
+            options.request.http?.headers.set(
+              key,
+              options.context.req.get(key) || '',
+            )
+          })
+        }
         options.request.http?.headers.set(
-          "Authorization",
-          options.context.token || ""
-        );
-        
+          'Authorization',
+          options.context.token || '',
+        )
       },
-    });
+    })
   },
-});
+})
 async function startServer() {
-  const app = express();
-  const HttpServer = http.createServer(app);
+  const app = express()
+  const HttpServer = http.createServer(app)
   const server = new ApolloServer({
     gateway,
     context: ({ req, res }) => {
-      return { req, res, token: req.headers.authorization };
+      return { req, res, token: req.headers.authorization, header: req.headers }
     },
-    cache: "bounded",
+    cache: 'bounded',
     plugins: [],
-  });
-  await server.start();
-  app.use(multer().any());
-  app.use(graphqlUploadExpress());
+  })
+  await server.start()
+  app.use(multer().any())
+  app.use(graphqlUploadExpress())
 
-  server.applyMiddleware({ app,path:"/" });
+  server.applyMiddleware({ app, path: '/' })
 
   HttpServer.listen(port, () => {
     console.log(
-      `🚀 Server ready at http://localhost:${port}${server.graphqlPath}`
-    );
+      `🚀 Server ready at http://localhost:${port}${server.graphqlPath}`,
+    )
   })
-    .on("error", (err) => {
-      console.error(err);
+    .on('error', (err) => {
+      console.error(err)
     })
-    .on("close", () => {
-      console.log("Server closed");
+    .on('close', () => {
+      console.log('Server closed')
     })
-    .on("listening", () => {
-      console.log("Server listening");
-    });
+    .on('listening', () => {
+      console.log('Server listening')
+    })
 }
-startServer();
+startServer()

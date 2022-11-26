@@ -3,7 +3,7 @@ import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.0/mod.ts'
 import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 import { GQLError } from 'https://deno.land/x/oak_graphql@0.6.4/mod.ts'
 import { emailChecker } from '../function/emailChecker.ts'
-import { GenToken, DecodeToken } from '../util/Token.ts'
+import { DecodeToken, GenToken } from '../util/Token.ts'
 
 import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
 import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
@@ -22,15 +22,39 @@ const ws = new WebSocket(
 ws.onopen = () => console.log('connect to ws success')
 ws.onmessage = async (message: MessageEvent<any>) => {
 	const data = JSON.parse(message.data)
+	const send = (result: any) => ws.send(JSON.stringify(result))
+	let result
 	if (data.url == 'user/decodeToken') {
-		let result
 		try {
 			const decodeData = await DecodeToken(data.payload.token, client, DB_NAME)
+			const sessionData = decodeData && {
+				creatorID: decodeData.userID,
+				...decodeData,
+			}
+			const TeamID = data.payload.teamID as string
+			if (TeamID.trim().length > 0) {
+				const db = client.database(DB_NAME)
+				const users = db.collection<UserReturn>('users')
+				const user = await users.findOne({
+					_id: new ObjectId(TeamID),
+				})
+				if (!user?.isTeam) {
+					throw new Error('team-id is not correct')
+				} else {
+					const members = user.member.map((v) => v.toHexString())
+					// if not will create at main account
+					if (members.includes(decodeData?.userID.toHexString() || '')) {
+						if (sessionData?.creatorID) {
+							sessionData.creatorID = new ObjectId(user._id)
+						}
+					}
+				}
+			}
 			result = {
 				url: data.from,
 				header: null,
 				payload: {
-					sessionData: decodeData,
+					sessionData,
 					id: data.payload.id,
 				},
 				type: 'rep',
@@ -48,54 +72,18 @@ ws.onmessage = async (message: MessageEvent<any>) => {
 				error: error.message,
 			}
 		}
-
-		ws.send(JSON.stringify(result))
-	}
-	if (data.url == 'user/GetUserById') {
-		let result
-		try {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			const user = await users.findOne({
-				_id: new ObjectId(data.payload.userID),
-			})
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: user,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: null,
-			}
-		} catch (error) {
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: null,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: error.message,
-			}
-		}
-
-		ws.send(JSON.stringify(result))
 	}
 	if (data.url == 'user/updateUserComic') {
-		let result
 		try {
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 			await users.updateOne(
 				{
 					_id: new ObjectId(data.payload.UserID),
 				},
 				{
 					$push: {
-						comicIDs: new ObjectId(data.payload._id),
+						comicIDs: { $each: [new ObjectId(data.payload._id)] },
 					},
 				}
 			)
@@ -123,13 +111,11 @@ ws.onmessage = async (message: MessageEvent<any>) => {
 				error: error.message,
 			}
 		}
-		ws.send(JSON.stringify(result))
 	}
 	if (data.url == 'user/DeleteComic') {
-		let result
 		try {
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 			await users.updateOne(
 				{
 					_id: new ObjectId(data.payload.UserID),
@@ -164,30 +150,53 @@ ws.onmessage = async (message: MessageEvent<any>) => {
 				error: error.message,
 			}
 		}
-		ws.send(JSON.stringify(result))
+	}
+	if (result) {
+		send(result)
 	}
 }
 
-export interface User {
+export interface BaseUser {
 	_id: ObjectId
-	username: string
-	email: string
-	password: string
+	name: string
 	createdAt: Date
 	updatedAt: Date
 	comicIDs: ObjectId[]
+	member?: ObjectId[]
 }
+
+interface Team extends BaseUser {
+	isTeam: true
+	member: ObjectId[]
+	owner: ObjectId
+}
+
+interface User extends BaseUser {
+	password: string
+	email: string
+	isTeam: false
+}
+
+export type UserReturn = Team | User
+
 interface UserLoginOrRegisterResponse {
-	user: User
+	user: UserReturn
 	accessToken: string
 }
 interface IResolvers {
 	Query: {
-		_service: (root: any) => {
+		_service: (
+			root: any
+		) => {
 			sdl: string
 		}
 		_entities: (root: any, args: any) => Promise<any[]>
-		Me(root: any, args: any, context: any, info: any): Promise<User>
+		Me(
+			root: any,
+			args: any,
+			context: any,
+			info: any
+		): Promise<UserReturn | typeof GQLError>
 	}
 	Mutation: {
 		Login: (
@@ -205,13 +214,44 @@ interface IResolvers {
 				input: {
 					email: string
 					password: string
-					username: string
+					name: string
 				}
 			}
 		) => PromiseOrType<UserLoginOrRegisterResponse>
+		CreateTeam: (
+			parter: any,
+			input: {
+				input: {
+					name: string
+				}
+			},
+			context: any
+		) => PromiseOrType<UserReturn>
+		AddUserToTeam: (
+			parter: any,
+			input: {
+				input: {
+					TeamID: string
+					UserID: string
+				}
+			},
+			context: any
+		) => PromiseOrType<UserReturn>
+		RemoveUserInTeam: (
+			parter: any,
+			input: {
+				input: {
+					TeamID: string
+					UserID: string
+				}
+			},
+			context: any
+		) => PromiseOrType<UserReturn>
 	}
 	User: {
-		__resolveReference: (reference: any) => PromiseOrType<User | undefined>
+		__resolveReference: (
+			reference: any
+		) => PromiseOrType<UserReturn | undefined>
 	}
 }
 
@@ -253,7 +293,7 @@ export const resolvers: IResolvers = {
 				})
 			}
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 			return {
 				...(await users.findOne({
 					_id: new ObjectId(UserSession.userID),
@@ -265,17 +305,22 @@ export const resolvers: IResolvers = {
 	Mutation: {
 		async Login(_, args) {
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 			const user =
 				(await users.findOne({
 					email: args.input.UsernameOrEmail,
 				})) ||
 				(await users.findOne({
-					username: args.input.UsernameOrEmail,
+					name: args.input.UsernameOrEmail,
 				}))
 			if (!user) {
 				throw new GQLError({
 					type: 'email or password or user name is incorrect',
+				})
+			}
+			if (user.isTeam) {
+				throw new GQLError({
+					type: 'that is the team account',
 				})
 			}
 			const IsValidPassword = await bcrypt.compare(
@@ -295,30 +340,31 @@ export const resolvers: IResolvers = {
 		},
 		async Register(_, args) {
 			// const isEmailValid = await emailChecker(args.input.email)
-			console.log(args.input.email)
+			// console.log(args.input.email);
 			// if (!isEmailValid) {
 			// throw new GQLError({ type: 'email invalid' })
 			// }
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 
 			const user =
-                (await users.findOne({
-                    email: args.input.email,
-                })) ||
-                (await users.findOne({
-                    username: args.input.username,
-                }))
-			
-            if (user) {
-                throw new GQLError({
-                    type: 'username is already taken',
-                })
-            }
+				(await users.findOne({
+					email: args.input.email,
+				})) ||
+				(await users.findOne({
+					name: args.input.name,
+				}))
+
+			if (user) {
+				throw new GQLError({
+					type: 'username is already taken',
+				})
+			}
 
 			const insertId = await users.insertOne({
 				...args.input,
-				password: await bcrypt.hash(args.input.password),
+				isTeam: false,
+				...{ password: await bcrypt.hash(args.input.password) },
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				comicIDs: [],
@@ -329,17 +375,192 @@ export const resolvers: IResolvers = {
 			if (!returnValue) {
 				throw new GQLError({ type: 'Server Error' })
 			}
-			returnValue.password = ''
+			if (!returnValue.isTeam) {
+				returnValue.password = ''
+			}
 			return {
 				accessToken: await GenToken(client, returnValue._id, DB_NAME),
 				user: returnValue,
 			}
 		},
+		async CreateTeam(_, args, context) {
+			if (!context.request.headers.get('authorization')) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const UserSession = await DecodeToken(
+				context.request.headers.get('authorization').replace('Bearer ', ''),
+				client,
+				DB_NAME
+			)
+			if (!UserSession) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const db = client.database(DB_NAME)
+			const users = db.collection<UserReturn>('users')
+			const user = await users.findOne({
+				_id: new ObjectId(UserSession.userID),
+			})
+			if (user?.isTeam) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const CreateValue = {
+				...args.input,
+				isTeam: true,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				comicIDs: [],
+				member: [new ObjectId(user?._id)],
+				owner: new ObjectId(user?._id),
+			} as Omit<Team, '_id'>
+			const insertId = await users.insertOne({
+				...CreateValue,
+			})
+			const returnValue = await users.findOne({
+				_id: insertId,
+			})
+			if (!returnValue) {
+				throw new GQLError({ type: 'Server Error' })
+			}
+			if (!returnValue.isTeam) {
+				returnValue.password = ''
+			}
+			return returnValue
+		},
+		AddUserToTeam: async (_, args, context) => {
+			if (!context.request.headers.get('authorization')) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const UserSession = await DecodeToken(
+				context.request.headers.get('authorization').replace('Bearer ', ''),
+				client,
+				DB_NAME
+			)
+			if (!UserSession) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const db = client.database(DB_NAME)
+			const users = db.collection<UserReturn>('users')
+			const user = await users.findOne({
+				_id: new ObjectId(UserSession.userID),
+			})
+			if (user?.isTeam) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const TeamData = await users.findOne({
+				_id: new ObjectId(args.input.TeamID),
+			})
+			if (TeamData?.isTeam && TeamData.owner != user?._id) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+
+			await users.updateOne(
+				{
+					_id: new ObjectId(args.input.TeamID),
+				},
+				{
+					$push: {
+						member: { $each: [new ObjectId(args.input.UserID)] },
+					},
+				}
+			)
+			const returnValue = await users.findOne({
+				_id: new ObjectId(args.input.TeamID),
+			})
+			if (!returnValue) {
+				throw new GQLError({ type: 'Server Error' })
+			}
+			if (!returnValue.isTeam) {
+				returnValue.password = ''
+			}
+			return returnValue
+		},
+		RemoveUserInTeam: async (_, args, context) => {
+			if (!context.request.headers.get('authorization')) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const UserSession = await DecodeToken(
+				context.request.headers.get('authorization').replace('Bearer ', ''),
+				client,
+				DB_NAME
+			)
+			if (!UserSession) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const db = client.database(DB_NAME)
+			const users = db.collection<UserReturn>('users')
+			const user = await users.findOne({
+				_id: new ObjectId(UserSession.userID),
+			})
+			if (user?.isTeam) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+			const TeamData = await users.findOne({
+				_id: new ObjectId(args.input.TeamID),
+			})
+			if (TeamData?.isTeam && TeamData.owner != user?._id) {
+				throw new GQLError({
+					type: 'Unauthorized',
+					message: 'You are not authorized to access this resource',
+				})
+			}
+
+			await users.updateOne(
+				{
+					_id: new ObjectId(args.input.TeamID),
+				},
+				{
+					$pull: {
+						member: new ObjectId(args.input.UserID),
+					},
+				}
+			)
+			const returnValue = await users.findOne({
+				_id: new ObjectId(args.input.TeamID),
+			})
+			if (!returnValue) {
+				throw new GQLError({ type: 'Server Error' })
+			}
+			if (!returnValue.isTeam) {
+				returnValue.password = ''
+			}
+			return returnValue
+		},
 	},
+
 	User: {
 		__resolveReference: async (reference) => {
 			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
+			const users = db.collection<UserReturn>('users')
 			const user = await users.findOne({
 				_id: new ObjectId(reference._id),
 			})

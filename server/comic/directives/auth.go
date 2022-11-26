@@ -3,6 +3,7 @@ package directives
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -21,6 +22,7 @@ type SessionDataReturn struct {
 	ID        string    `json:"_id"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	CreatorID string    `json:"creatorID"`
 	UserID    string    `json:"userID"`
 }
 
@@ -48,7 +50,7 @@ type ReturnData struct {
 func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{}, error) {
 	request := passRequest.CtxValue(ctx)
 
-	auth := request.Header.Get("Authorization")
+	auth := request.Header.Clone().Get("Authorization")
 	if auth == "" {
 		return nil, &gqlerror.Error{
 			Message: "Access Denied",
@@ -61,13 +63,17 @@ func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{
 		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
 		Path:   "/",
 	}
+	teamID := request.Header.Clone().Get("team-id")
+	fmt.Printf("teamID: %v\n", teamID)
 	requestId := uuid.New().String()
 	payload := struct {
-		Token string `json:"token"`
-		ID    string `json:"id"`
+		Token  string `json:"token"`
+		ID     string `json:"id"`
+		TeamId string `json:"teamID"`
 	}{
-		Token: auth,
-		ID:    requestId,
+		Token:  auth,
+		ID:     requestId,
+		TeamId: teamID,
 	}
 	requestData := WsRequest{
 		Url:     "user/decodeToken",

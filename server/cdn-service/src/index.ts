@@ -89,3 +89,7 @@ server.on("listening", () => {
   });
 });
 server.listen(PORT);
+
+process.on("exit", () => {
+  process.exit(0)
+})
