@@ -31,7 +31,7 @@ type WsRequest struct {
 	Header  *interface{} `json:"header"`
 	Payload any          `json:"payload"`
 	From    string       `json:"from"`
-	Type    string       `json:"message"`
+	Type    string       `json:"type"`
 }
 
 type PayloadReturn struct {

@@ -30,7 +30,7 @@ services:
     env_file:
       - ./graphql-gateway/.env
       - ./.base.env
-    # restart: always
+    restart: always
 
   shartube-ws-server:
     container_name: shartube-ws-server
