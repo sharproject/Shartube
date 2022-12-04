@@ -13,6 +13,12 @@ export function BaseUserSchema() {
 				default: [],
 			},
 		],
+		ShortComicIDs: [
+			{
+				type: mongoose.Types.ObjectId,
+				default: [],
+			},
+		],
 	})
 
 	return schema
@@ -23,4 +29,5 @@ export interface IBaseUser extends mongoose.Document {
 	createdAt: Date
 	updatedAt: Date
 	comicIDs: mongoose.Types.ObjectId[]
+	ShortComicIDs: mongoose.Types.ObjectId[]
 }

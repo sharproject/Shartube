@@ -1,0 +1,5 @@
+extend type User @key(fields: "_id")  {
+  _id: ID! @external
+  ShortComics: [ShortComic] @goField(forceResolver: true)
+  ShortComicIDs: [String]
+}

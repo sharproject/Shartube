@@ -1,4 +1,3 @@
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 import { TeamModel } from '../model/team.ts'
 import { UserModel } from '../model/user.ts'
 import { DecodeToken } from '../util/Token.ts'
@@ -28,12 +27,14 @@ export class WsListen extends WebSocket {
 			let result: SenderData | null = null
 			if (data.url == 'user/decodeToken') {
 				result = await this.decodeToken(data)
-			}
-			if (data.url == 'user/updateUserComic') {
+			} else if (data.url == 'user/updateUserComic') {
 				result = await this.updateUserComic(data)
-			}
-			if (data.url == 'user/DeleteComic') {
+			} else if (data.url == 'user/DeleteComic') {
 				result = await this.DeleteComic(data)
+			} else if (data.url == "user/UpdateUserShortComic") {
+				result = await this.updateUserShortComic(data)
+			} else if (data.url == "user/DeleteShortComic") {
+				result = await this.DeleteShortComic(data)
 			}
 			if (result) {
 				send(result)
@@ -95,7 +96,7 @@ export class WsListen extends WebSocket {
 	}
 	async updateUserComic(data: SenderData): Promise<SenderData> {
 		try {
-			let returnData =
+			const returnData =
 				(await UserModel.findOneAndUpdate(
 					{
 						_id: data.payload.UserID,
@@ -141,9 +142,57 @@ export class WsListen extends WebSocket {
 			}
 		}
 	}
+	async updateUserShortComic(data: SenderData): Promise<SenderData> {
+		try {
+			const returnData =
+				(await UserModel.findOneAndUpdate(
+					{
+						_id: data.payload.UserID,
+					},
+					{
+						$push: {
+							ShortComicIDs: { $each: [data.payload._id] },
+						},
+					}
+				)) ||
+				(await TeamModel.findOneAndUpdate(
+					{
+						_id: data.payload.UserID,
+					},
+					{
+						$push: {
+							ShortComicIDs: { $each: [data.payload._id] },
+						},
+					}
+				))
+			return {
+				url: data.from,
+				header: null,
+				payload: {
+					user: returnData,
+					id: data.payload.id,
+				},
+				type: 'rep',
+				error: null,
+				from: 'user/UpdateUserShortComic',
+			}
+		} catch (error) {
+			return {
+				url: data.from,
+				header: null,
+				payload: {
+					user: null,
+					id: data.payload.id,
+				},
+				type: 'rep',
+				error: error.message,
+				from: 'user/UpdateUserShortComic',
+			}
+		}
+	}
 	async DeleteComic(data: SenderData): Promise<SenderData> {
 		try {
-			let returnData =
+			const returnData =
 				(await UserModel.findOneAndUpdate(
 					{
 						_id: data.payload.UserID,
@@ -173,7 +222,7 @@ export class WsListen extends WebSocket {
 				},
 				type: 'rep',
 				error: null,
-				from: 'user/updateUserComic',
+				from: 'user/DeleteUserComic',
 			}
 		} catch (error) {
 			return {
@@ -185,7 +234,57 @@ export class WsListen extends WebSocket {
 				},
 				type: 'rep',
 				error: error.message,
-				from: 'user/updateUserComic',
+				from: 'user/DeleteUserComic',
+			}
+		}
+	}
+
+
+	async DeleteShortComic(data: SenderData): Promise<SenderData> {
+		try {
+			const returnData =
+				(await UserModel.findOneAndUpdate(
+					{
+						_id: data.payload.UserID,
+					},
+					{
+						$pull: {
+							ShortComicIDs: data.payload._id,
+						},
+					}
+				)) ||
+				(await TeamModel.findOneAndUpdate(
+					{
+						_id: data.payload.UserID,
+					},
+					{
+						$pull: {
+							ShortComicIDs: data.payload._id,
+						},
+					}
+				))
+			return {
+				url: data.from,
+				header: null,
+				payload: {
+					user: returnData,
+					id: data.payload.id,
+				},
+				type: 'rep',
+				error: null,
+				from: 'user/DeleteUserShortComic',
+			}
+		} catch (error) {
+			return {
+				url: data.from,
+				header: null,
+				payload: {
+					user: null,
+					id: data.payload.id,
+				},
+				type: 'rep',
+				error: error.message,
+				from: 'user/DeleteUserShortComic',
 			}
 		}
 	}

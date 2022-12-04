@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
 	"github.com/Folody-Team/Shartube/database/comic_model"
 	"github.com/Folody-Team/Shartube/database/comic_session_model"
@@ -60,7 +61,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if err != nil {
 		return nil, err
 	}
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	CreateIDObject, err := primitive.ObjectIDFromHex(CreateID)
 	if err != nil {
 		return nil, err
@@ -114,7 +115,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, err
 	}
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
 	comicSession, err := comicSessionModel.FindById(sessionID)
 	if err != nil {
@@ -139,7 +140,7 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, err
 	}
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	comicSession, err := ComicSessionModel.FindById(sessionID)
 	if err != nil {
 		return nil, err

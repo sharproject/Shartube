@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
 	"github.com/Folody-Team/Shartube/database/comic_session_model"
 	"github.com/Folody-Team/Shartube/directives"
@@ -45,7 +46,7 @@ func (r *mutationResolver) CreateComicChap(ctx context.Context, input model.Crea
 	if err != nil {
 		return nil, err
 	}
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	CreateIDObject, err := primitive.ObjectIDFromHex(CreateID)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 		return nil, err
 	}
 
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 		return nil, err
 	}
 
-	comicObjectData := WsRequest{
+	comicObjectData := LocalTypes.WsRequest{
 		Url:     "subtitle/GenerationSubtitle",
 		Header:  nil,
 		Payload: AllImages,
@@ -185,7 +186,7 @@ func (r *mutationResolver) UpdateComicChap(ctx context.Context, chapID string, i
 		return nil, err
 	}
 	comicChap, err := comicChapModel.FindById(chapID)
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
 	if err != nil {
 		return nil, err
@@ -210,7 +211,7 @@ func (r *mutationResolver) DeleteComicChap(ctx context.Context, chapID string) (
 		return nil, err
 	}
 	comicChap, err := comicChapModel.FindById(chapID)
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		return nil, err
 	}
 
-	CreateID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).CreatorID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +280,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		return nil, err
 	}
 
-	comicObjectData := WsRequest{
+	comicObjectData := LocalTypes.WsRequest{
 		Url:     "subtitle/DeleteSubtitle",
 		Header:  nil,
 		Payload: imageID,

@@ -23,9 +23,8 @@ export async function GenToken(userID: string) {
 	const session = await new SessionModel({
 		userID: userID,
 	}).save()
-	const exp = getNumericDate(
-		new Date(new Date().getSeconds() + timeByMinus * 60)
-	)
+	const expTimeDate = (new Date().getSeconds() + timeByMinus * 60)
+	const exp = getNumericDate(expTimeDate)
 
 	const jwt = await create(
 		{ alg: 'HS512', typ: 'JWT' },

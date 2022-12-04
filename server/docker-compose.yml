@@ -23,9 +23,11 @@ services:
     depends_on:
       - shartube-comic-server
       - shartube-user-server
+      - shartube-short-comic-server
     environment:
       - COMIC_SERVER_HOST=http://shartube-comic-server:8080/query
       - USER_SERVER_HOST=http://shartube-user-server:8080/graphql
+      - SHORT_COMIC_SERVER_HOST=http://shartube-short-comic-server:8080/query
     build: ./graphql-gateway
     env_file:
       - ./graphql-gateway/.env
@@ -60,6 +62,26 @@ services:
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
       - ./comic/.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+
+  shartube-short-comic-server:
+    container_name: shartube-short-comic-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-db
+      - shartube-user-server
+    build: ./short_comic
+    environment:
+      - WS_HOST=shartube-ws-server
+      - WS_PORT=3012
+      - UserHost=shartube-user-server
+      - UploadServer=http://shartube-upload-server:3000/save
+    env_file:
+      - ./short_comic/.env
       - ./.base.env
     restart: always
     expose:
@@ -114,6 +136,7 @@ services:
       - PORT=8080
       - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
       - MEME_SERVER=http://shartube-meme-server:8080
+      - USER_SERVER=http://shartube-user-server:8080
     ports:
       - "8080:8080"
   
