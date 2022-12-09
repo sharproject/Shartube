@@ -5,7 +5,12 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
+	"log"
+	"net/url"
+	"os"
 
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
 	"github.com/Folody-Team/Shartube/database/comic_session_model"
 	"github.com/Folody-Team/Shartube/directives"
@@ -14,6 +19,7 @@ import (
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
+	"github.com/sacOO7/gowebsocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -40,8 +46,8 @@ func (r *mutationResolver) CreateComicChap(ctx context.Context, input model.Crea
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
-	userIDObject, err := primitive.ObjectIDFromHex(userID)
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
+	CreateIDObject, err := primitive.ObjectIDFromHex(CreateID)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +58,7 @@ func (r *mutationResolver) CreateComicChap(ctx context.Context, input model.Crea
 	if comicSessionDoc == nil {
 		return nil, gqlerror.Errorf("comic session not found")
 	}
-	if userID != comicSessionDoc.CreatedByID {
+	if CreateID != comicSessionDoc.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
@@ -63,7 +69,7 @@ func (r *mutationResolver) CreateComicChap(ctx context.Context, input model.Crea
 	ChapID, err := comicChapModel.New(&model.CreateComicChapInputModel{
 		Name:        input.Name,
 		Description: input.Description,
-		CreatedByID: userIDObject.Hex(),
+		CreatedByID: CreateIDObject.Hex(),
 		SessionID:   input.SessionID,
 	}).Save()
 	if err != nil {
@@ -90,7 +96,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 		return nil, err
 	}
 
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +107,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 	if comicChapDoc == nil {
 		return nil, gqlerror.Errorf("comic chap not found")
 	}
-	if userID != comicChapDoc.CreatedByID {
+	if CreateID != comicChapDoc.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 
@@ -131,6 +137,45 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 		return nil, err
 	}
 
+	// get data from comic model
+	u := url.URL{
+		Scheme: "ws",
+		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
+		Path:   "/",
+	}
+	socket := gowebsocket.New(u.String())
+
+	socket.OnConnected = func(socket gowebsocket.Socket) {
+		log.Println("Connected to server")
+	}
+
+	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
+		log.Println("Got messages " + message)
+	}
+
+	socket.Connect()
+
+	if err != nil {
+		return nil, err
+	}
+
+	comicObjectData := LocalTypes.WsRequest{
+		Url:     "subtitle/GenerationSubtitle",
+		Header:  nil,
+		Payload: AllImages,
+		From:    "comic/AddImageForChap",
+		Type:    "message",
+	}
+
+	comicObject, err := json.Marshal(comicObjectData)
+	if err != nil {
+		return nil, err
+	}
+	comicObjectString := string(comicObject)
+	socket.SendText(comicObjectString)
+
+	socket.Close()
+
 	return comicChapModel.FindById(comicChapDoc.ID)
 }
 
@@ -141,7 +186,7 @@ func (r *mutationResolver) UpdateComicChap(ctx context.Context, chapID string, i
 		return nil, err
 	}
 	comicChap, err := comicChapModel.FindById(chapID)
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
 	if err != nil {
 		return nil, err
@@ -151,7 +196,7 @@ func (r *mutationResolver) UpdateComicChap(ctx context.Context, chapID string, i
 			Message: "comic chap not found",
 		}
 	}
-	if userID != comicChap.CreatedByID {
+	if CreateID != comicChap.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	return comicChapModel.FindOneAndUpdate(bson.M{
@@ -166,7 +211,7 @@ func (r *mutationResolver) DeleteComicChap(ctx context.Context, chapID string) (
 		return nil, err
 	}
 	comicChap, err := comicChapModel.FindById(chapID)
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +220,7 @@ func (r *mutationResolver) DeleteComicChap(ctx context.Context, chapID string) (
 			Message: "comic chap not found",
 		}
 	}
-	if userID != comicChap.CreatedByID {
+	if CreateID != comicChap.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	success, err := deleteUtil.DeleteChap(comicChap.ID, r.Client, true)
@@ -195,7 +240,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		return nil, err
 	}
 
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +251,52 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 	if comicChapDoc == nil {
 		return nil, gqlerror.Errorf("comic chap not found")
 	}
-	if userID != comicChapDoc.CreatedByID {
+	if CreateID != comicChapDoc.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	ComicChapObjectId, err := primitive.ObjectIDFromHex(comicChapDoc.ID)
 	if err != nil {
 		return nil, err
 	}
+	// get data from comic model
+	u := url.URL{
+		Scheme: "ws",
+		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
+		Path:   "/",
+	}
+	socket := gowebsocket.New(u.String())
+
+	socket.OnConnected = func(socket gowebsocket.Socket) {
+		log.Println("Connected to server")
+	}
+
+	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
+		log.Println("Got messages " + message)
+	}
+
+	socket.Connect()
+
+	if err != nil {
+		return nil, err
+	}
+
+	comicObjectData := LocalTypes.WsRequest{
+		Url:     "subtitle/DeleteSubtitle",
+		Header:  nil,
+		Payload: imageID,
+		From:    "comic/RemoveImageForChap",
+		Type:    "message",
+	}
+
+	comicObject, err := json.Marshal(comicObjectData)
+	if err != nil {
+		return nil, err
+	}
+	comicObjectString := string(comicObject)
+	socket.SendText(comicObjectString)
+
+	socket.Close()
+
 	for _, v := range imageID {
 		imageIndex := slices.IndexFunc(comicChapDoc.Images, func(ir *model.ImageResult) bool {
 			return ir.ID == v

@@ -14,7 +14,7 @@ pub(crate) fn handler() {
             Ok(())
         }
         fn on_message(&mut self, msg: Message) -> Result<()> {
-            println!("Got message '{}'", msg);
+            // println!("Got message '{}'", msg);
             self.ws.broadcast(msg.clone())?;
             Ok(())
         }

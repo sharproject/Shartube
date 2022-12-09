@@ -1,0 +1,63 @@
+interface CreateShortComicChap {
+  name: String!
+  description: String
+  ComicID: String!
+}
+input CreateShortComicChapInput {
+  name: String!
+  description: String
+  ComicID: String!
+}
+type CreateShortComicChapInputModel implements CreateShortComicChap {
+  name: String!
+  description: String
+  CreatedByID: String!
+  ComicID: String!
+}
+type ImageResult {
+  ID: String!
+  Url: String!
+}
+type ShortComicChap implements CreateShortComicChap @key(fields: "_id") {
+  _id: ID!
+  createdAt: Time!
+  updatedAt: Time!
+  CreatedBy: User @goField(forceResolver: true)
+  CreatedByID: String!
+  name: String!
+  description: String
+  ComicID: String!
+  Comic: ShortComic! @goField(forceResolver: true)
+  Images: [ImageResult!]!
+}
+
+input UpdateShortComicChapInput {
+  name: String
+  description: String
+}
+extend type Mutation {
+  CreateShortComicChap(input: CreateShortComicChapInput!): ShortComicChap!
+    @goField(forceResolver: true)
+    @auth
+  AddImageToShortComicChap(req: [UploadFile!]!, chapID: String!): ShortComicChap!
+    @goField(forceResolver: true)
+    @auth
+  updateShortComicChap(chapID: String!, input: UpdateShortComicChapInput!): ShortComicChap!
+    @goField(forceResolver: true)
+    @auth
+  DeleteShortComicChap(chapID: String!): DeleteResult!
+    @goField(forceResolver: true)
+    @auth
+  DeleteShortComicChapImage(chapID: String!, imageID: [String!]!): ShortComicChap!
+    @goField(forceResolver: true)
+    @auth
+}
+
+input UploadFile {
+  id: Int!
+  file: Upload!
+}
+
+extend type Query {
+  ChapByComic(ComicID: String!): [ShortComicChap!] @goField(forceResolver: true)
+}

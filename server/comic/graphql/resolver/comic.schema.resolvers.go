@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_model"
 	"github.com/Folody-Team/Shartube/database/comic_session_model"
 	"github.com/Folody-Team/Shartube/directives"
@@ -51,7 +52,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		return nil, err
 	}
 
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		ThumbnailUrl = *ThumbnailUrlPointer
 	}
 	comicID, err := comicModel.New(&model.CreateComicInputModel{
-		CreatedByID: userID,
+		CreatedByID: CreateID,
 		Name:        input.Name,
 		Description: input.Description,
 		Thumbnail:   &ThumbnailUrl,
@@ -96,12 +97,12 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		return nil, err
 	}
 
-	comicObjectData := WsRequest{
+	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/updateUserComic",
 		Header: nil,
 		Payload: bson.M{
 			"_id":    comicID.Hex(),
-			"UserID": userID,
+			"UserID": CreateID,
 		},
 		From: "comic/createComic",
 		Type: "message",
@@ -124,7 +125,7 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
 	comic, err := comicModel.FindById(comicID)
 	if err != nil {
@@ -135,7 +136,7 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 			Message: "comic not found",
 		}
 	}
-	if comic.CreatedByID != userID {
+	if comic.CreatedByID != CreateID {
 		return nil, &gqlerror.Error{
 			Message: "Access Denied",
 		}
@@ -152,7 +153,7 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	ComicData, err := ComicModel.FindById(comicID)
 	if err != nil {
 		return nil, err
@@ -162,7 +163,7 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 			Message: "comic not found",
 		}
 	}
-	if ComicData.CreatedByID != userID {
+	if ComicData.CreatedByID != CreateID {
 		return nil, &gqlerror.Error{
 			Message: "Access Denied",
 		}
@@ -192,14 +193,14 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 		return nil, err
 	}
 
-	comicObjectData := WsRequest{
+	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/DeleteComic",
 		Header: nil,
 		Payload: bson.M{
 			"_id":    comicID,
-			"UserID": userID,
+			"UserID": CreateID,
 		},
-		From: "comic/createComic",
+		From: "comic/DeleteComic",
 		Type: "message",
 	}
 
@@ -240,10 +241,3 @@ type comicResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-type WsRequest struct {
-	Url     string       `json:"url"`
-	Header  *interface{} `json:"header"`
-	Payload any          `json:"payload"`
-	From    string       `json:"from"`
-	Type    string       `json:"message"`
-}

@@ -1,0 +1,6 @@
+dev command : go run github.com/cosmtrek/air
+start command : go run ./server.go
+
+todo for ws : 
+- user/UpdateUserShortComic
+- user/DeleteShortComic

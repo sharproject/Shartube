@@ -1,17 +1,23 @@
 import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
 import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 import { Application, Router } from 'https://deno.land/x/oak/mod.ts'
 import { applyGraphQL } from 'https://deno.land/x/oak_graphql/mod.ts'
-import { resolvers, User } from './resolvers/index.ts'
+import { resolvers } from './resolvers/index.ts'
 import { typeDefs } from './typeDefs/index.ts'
-import client, { DB_NAME } from './util/client.ts'
+import { WsListen } from './ws/index.ts'
+import mongoose from 'npm:mongoose'
+import { getDbUrl } from './util/GetDBUrl.ts'
+import { UserModel } from './model/user.ts'
+import { TeamModel } from './model/team.ts'
 
 config({
-	path: PathJoin(import.meta.url,"..", '.env'),
+	path: PathJoin(import.meta.url, '..', '.env'),
 })
 
-const app = new Application()
+const app = new Application({
+	proxy:true
+})
+new WsListen(`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`)
 
 app.use(async (ctx, next) => {
 	await next()
@@ -25,25 +31,34 @@ app.use(async (ctx, next) => {
 	ctx.response.headers.set('X-Response-Time', `${ms}ms`)
 })
 
+await mongoose.connect(getDbUrl())
+
 // endpoint for get user info by id
 app.use(async (ctx, next) => {
-	if (ctx.request.url.pathname == '/user/comics') {
+	const pathname = ctx.request.url.pathname.trim()
+	if (pathname.startsWith('/user/comics')) {
 		const id = ctx.request.url.searchParams.get('id')
 		if (!id) {
 			ctx.response.status = 400
 			ctx.response.body = 'id is required'
 			return
 		}
-		const db = client.database(DB_NAME)
-		const users = db.collection<User>('users')
-		const user = await users.findOne({
-			_id: new ObjectId(id),
-		})
-		ctx.response.body = user?.comicIDs
-	}
-	// get header token
-	const token = ctx.request.headers.get('authorization')
 
+		ctx.response.body = (
+			(await UserModel.findById(id)) || (await TeamModel.findById(id))
+		)?.comicIDs
+	}
+	if (pathname.startsWith('/user/info')) {
+		const id = ctx.request.url.searchParams.get('id')
+		if (!id) {
+			ctx.response.status = 400
+			ctx.response.body = 'id is required'
+			return
+		}
+		console.log({ id })
+		ctx.response.body =
+			(await UserModel.findById(id)) || (await TeamModel.findById(id))
+	}
 	await next()
 })
 
