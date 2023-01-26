@@ -17,9 +17,13 @@ type WsRequest struct {
 	Type    string       `json:"type"`
 }
 
+type BaseReturn struct {
+	ID string `json:"id"`
+}
+
 type AuthPayloadReturn struct {
+	BaseReturn
 	SessionData *AuthSessionDataReturn `json:"sessionData"`
-	ID          string                 `json:"id"`
 }
 
 type WsReturnData[T any] struct {
@@ -28,4 +32,8 @@ type WsReturnData[T any] struct {
 	Payload T            `json:"payload"`
 	Type    string       `json:"type"`
 	Error   *string      `json:"error"`
+}
+
+type GetUploadTokenReturn struct {
+	BaseReturn
 }

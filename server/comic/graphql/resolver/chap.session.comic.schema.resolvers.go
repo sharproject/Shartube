@@ -19,6 +19,7 @@ import (
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/sacOO7/gowebsocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
@@ -90,7 +91,7 @@ func (r *mutationResolver) CreateComicChap(ctx context.Context, input model.Crea
 }
 
 // AddImageToChap is the resolver for the AddImageToChap field.
-func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.UploadFile, chapID string) (*model.ComicChap, error) {
+func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*string, error) {
 	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -111,72 +112,103 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, req []*model.Uplo
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 
-	AllImages := comicChapDoc.Images
-	for _, v := range req {
-		url, err := util.UploadImageForGraphql(v.File)
-		if err != nil {
-			return nil, err
-		}
-
-		AllImages = append(AllImages, &model.ImageResult{
-			ID:  uuid.New().String(),
-			URL: *url,
-		})
-	}
-	ComicChapObjectId, err := primitive.ObjectIDFromHex(comicChapDoc.ID)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := comicChapModel.FindOneAndUpdate(bson.M{
-		"_id": ComicChapObjectId,
-	}, bson.M{
-		"$set": bson.M{
-			"Images": AllImages,
-		},
-	}); err != nil {
-		return nil, err
-	}
-
-	// get data from comic model
 	u := url.URL{
 		Scheme: "ws",
 		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
 		Path:   "/",
 	}
-	socket := gowebsocket.New(u.String())
-
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
+	requestId := uuid.New().String()
+	payload := struct {
+		ID       string `json:"id"`
+		SaveData struct {
+			ChapId string `json:"chapId"`
+		} `json:"data"`
+		EmitTo string `json:"emit_to"`
+	}{
+		ID: requestId,
+		SaveData: struct {
+			ChapId string `json:"chapId"`
+		}{
+			ChapId: chapID,
+		},
+		EmitTo: "comic",
 	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
-
-	comicObjectData := LocalTypes.WsRequest{
-		Url:     "subtitle/GenerationSubtitle",
+	requestData := LocalTypes.WsRequest{
+		Url:     "upload_token_registry/genToken",
 		Header:  nil,
-		Payload: AllImages,
-		From:    "comic/AddImageForChap",
+		Payload: &payload,
+		From:    "comic/addImages",
 		Type:    "message",
 	}
-
-	comicObject, err := json.Marshal(comicObjectData)
+	requestDataBytes, err := json.Marshal(requestData)
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer ws.Close()
+	ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	for {
+		_, message, err := ws.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+		err = json.Unmarshal(message, &data)
+		if err != nil {
+			return nil, err
+		}
+		if data.Type == "rep" {
+			if data.Payload.ID == requestId {
+				if data.Error != nil {
+					return nil, &gqlerror.Error{
+						Message: *data.Error,
+					}
+				}
 
-	socket.Close()
+				return nil, &gqlerror.Error{
+					Message: "500 server error",
+				}
 
-	return comicChapModel.FindById(comicChapDoc.ID)
+			}
+		}
+	}
+
+	// ws message handler
+	// AllImages := comicChapDoc.Images
+	// ComicChapObjectId, err := primitive.ObjectIDFromHex(comicChapDoc.ID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if _, err := comicChapModel.FindOneAndUpdate(bson.M{
+	// 	"_id": ComicChapObjectId,
+	// }, bson.M{
+	// 	"$set": bson.M{
+	// 		"Images": AllImages,
+	// 	},
+	// }); err != nil {
+	// 	return nil, err
+	// }
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// comicObjectData := LocalTypes.WsRequest{
+	// 	Url:     "subtitle/GenerationSubtitle",
+	// 	Header:  nil,
+	// 	Payload: AllImages,
+	// 	From:    "comic/AddImageForChap",
+	// 	Type:    "message",
+	// }
+
+	// comicObject, err := json.Marshal(comicObjectData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// ws.WriteMessage(websocket.TextMessage,comicObject)
 }
 
 // UpdateComicChap is the resolver for the updateComicChap field.

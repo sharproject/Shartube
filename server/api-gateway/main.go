@@ -38,6 +38,9 @@ func setupProxy(app *fiber.App) {
 
 	app.Use("/user/*", ProxyHandler(os.Getenv("USER_SERVER")))
 	api.Use("/user/*", ProxyHandler(os.Getenv("USER_SERVER")))
+
+	app.Use("/save",ProxyHandler(os.Getenv("CDN_SERVER")))
+	api.Use("/save",ProxyHandler(os.Getenv("CDN_SERVER")))
 }
 
 func main() {

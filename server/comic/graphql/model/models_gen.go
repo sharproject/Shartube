@@ -154,11 +154,6 @@ type UpdateComicSessionInputModel struct {
 	Thumbnail   *string `json:"thumbnail"`
 }
 
-type UploadFile struct {
-	ID   int            `json:"id"`
-	File graphql.Upload `json:"file"`
-}
-
 type User struct {
 	ID       string    `json:"_id" bson:"_id"`
 	Comics   []*Comic  `json:"comics"`

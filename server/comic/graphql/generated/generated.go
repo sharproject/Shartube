@@ -134,7 +134,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddImageToChap     func(childComplexity int, req []*model.UploadFile, chapID string) int
+		AddImageToChap     func(childComplexity int, chapID string) int
 		CreateComic        func(childComplexity int, input model.CreateComicInput) int
 		CreateComicChap    func(childComplexity int, input model.CreateComicChapInput) int
 		CreateComicSession func(childComplexity int, input model.CreateComicSessionInput) int
@@ -200,7 +200,7 @@ type EntityResolver interface {
 }
 type MutationResolver interface {
 	CreateComicChap(ctx context.Context, input model.CreateComicChapInput) (*model.ComicChap, error)
-	AddImageToChap(ctx context.Context, req []*model.UploadFile, chapID string) (*model.ComicChap, error)
+	AddImageToChap(ctx context.Context, chapID string) (*string, error)
 	UpdateComicChap(ctx context.Context, chapID string, input model.UpdateComicChapInput) (*model.ComicChap, error)
 	DeleteComicChap(ctx context.Context, chapID string) (*model.DeleteResult, error)
 	DeleteChapImage(ctx context.Context, chapID string, imageID []string) (*model.ComicChap, error)
@@ -612,7 +612,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddImageToChap(childComplexity, args["req"].([]*model.UploadFile), args["chapID"].(string)), true
+		return e.complexity.Mutation.AddImageToChap(childComplexity, args["chapID"].(string)), true
 
 	case "Mutation.createComic":
 		if e.complexity.Mutation.CreateComic == nil {
@@ -868,7 +868,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputUpdateComicChapInput,
 		ec.unmarshalInputUpdateComicInput,
 		ec.unmarshalInputUpdateComicSessionInput,
-		ec.unmarshalInputUploadFile,
 	)
 	first := true
 
@@ -970,7 +969,7 @@ extend type Mutation {
   CreateComicChap(input: CreateComicChapInput!): ComicChap!
     @goField(forceResolver: true)
     @auth
-  AddImageToChap(req: [UploadFile!]!, chapID: String!): ComicChap!
+  AddImageToChap(chapID: String!): String
     @goField(forceResolver: true)
     @auth
   updateComicChap(chapID: String!, input: UpdateComicChapInput!): ComicChap!
@@ -982,11 +981,6 @@ extend type Mutation {
   DeleteChapImage(chapID: String!, imageID: [String!]!): ComicChap!
     @goField(forceResolver: true)
     @auth
-}
-
-input UploadFile {
-  id: Int!
-  file: Upload!
 }
 
 extend type Query {
@@ -1240,24 +1234,15 @@ func (ec *executionContext) field_Entity_findUserByID_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_AddImageToChap_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*model.UploadFile
-	if tmp, ok := rawArgs["req"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("req"))
-		arg0, err = ec.unmarshalNUploadFile2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUploadFileᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["req"] = arg0
-	var arg1 string
+	var arg0 string
 	if tmp, ok := rawArgs["chapID"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("chapID"))
-		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["chapID"] = arg1
+	args["chapID"] = arg0
 	return args, nil
 }
 
@@ -4028,7 +4013,7 @@ func (ec *executionContext) _Mutation_AddImageToChap(ctx context.Context, field 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddImageToChap(rctx, fc.Args["req"].([]*model.UploadFile), fc.Args["chapID"].(string))
+			return ec.resolvers.Mutation().AddImageToChap(rctx, fc.Args["chapID"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -4044,24 +4029,21 @@ func (ec *executionContext) _Mutation_AddImageToChap(ctx context.Context, field 
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.ComicChap); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/Folody-Team/Shartube/graphql/model.ComicChap`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ComicChap)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNComicChap2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComicChap(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_AddImageToChap(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4071,29 +4053,7 @@ func (ec *executionContext) fieldContext_Mutation_AddImageToChap(ctx context.Con
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "_id":
-				return ec.fieldContext_ComicChap__id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_ComicChap_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_ComicChap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicChap_CreatedBy(ctx, field)
-			case "CreatedByID":
-				return ec.fieldContext_ComicChap_CreatedByID(ctx, field)
-			case "name":
-				return ec.fieldContext_ComicChap_name(ctx, field)
-			case "description":
-				return ec.fieldContext_ComicChap_description(ctx, field)
-			case "SessionID":
-				return ec.fieldContext_ComicChap_SessionID(ctx, field)
-			case "Session":
-				return ec.fieldContext_ComicChap_Session(ctx, field)
-			case "Images":
-				return ec.fieldContext_ComicChap_Images(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ComicChap", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -7865,42 +7825,6 @@ func (ec *executionContext) unmarshalInputUpdateComicSessionInput(ctx context.Co
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUploadFile(ctx context.Context, obj interface{}) (model.UploadFile, error) {
-	var it model.UploadFile
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "file"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "file":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("file"))
-			it.File, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -8662,9 +8586,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_AddImageToChap(ctx, field)
 			})
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "updateComicChap":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -9565,21 +9486,6 @@ func (ec *executionContext) marshalNImageResult2ᚖgithubᚗcomᚋFolodyᚑTeam�
 	return ec._ImageResult(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9650,43 +9556,6 @@ func (ec *executionContext) unmarshalNUpdateComicChapInput2githubᚗcomᚋFolody
 func (ec *executionContext) unmarshalNUpdateComicInput2githubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUpdateComicInput(ctx context.Context, v interface{}) (model.UpdateComicInput, error) {
 	res, err := ec.unmarshalInputUpdateComicInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
-	res, err := graphql.UnmarshalUpload(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
-	res := graphql.MarshalUpload(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNUploadFile2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUploadFileᚄ(ctx context.Context, v interface{}) ([]*model.UploadFile, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.UploadFile, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNUploadFile2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUploadFile(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNUploadFile2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUploadFile(ctx context.Context, v interface{}) (*model.UploadFile, error) {
-	res, err := ec.unmarshalInputUploadFile(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {

@@ -2,10 +2,10 @@ FROM node:gallium-alpine as ts-compiler
 WORKDIR /home/app
 
 COPY ./package.json .
-RUN yarn install
+RUN npm install
 
 COPY . .
-RUN yarn run build
+RUN npm run build
 
 FROM node:gallium-alpine as ts-remover
 WORKDIR /home/app
@@ -13,7 +13,7 @@ WORKDIR /home/app
 COPY --from=ts-compiler /home/app/package.json ./
 COPY --from=ts-compiler /home/app/dist ./
 
-RUN yarn install --production
+RUN npm install --production
 
 FROM node:gallium-alpine
 WORKDIR /home/app

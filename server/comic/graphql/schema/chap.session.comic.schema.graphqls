@@ -39,7 +39,7 @@ extend type Mutation {
   CreateComicChap(input: CreateComicChapInput!): ComicChap!
     @goField(forceResolver: true)
     @auth
-  AddImageToChap(req: [UploadFile!]!, chapID: String!): ComicChap!
+  AddImageToChap(chapID: String!): String
     @goField(forceResolver: true)
     @auth
   updateComicChap(chapID: String!, input: UpdateComicChapInput!): ComicChap!
@@ -51,11 +51,6 @@ extend type Mutation {
   DeleteChapImage(chapID: String!, imageID: [String!]!): ComicChap!
     @goField(forceResolver: true)
     @auth
-}
-
-input UploadFile {
-  id: Int!
-  file: Upload!
 }
 
 extend type Query {

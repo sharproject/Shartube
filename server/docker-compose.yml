@@ -137,6 +137,7 @@ services:
       - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
       - MEME_SERVER=http://shartube-meme-server:8080
       - USER_SERVER=http://shartube-user-server:8080
+      - CDN_SERVER=http://shartube-upload-server:3000/save
     ports:
       - "8080:8080"
   
