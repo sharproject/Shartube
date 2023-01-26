@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@augu/orchid": "^3.1.1",
-    "@wumpcord/rest": "^1.2.1",
+    "@wumpcord/rest": "github:wumpcord/rest",
     "cors": "^2.8.5",
     "discord-interactions": "^3.2.0",
     "dotenv": "^16.0.1",
