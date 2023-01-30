@@ -1,5 +1,5 @@
 import mongoose from 'npm:mongoose'
-export const timeByMinus = 180
+export const timeByMinus = 180 * 60
 
 const SessionSchema = new mongoose.Schema({
 	userID: { type: mongoose.Types.ObjectId, required: true },
@@ -12,7 +12,7 @@ export const SessionModel = mongoose.model<SessionType>(
 	SessionSchema
 )
 
-export interface SessionType {
+export interface SessionType extends mongoose.Document {
 	createdAt: Date
 	updatedAt: Date
 	userID: mongoose.Types.ObjectId

@@ -6,9 +6,6 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"log"
-	"net/url"
-	"os"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_model"
@@ -18,7 +15,7 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/model"
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
-	"github.com/sacOO7/gowebsocket"
+	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -76,26 +73,6 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 	}
 
 	// get data from comic model
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	socket := gowebsocket.New(u.String())
-
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
-	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
 
 	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/updateUserComic",
@@ -112,10 +89,8 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
+	r.Ws.WriteMessage(websocket.TextMessage, []byte(comicObject))
 
-	socket.Close()
 	return comicModel.FindById(comicID.Hex())
 }
 
@@ -172,26 +147,6 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	socket := gowebsocket.New(u.String())
-
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
-	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
 
 	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/DeleteComic",
@@ -208,12 +163,8 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
+	r.Ws.WriteMessage(websocket.TextMessage, comicObject)
 
-	socket.Close()
-
-	// send to user service to pull comic
 	return &model.DeleteResult{
 		Success: success,
 		ID:      ComicData.ID,

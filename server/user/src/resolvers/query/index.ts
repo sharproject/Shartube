@@ -7,75 +7,73 @@ import { PromiseOrType } from '../../types/util.ts'
 import { DecodeToken } from '../../util/Token.ts'
 
 export interface IQuery {
-	_service: (
-		root: unknown
-	) => {
-		sdl: string
-	}
-	_entities: (
-		root: {
-			[key: string]: unknown
-		},
-		args: {
-			representations: {
-				__typename: string
-				[key: string]: unknown
-			}[]
-		}
-	) => Promise<unknown[]>
-	Me(
-		root: IResolvers,
-		args: Record<string | number | symbol, never>,
-		context: any,
-		info: unknown
-	): Promise<User | typeof GQLError>
+  _service: (
+    root: unknown
+  ) => {
+    sdl: string
+  }
+  _entities: (
+    root: {
+      [key: string]: unknown
+    },
+    args: {
+      representations: {
+        __typename: string
+        [key: string]: unknown
+      }[]
+    }
+  ) => Promise<unknown[]>
+  Me(
+    root: IResolvers,
+    args: Record<string | number | symbol, never>,
+    context: any,
+    info: unknown
+  ): Promise<User | typeof GQLError>
 }
 
 export const query: IQuery = {
-	_service: () => {
-		const stringResult = TypeDefsString
-		return { sdl: stringResult }
-	},
-	_entities: async (root, args) => {
-		const returnValue = []
-		for (const data of args.representations) {
-			const TypeObj = root[data.__typename as string] as {
-				__resolveReference: (
-					reference: unknown
-				) => PromiseOrType<unknown | undefined>
-			}
-			const result = await TypeObj.__resolveReference(data)
-			if (typeof result != 'object') {
-				continue
-			}
-			returnValue.push({
-				...data,
-				...result,
-			})
-		}
-		return returnValue
-	},
-	Me: async (_r, _a, context) => {
-		if (!context.request.headers.get('authorization')) {
-			throw new GQLError({
-				type: 'Unauthorized',
-				message: 'You are not authorized to access this resource',
-			})
-		}
-		const UserSession = await DecodeToken(
-			context.request.headers.get('authorization').replace('Bearer ', ''),
-		)
-		if (!UserSession) {
-			throw new GQLError({
-				type: 'Unauthorized',
-				message: 'You are not authorized to access this resource',
-			})
-		}
-		return {
-			...(await UserModel.findOne({
-				_id: UserSession.userID,
-			})),
-			password: '',
-		}
-	},
+  _service: () => {
+    const stringResult = TypeDefsString
+    return { sdl: stringResult }
+  },
+  _entities: async (root, args) => {
+    const returnValue = [] as any[];
+    for (const data of args.representations) {
+      const TypeObj = root[data.__typename as string] as {
+        __resolveReference: (
+          reference: unknown
+        ) => PromiseOrType<unknown | undefined>
+      }
+      const result = await TypeObj.__resolveReference(data)
+      if (typeof result != 'object') {
+        continue
+      }
+      returnValue.push({
+        ...data,
+        ...result,
+      })
+    }
+    return returnValue
+  },
+  Me: async (_r, _a, context) => {
+    if (!context.request.headers.get('authorization')) {
+      throw new GQLError({
+        type: 'Unauthorized',
+        message: 'You are not authorized to access this resource',
+      })
+    }
+    const UserSession = await DecodeToken(
+      context.request.headers.get('authorization').replace('Bearer ', ''),
+    )
+    if (!UserSession) {
+      throw new GQLError({
+        type: 'Unauthorized',
+        message: 'You are not authorized to access this resource',
+      })
+    }
+    console.log(UserSession.userID.toHexString())
+    const user = (await UserModel.findById(UserSession.userID))
+    user.password = ""
+    return user
+  },
 }

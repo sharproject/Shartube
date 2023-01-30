@@ -11,9 +11,23 @@ import { Discord } from './discord'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import { w3cwebsocket as W3CWebSocket } from 'websocket'
+import multer from 'multer'
+import delay from 'delay'
+var tokenStrorage = new Map()
+interface SenderData {
+  url: string
+  header: unknown
+  payload: {
+    id: string
+    [key: string]: any
+  }
+  from: string
+  error?: string | null
+  type: 'rep' | 'message' | 'event'
+}
+let connectUrl = `ws://${process.env.WS_HOST}:${process.env.WS_PORT}/`
+let ClientSocket = new W3CWebSocket(connectUrl)
 ;(async () => {
-  let connectUrl = `ws://${process.env.WS_HOST}:${process.env.WS_PORT}/`
-  let ClientSocket = new W3CWebSocket(connectUrl)
   ClientSocket.onerror = function () {
     console.log('Connection Error')
   }
@@ -27,7 +41,30 @@ import { w3cwebsocket as W3CWebSocket } from 'websocket'
   }
 
   ClientSocket.onmessage = function (e) {
-    console.log(e)
+    let data = e.data
+    if (typeof data != 'string') {
+      return
+    }
+    let jsonData: SenderData = JSON.parse(data)
+    console.log(jsonData)
+    if (jsonData.type != 'message') return
+    if (jsonData.url == 'upload_token_registry/genToken') {
+      let { id, data, emit_to } = jsonData.payload
+      tokenStrorage.set(id, { data, emit_to })
+      // genToken
+      let responseData: SenderData = {
+        url: jsonData.from,
+        type: 'rep',
+        from: jsonData.url,
+        header: null,
+        error: null,
+        payload: {
+          id: id,
+          token: id,
+        },
+      }
+      ClientSocket.send(JSON.stringify(responseData))
+    }
   }
 })()
 
@@ -71,7 +108,7 @@ app.post('/', async (req, res) => {
   res.send('Hello World!')
 })
 
-app.post('/save', function (req, res) {
+app.post('/save', multer().any(), function (req, res) {
   const bot = new Discord(process.env.TOKEN || '')
   const { message } = req.body
 
@@ -96,6 +133,7 @@ app.post('/save', function (req, res) {
     res.send(data)
   })
 })
+
 server.on('listening', () => {
   console.log('Server is listening on port ', PORT)
   register(process.env.APPLICATION_ID || '', {
@@ -106,6 +144,6 @@ server.on('listening', () => {
 })
 server.listen(PORT)
 
-process.on('exit', () => {
-  process.exit(0)
-})
+// process.on('exit', () => {
+//   process.exit(0)
+// })

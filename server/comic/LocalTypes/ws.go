@@ -36,4 +36,5 @@ type WsReturnData[T any] struct {
 
 type GetUploadTokenReturn struct {
 	BaseReturn
+	Token *string `json:"token"`
 }

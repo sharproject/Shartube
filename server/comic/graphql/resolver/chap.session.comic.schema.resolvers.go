@@ -6,9 +6,7 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"log"
-	"net/url"
-	"os"
+	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -20,7 +18,6 @@ import (
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/sacOO7/gowebsocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -112,11 +109,6 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
 	requestId := uuid.New().String()
 	payload := struct {
 		ID       string `json:"id"`
@@ -144,14 +136,12 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 	if err != nil {
 		return nil, err
 	}
-	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	defer ws.Close()
-	ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
 	for {
-		_, message, err := ws.ReadMessage()
+		_, message, err := r.Ws.ReadMessage()
 		if err != nil {
 			return nil, err
 		}
@@ -167,7 +157,10 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 						Message: *data.Error,
 					}
 				}
-
+				fmt.Printf("%+v\n", data)
+				if data.Payload.Token != nil {
+					return data.Payload.Token, nil
+				}
 				return nil, &gqlerror.Error{
 					Message: "500 server error",
 				}
@@ -291,28 +284,8 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		return nil, err
 	}
 	// get data from comic model
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	socket := gowebsocket.New(u.String())
 
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
-	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
-
-	comicObjectData := LocalTypes.WsRequest{
+	chapObjectData := LocalTypes.WsRequest{
 		Url:     "subtitle/DeleteSubtitle",
 		Header:  nil,
 		Payload: imageID,
@@ -320,14 +293,11 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		Type:    "message",
 	}
 
-	comicObject, err := json.Marshal(comicObjectData)
+	chapObject, err := json.Marshal(chapObjectData)
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
-
-	socket.Close()
+	r.Ws.WriteMessage(websocket.TextMessage, chapObject)
 
 	for _, v := range imageID {
 		imageIndex := slices.IndexFunc(comicChapDoc.Images, func(ir *model.ImageResult) bool {

@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/directives"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/resolver"
@@ -14,6 +18,7 @@ import (
 	"github.com/Folody-Team/Shartube/util/getClient"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
@@ -43,8 +48,29 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
+
+	u := url.URL{
+		Scheme: "ws",
+		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
+		Path:   "/",
+	}
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	go func() {
+		for {
+			_, message, err := ws.ReadMessage()
+			if err != nil {
+				continue
+			}
+			if _, err := HandleWs(message); err != nil {
+				continue
+			}
+		}
+	}()
 	c := generated.Config{Resolvers: &resolver.Resolver{
-		Client: client,
+		Client: client, Ws: ws,
 	}}
 	c.Directives.Auth = directives.Auth
 
@@ -89,4 +115,16 @@ func main() {
 			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		)(router)))
 	}
+}
+
+func HandleWs(message []byte) (*interface{}, error) {
+	var data LocalTypes.WsReturnData[interface{}]
+	err := json.Unmarshal(message, &data)
+	if err != nil {
+		return nil, err
+	}
+	if data.Type == "rep" {
+		fmt.Printf("data: %v+\n", data)
+	}
+	return nil, nil
 }

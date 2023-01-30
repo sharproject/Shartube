@@ -11,7 +11,7 @@ import { User, UserModel } from '../model/user.ts'
 config({
 	path: PathJoin(import.meta.url, './../../.env'),
 })
-const DB_NAME = Deno.env.get('DB_NAME') || 'users'
+
 
 export interface IResolvers {
 	Query: IQuery

@@ -5,7 +5,7 @@ import { applyGraphQL } from 'https://deno.land/x/oak_graphql/mod.ts'
 import { resolvers } from './resolvers/index.ts'
 import { typeDefs } from './typeDefs/index.ts'
 import { WsListen } from './ws/index.ts'
-import mongoose from 'npm:mongoose'
+import mongoose from 'npm:mongoose@^6.9.0'
 import { getDbUrl } from './util/GetDBUrl.ts'
 import { UserModel } from './model/user.ts'
 import { TeamModel } from './model/team.ts'
@@ -15,7 +15,7 @@ config({
 })
 
 const app = new Application({
-	proxy:true
+	proxy: true,
 })
 new WsListen(`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`)
 
@@ -30,8 +30,15 @@ app.use(async (ctx, next) => {
 	const ms = Date.now() - start
 	ctx.response.headers.set('X-Response-Time', `${ms}ms`)
 })
-
-await mongoose.connect(getDbUrl())
+;(async () => {
+	try {
+		let url = getDbUrl()
+		console.log({ url })
+		await mongoose.connect(url, {})
+	} catch (error) {
+		console.log({ error })
+	}
+})()
 
 // endpoint for get user info by id
 app.use(async (ctx, next) => {
