@@ -13,7 +13,14 @@ import bodyParser from 'body-parser'
 import { w3cwebsocket as W3CWebSocket } from 'websocket'
 import multer from 'multer'
 import delay from 'delay'
-var tokenStrorage = new Map()
+var tokenStorage: Map<
+  string,
+  {
+    data: any
+    emit_to: string
+    event_name: string
+  }
+> = new Map()
 interface SenderData {
   url: string
   header: unknown
@@ -23,13 +30,15 @@ interface SenderData {
   }
   from: string
   error?: string | null
-  type: 'rep' | 'message' | 'event'
+  type: 'rep' | 'message'
 }
 let connectUrl = `ws://${process.env.WS_HOST}:${process.env.WS_PORT}/`
 let ClientSocket = new W3CWebSocket(connectUrl)
+let SocketIsClose = false
 ;(async () => {
   ClientSocket.onerror = function () {
     console.log('Connection Error')
+    SocketIsClose = true
   }
 
   ClientSocket.onopen = function () {
@@ -38,6 +47,7 @@ let ClientSocket = new W3CWebSocket(connectUrl)
 
   ClientSocket.onclose = function () {
     console.log('echo-protocol Client Closed')
+    SocketIsClose = true
   }
 
   ClientSocket.onmessage = function (e) {
@@ -49,8 +59,8 @@ let ClientSocket = new W3CWebSocket(connectUrl)
     console.log(jsonData)
     if (jsonData.type != 'message') return
     if (jsonData.url == 'upload_token_registry/genToken') {
-      let { id, data, emit_to } = jsonData.payload
-      tokenStrorage.set(id, { data, emit_to })
+      let { id, data, emit_to, event_name } = jsonData.payload
+      tokenStorage.set(id, { data, emit_to, event_name })
       // genToken
       let responseData: SenderData = {
         url: jsonData.from,
@@ -67,6 +77,50 @@ let ClientSocket = new W3CWebSocket(connectUrl)
     }
   }
 })()
+async function UploadImageSuccess(
+  url: string[],
+  id: string,
+): Promise<
+  [
+    boolean,
+    {
+      err: string
+    } | null,
+  ]
+> {
+  if (SocketIsClose) {
+    return [
+      false,
+      {
+        err: 'socket is close',
+      },
+    ]
+  }
+  let doc = tokenStorage.get(id)
+  if (!doc) {
+    return [
+      false,
+      {
+        err: 'token not found',
+      },
+    ]
+  }
+  let socketUrl = `${doc.emit_to}/${doc.event_name}`
+
+  let request: SenderData = {
+    type: 'message',
+    header: null,
+    from: 'upload_token_registry/user_upload_webhook',
+    url: socketUrl,
+    error: null,
+    payload: {
+      id: crypto.randomUUID(),
+      url,
+    },
+  }
+  ClientSocket.send(JSON.stringify(request))
+  return [true, null]
+}
 
 const app = express()
 const PORT = process.env.PORT || 3000 || 1688
@@ -108,7 +162,7 @@ app.post('/', async (req, res) => {
   res.send('Hello World!')
 })
 
-app.post('/save', multer().any(), function (req, res) {
+app.post('/save', multer().any(), async function (req, res) {
   const bot = new Discord(process.env.TOKEN || '')
   const { message } = req.body
 
@@ -118,20 +172,22 @@ app.post('/save', multer().any(), function (req, res) {
   const base64Image = message.split(';base64,').pop() as string
   const image = Buffer.from(base64Image, 'base64')
 
-  bot.rest(
+  let ResponseData = await bot.rest(
     `/channels/${process.env.CHANNEL_ID}/messages`,
     {
       files: image,
     },
     'POST',
   )
+  console.log(ResponseData)
 
-  bot.on('data', (imageData) => {
-    const newImageData = JSON.parse(imageData)
-    data = JSON.stringify(newImageData.attachments[0])
-    console.log({ 'newImageData.attachments': newImageData.attachments })
-    res.send(data)
-  })
+  // bot.on('data', (imageData) => {
+  //   const newImageData = JSON.parse(imageData)
+  //   data = JSON.stringify(newImageData.attachments[0])
+  //   console.log({ 'newImageData.attachments': newImageData.attachments })
+  //   // UploadImageSuccess([data])
+  //   res.send(data)
+  // })
 })
 
 server.on('listening', () => {

@@ -16,7 +16,7 @@ export async function register(
   const method = "post";
 
   const discord = new Discord(process.env.TOKEN || "");
-  discord.rest(
+  await discord.rest(
     endpoint,
     {
       body: command,
