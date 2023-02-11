@@ -9,7 +9,7 @@ interface CreateComic {
 input CreateComicInput {
   name: String!
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type CreateComicInputModel implements CreateComic {
@@ -35,7 +35,7 @@ type Comic implements CreateComic {
 input UpdateComicInput {
   name: String
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type DeleteResult {
@@ -49,8 +49,13 @@ type UpdateComicInputModel  {
   thumbnail: String
 }
 
+type CreateComicResponse{
+  comic:Comic!
+  UploadToken:String
+}
+
 extend type Mutation {
-  createComic(input: CreateComicInput!): Comic!
+  createComic(input: CreateComicInput!): CreateComicResponse!
     @goField(forceResolver: true)
     @auth
   updateComic(comicID: String!, input: UpdateComicInput!): Comic!

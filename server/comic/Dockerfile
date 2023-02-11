@@ -1,16 +1,16 @@
-FROM golang:alpine3.15 as golang-compiler
+FROM golang:alpine as golang-compiler
 WORKDIR /home/container
 COPY . .
 RUN go mod tidy
 RUN go get .
 RUN go build -o ./main.exe .
 
-FROM golang:alpine3.15 as golang-remover
+FROM golang:alpine as golang-remover
 WORKDIR /home/container
 COPY --from=golang-compiler /home/container ./
 
 
-FROM alpine:3.14
+FROM alpine
 WORKDIR /home/container
 
 COPY --from=golang-remover /home/container ./

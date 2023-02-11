@@ -1,45 +1,28 @@
-FROM node:gallium-alpine as ts-compiler
+FROM rust:alpine as rust-build
 WORKDIR /home/app
-RUN npm install -g npm@9.4.0
 
-RUN apk add --update \
-  python3 \
-  python3-dev \
-  py-pip \
-  build-base \
-  git \
-  openssh-client &&\
-  rm -rf /var/cache/apk/*
+RUN apk add git curl &&\
+      apk add pkgconfig openssl-dev gcc musl-dev rustup &&\
+      rm -rf /var/cache/apk/*
 
-COPY ./package.json .
-RUN npm install
+COPY Cargo.toml ./
+RUN mkdir src && echo 'fn main() {}' > src/main.rs
+
+RUN cargo fetch
+
+RUN mkdir -p src && echo 'fn main() {}' > src/main.rs
+RUN cargo build --release
+
+RUN rm -rf src
 
 COPY . .
-RUN npm run build
+# RUN rm -rf ./target/release/..fingerprint/upload_service*
+RUN rm -rf ./target/release/deps/upload_service*
+RUN cargo build --release
 
-FROM node:gallium-alpine as ts-remover
+FROM alpine
 WORKDIR /home/app
 
-RUN apk add --update \
-  python3 \
-  python3-dev \
-  py-pip \
-  build-base \
-  git \
-  openssh-client &&\
-  rm -rf /var/cache/apk/*
 
-
-RUN npm install -g npm@9.4.0
-
-COPY --from=ts-compiler /home/app/package.json ./
-COPY --from=ts-compiler /home/app/dist ./
-
-RUN npm install --production
-
-FROM node:gallium-alpine
-WORKDIR /home/app
-COPY --from=ts-remover /home/app ./
-ENV PORT=3000
-EXPOSE 3000
-CMD ["node","index.js"]
+COPY --from=rust-build /home/app/target/release/upload_service .
+CMD ["./upload_service"]

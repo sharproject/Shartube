@@ -6,7 +6,6 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -111,19 +110,17 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 
 	requestId := uuid.New().String()
 	payload := struct {
-		ID       string `json:"id"`
-		SaveData struct {
-			ChapId string `json:"chapId"`
-		} `json:"data"`
-		EmitTo string `json:"emit_to"`
+		ID        string                                     `json:"id"`
+		SaveData  LocalTypes.UploadedChapImagesSocketPayload `json:"data"`
+		EmitTo    string                                     `json:"emit_to"`
+		EventName string                                     `json:"event_name"`
 	}{
 		ID: requestId,
-		SaveData: struct {
-			ChapId string `json:"chapId"`
-		}{
+		SaveData: LocalTypes.UploadedChapImagesSocketPayload{
 			ChapId: chapID,
 		},
-		EmitTo: "comic",
+		EmitTo:    "comic",
+		EventName: "SocketAddImagesToChap",
 	}
 	requestData := LocalTypes.WsRequest{
 		Url:     "upload_token_registry/genToken",
@@ -157,51 +154,15 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 						Message: *data.Error,
 					}
 				}
-				fmt.Printf("%+v\n", data)
-				if data.Payload.Token != nil {
-					return data.Payload.Token, nil
-				}
-				return nil, &gqlerror.Error{
-					Message: "500 server error",
-				}
+				return &data.Payload.Token, nil
+
+				// return nil, &gqlerror.Error{
+				// 	Message: "500 server error",
+				// }
 
 			}
 		}
 	}
-
-	// ws message handler
-	// AllImages := comicChapDoc.Images
-	// ComicChapObjectId, err := primitive.ObjectIDFromHex(comicChapDoc.ID)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if _, err := comicChapModel.FindOneAndUpdate(bson.M{
-	// 	"_id": ComicChapObjectId,
-	// }, bson.M{
-	// 	"$set": bson.M{
-	// 		"Images": AllImages,
-	// 	},
-	// }); err != nil {
-	// 	return nil, err
-	// }
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// comicObjectData := LocalTypes.WsRequest{
-	// 	Url:     "subtitle/GenerationSubtitle",
-	// 	Header:  nil,
-	// 	Payload: AllImages,
-	// 	From:    "comic/AddImageForChap",
-	// 	Type:    "message",
-	// }
-
-	// comicObject, err := json.Marshal(comicObjectData)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// ws.WriteMessage(websocket.TextMessage,comicObject)
 }
 
 // UpdateComicChap is the resolver for the updateComicChap field.

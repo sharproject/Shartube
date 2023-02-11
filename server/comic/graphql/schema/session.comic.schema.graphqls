@@ -9,7 +9,7 @@ input CreateComicSessionInput {
   name: String!
   description: String
   comicID: String!
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type CreateComicSessionInputModel implements CreateComicSession {
@@ -38,7 +38,7 @@ type ComicSession implements CreateComicSession {
 input UpdateComicSessionInput {
   name: String
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type UpdateComicSessionInputModel {
@@ -47,8 +47,12 @@ type UpdateComicSessionInputModel {
   thumbnail: String
 }
 
+type CreateComicSessionResponse{
+  ComicSession:ComicSession!
+  UploadToken:String
+}
 extend type Mutation {
-  CreateComicSession(input: CreateComicSessionInput!): ComicSession!
+  CreateComicSession(input: CreateComicSessionInput!): CreateComicSessionResponse!
     @goField(forceResolver: true)
     @auth
   updateComicSession(

@@ -1,3 +1,2 @@
-package-look.json
-yarn.lock
-node_modules/
+/target
+

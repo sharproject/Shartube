@@ -32,9 +32,27 @@ type WsReturnData[T any] struct {
 	Payload T            `json:"payload"`
 	Type    string       `json:"type"`
 	Error   *string      `json:"error"`
+	From    string       `json:"from"`
 }
 
 type GetUploadTokenReturn struct {
 	BaseReturn
-	Token *string `json:"token"`
+	Token string `json:"token"`
+}
+
+type BaseUploadedSocketPayload[T any] struct {
+	BaseReturn
+	Data T        `json:"data"`
+	Url  []string `json:"url"`
+}
+type UploadedChapImagesSocketPayload struct {
+	ChapId string `json:"chapId"`
+}
+
+type UploadedComicThumbnailPayload struct {
+	ComicId string `json:"comicId"`
+}
+
+type UploadSessionComicThumbnailPayload struct {
+	ComicSessionId string `json:"comicSessionId"`
 }

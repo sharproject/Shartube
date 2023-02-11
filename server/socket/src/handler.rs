@@ -16,6 +16,13 @@ pub(crate) fn handler() {
         fn on_message(&mut self, msg: Message) -> Result<()> {
             // println!("Got message '{}'", msg);
             self.ws.broadcast(msg.clone())?;
+            match msg {
+                ws::Message::Text(t) => {
+                    let json_data = serde_json::from_str::<serde_json::Value>(&t.clone());
+                    println!("got the message {:#?}", json_data);
+                }
+                _ => {}
+            }
             Ok(())
         }
         fn on_close(&mut self, code: CloseCode, reason: &str) {
