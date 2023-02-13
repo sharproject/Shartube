@@ -51,7 +51,7 @@ func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{
 		Url:     "user/decodeToken",
 		Header:  nil,
 		Payload: &payload,
-		From:    "comic/auth",
+		From:    "ShortComic/auth",
 		Type:    "message",
 	}
 	requestDataBytes, err := json.Marshal(requestData)

@@ -4,8 +4,6 @@ package model
 
 import (
 	"time"
-
-	"github.com/99designs/gqlgen/graphql"
 )
 
 type CreateShortComic interface {
@@ -32,9 +30,9 @@ type CreateShortComicChapInputModel struct {
 func (CreateShortComicChapInputModel) IsCreateShortComicChap() {}
 
 type CreateShortComicInput struct {
-	Name        string          `json:"name"`
-	Description *string         `json:"description"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type CreateShortComicInputModel struct {
@@ -45,6 +43,11 @@ type CreateShortComicInputModel struct {
 }
 
 func (CreateShortComicInputModel) IsCreateShortComic() {}
+
+type CreateShortComicResponse struct {
+	ShortComic  *ShortComic `json:"ShortComic"`
+	UploadToken *string     `json:"UploadToken"`
+}
 
 type DeleteResult struct {
 	Success bool   `json:"success"`
@@ -93,9 +96,9 @@ type UpdateShortComicChapInput struct {
 }
 
 type UpdateShortComicInput struct {
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type UpdateShortComicInputModel struct {
@@ -104,9 +107,9 @@ type UpdateShortComicInputModel struct {
 	Thumbnail   *string `json:"thumbnail"`
 }
 
-type UploadFile struct {
-	ID   int            `json:"id"`
-	File graphql.Upload `json:"file"`
+type UpdateShortComicResponse struct {
+	ShortComic  *ShortComic `json:"ShortComic"`
+	UploadToken *string     `json:"UploadToken"`
 }
 
 type User struct {

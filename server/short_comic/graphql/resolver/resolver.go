@@ -1,6 +1,9 @@
 package resolver
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 //go:generate go run github.com/Folody-Team/Shartube/plugins
 // This file will not be regenerated automatically.
@@ -9,4 +12,5 @@ import "go.mongodb.org/mongo-driver/mongo"
 
 type Resolver struct {
 	Client *mongo.Client
+	Ws     *websocket.Conn
 }

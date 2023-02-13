@@ -11,7 +11,7 @@ func InitComicChapModel(client *mongo.Client) (*base_model.BaseModel[model.Creat
 	var UserModel = base_model.BaseModel[model.CreateShortComicChapInputModel, model.ShortComicChap]{
 		BaseModelInitValue: &base_model.BaseModelInitValue{
 			Client:         client,
-			CollectionName: "comic_chaps",
+			CollectionName: "short_comic_chaps",
 			Timestamp:      true,
 			DeleteAfter:    nil,
 		},
