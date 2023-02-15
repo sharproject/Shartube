@@ -67,6 +67,10 @@ func main() {
 		log.Fatalln(err)
 	}
 	go func() {
+		ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		for {
 			_, message, err := ws.ReadMessage()
 			if err != nil {
@@ -206,7 +210,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 			_, err = comicModel.FindOneAndUpdate(bson.M{
 				"_id": comicDocObjectId,
 			}, bson.M{
-				"thumbnail": data.Payload.Url[0],
+				"$set": bson.M{"thumbnail": data.Payload.Url[0]},
 			})
 			if err != nil {
 				return nil, err
@@ -228,7 +232,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 			_, err = comicSessionModel.FindOneAndUpdate(bson.M{
 				"_id": comicSessionDocObjectId,
 			}, bson.M{
-				"thumbnail": data.Payload.Url[0],
+				"$set": bson.M{"thumbnail": data.Payload.Url[0]},
 			})
 			if err != nil {
 				return nil, err

@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CreatedBy is the resolver for the CreatedBy field.
@@ -152,11 +153,10 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 			UploadToken: nil,
 		}, nil
 	}
-
 }
 
 // UpdateComic is the resolver for the updateComic field.
-func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, input model.UpdateComicInput) (*model.Comic, error) {
+func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, input model.UpdateComicInput) (*model.UploadComicResponse, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -178,9 +178,86 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 		}
 	}
 
-	return comicModel.FindOneAndUpdate(bson.M{
-		"_id": comic.ID,
-	}, input)
+	updateData := bson.M{}
+	if input.Description != nil {
+		updateData["description"] = input.Description
+	}
+	if input.Name != nil {
+		updateData["name"] = input.Name
+	}
+	comicObjectId, err := primitive.ObjectIDFromHex(comic.ID)
+	if err != nil {
+		return nil, err
+	}
+	comicDoc, err := comicModel.FindOneAndUpdate(bson.M{
+		"_id": comicObjectId,
+	}, bson.M{
+		"$set": updateData,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := struct {
+			ID        string                                   `json:"id"`
+			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
+			EmitTo    string                                   `json:"emit_to"`
+			EventName string                                   `json:"event_name"`
+		}{
+			ID: requestId,
+			SaveData: LocalTypes.UploadedComicThumbnailPayload{
+				ComicId: comicDoc.ID,
+			},
+			EmitTo:    "comic",
+			EventName: "SocketChangeComicThumbnail",
+		}
+		requestData := LocalTypes.WsRequest{
+			Url:     "upload_token_registry/genToken",
+			Header:  nil,
+			Payload: &payload,
+			From:    "comic/updateComic",
+			Type:    "message",
+		}
+		requestDataBytes, err := json.Marshal(requestData)
+		if err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		for {
+			_, message, err := r.Ws.ReadMessage()
+			if err != nil {
+				return nil, err
+			}
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			err = json.Unmarshal(message, &data)
+			if err != nil {
+				return nil, err
+			}
+			if data.Type == "rep" {
+				if data.Payload.ID == payload.ID {
+					if data.Error != nil {
+						return nil, &gqlerror.Error{
+							Message: *data.Error,
+						}
+					}
+					return &model.UploadComicResponse{
+						Comic:       comicDoc,
+						UploadToken: &data.Payload.Token,
+					}, nil
+				}
+			}
+		}
+	} else {
+		return &model.UploadComicResponse{
+			Comic:       comicDoc,
+			UploadToken: nil,
+		}, nil
+	}
+
 }
 
 // DeleteComic is the resolver for the DeleteComic field.

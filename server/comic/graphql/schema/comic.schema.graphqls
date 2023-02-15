@@ -53,12 +53,16 @@ type CreateComicResponse{
   comic:Comic!
   UploadToken:String
 }
+type UploadComicResponse{
+  comic:Comic!
+  UploadToken:String
+}
 
 extend type Mutation {
   createComic(input: CreateComicInput!): CreateComicResponse!
     @goField(forceResolver: true)
     @auth
-  updateComic(comicID: String!, input: UpdateComicInput!): Comic!
+  updateComic(comicID: String!, input: UpdateComicInput!): UploadComicResponse!
     @goField(forceResolver: true)
     @auth
   DeleteComic(comicID: String!): DeleteResult!

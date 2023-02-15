@@ -24,10 +24,6 @@ services:
       - shartube-comic-server
       - shartube-user-server
       - shartube-short-comic-server
-    environment:
-      - COMIC_SERVER_HOST=http://shartube-comic-server:8080/query
-      - USER_SERVER_HOST=http://shartube-user-server:8080/graphql
-      - SHORT_COMIC_SERVER_HOST=http://shartube-short-comic-server:8080/query
     build: ./graphql-gateway
     env_file:
       - ./graphql-gateway/.env

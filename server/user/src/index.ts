@@ -5,7 +5,7 @@ import { applyGraphQL } from 'https://deno.land/x/oak_graphql/mod.ts'
 import { resolvers } from './resolvers/index.ts'
 import { typeDefs } from './typeDefs/index.ts'
 import { WsListen } from './ws/index.ts'
-import mongoose from 'npm:mongoose@^6.9.0'
+import mongoose from 'npm:mongoose'
 import { getDbUrl } from './util/GetDBUrl.ts'
 import { UserModel } from './model/user.ts'
 import { TeamModel } from './model/team.ts'
@@ -33,7 +33,6 @@ app.use(async (ctx, next) => {
 ;(async () => {
 	try {
 		let url = getDbUrl()
-		console.log({ url })
 		await mongoose.connect(url, {})
 	} catch (error) {
 		console.log({ error })
@@ -43,19 +42,8 @@ app.use(async (ctx, next) => {
 // endpoint for get user info by id
 app.use(async (ctx, next) => {
 	const pathname = ctx.request.url.pathname.trim()
-	if (pathname.startsWith('/user/comics')) {
-		const id = ctx.request.url.searchParams.get('id')
-		if (!id) {
-			ctx.response.status = 400
-			ctx.response.body = 'id is required'
-			return
-		}
 
-		ctx.response.body = (
-			(await UserModel.findById(id)) || (await TeamModel.findById(id))
-		)?.comicIDs
-	}
-	if (pathname.startsWith('/user/info')) {
+	if (pathname.startsWith('public/user/info')) {
 		const id = ctx.request.url.searchParams.get('id')
 		if (!id) {
 			ctx.response.status = 400

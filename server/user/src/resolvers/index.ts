@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 
 import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
 import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'

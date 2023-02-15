@@ -1,26 +1,30 @@
-FROM node:gallium-alpine as ts-compiler
-WORKDIR /home/app
+FROM debian:stable-slim as install
+WORKDIR /app/dev
 
-COPY package.json .
+# install script needs curl or wget
+RUN apt update && apt install -y curl
+# We also need ca-certificates to trust certs
+RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-RUN yarn install
+RUN curl -sSL https://rover.apollo.dev/nix/latest | sh
+RUN mv /root/.rover/bin/rover ./rover
+
+RUN curl -sSL https://router.apollo.dev/download/nix/latest | sh
+
+FROM debian:stable-slim
+WORKDIR /app/dev
+
+COPY --from=install /app/dev .
+
+ENV APOLLO_ELV2_LICENSE=accept
+
+# We also need ca-certificates to trust certs
+RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt/lists/* && apt-get clean
+
+RUN echo "#!/usr/bin/env bash \
+    \n./rover supergraph compose --config supergraph.yaml > supergraph.graphql && ./router -s supergraph.graphql -c router.yaml" > run.sh
+RUN chmod 755 ./run.sh
 
 COPY . .
 
-RUN yarn run build
-
-
-FROM node:gallium-alpine as ts-remover
-WORKDIR /home/app
-
-COPY --from=ts-compiler /home/app/package.json ./
-COPY --from=ts-compiler /home/app/dist ./
-
-RUN yarn install --production
-
-FROM node:gallium-alpine
-WORKDIR /home/app
-COPY --from=ts-remover /home/app ./
-ENV PORT=2100
-EXPOSE 2100
-CMD ["node","index.js"]
+ENTRYPOINT [ "./run.sh" ]

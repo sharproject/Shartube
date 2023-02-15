@@ -162,6 +162,16 @@ type UpdateComicSessionInputModel struct {
 	Thumbnail   *string `json:"thumbnail"`
 }
 
+type UpdateComicSessionResponse struct {
+	ComicSession *ComicSession `json:"ComicSession"`
+	UploadToken  *string       `json:"UploadToken"`
+}
+
+type UploadComicResponse struct {
+	Comic       *Comic  `json:"comic"`
+	UploadToken *string `json:"UploadToken"`
+}
+
 type User struct {
 	ID       string    `json:"_id" bson:"_id"`
 	Comics   []*Comic  `json:"comics"`

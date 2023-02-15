@@ -10,12 +10,21 @@ import mongoose from 'npm:mongoose'
 config({
 	path: PathJoin(import.meta.url, '..', '..', '.env'),
 })
+async function import_key(path: string) {
+	console.log({ path })
+	const decoder = new TextDecoder('utf-8')
+	const json_data = JSON.parse(decoder.decode(Deno.readFileSync(path)))
+	const imported_key = await crypto.subtle.importKey(
+		'jwk',
+		json_data,
+		{ name: 'HMAC', hash: 'SHA-512' },
+		json_data.ext,
+		json_data.key_ops
+	)
+	return imported_key
+}
 
-const key = await crypto.subtle.generateKey(
-	{ name: 'HMAC', hash: 'SHA-512' },
-	true,
-	['sign', 'verify']
-)
+const key = await import_key(PathJoin(new URL('.', import.meta.url).pathname, '../secret/key.private'))
 
 export async function GenToken(userID: string) {
 	const session = await new SessionModel({

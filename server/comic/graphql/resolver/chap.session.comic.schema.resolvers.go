@@ -219,8 +219,8 @@ func (r *mutationResolver) DeleteComicChap(ctx context.Context, chapID string) (
 	}, nil
 }
 
-// DeleteChapImage is the resolver for the DeleteChapImage field.
-func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, imageID []string) (*model.ComicChap, error) {
+// DeleteComicChapImage is the resolver for the DeleteComicChapImage field.
+func (r *mutationResolver) DeleteComicChapImage(ctx context.Context, chapID string, imageID []string) (*model.ComicChap, error) {
 	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
 	if err != nil {
 		return nil, err

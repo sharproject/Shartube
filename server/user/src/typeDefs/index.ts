@@ -1,4 +1,4 @@
-import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
+import { gql } from 'https://deno.land/x/oak_graphql/mod.ts'
 
 export const TypeDefsString = `
 	type _Service {
@@ -33,6 +33,8 @@ export const TypeDefsString = `
 		updatedAt: Time!
 		isTeam: Boolean
   		member: [String]
+		ShortComicIDs:[String]!
+		comicIDs:[String]!
   		owner: String
 	}
 	type UserLoginOrRegisterResponse {
@@ -57,9 +59,9 @@ export const TypeDefsString = `
 	extend type Query {
 		_entities(representations: [_Any!]!): [_Entity]!
 		Me: User!
+		PageFromId(id:String!):User
 	}
-`;
+`
 export const typeDefs = gql`
 	${TypeDefsString}
-`;
-
+`
