@@ -13,4 +13,7 @@ subgraphs:
     routing_url: http://shartube-short-comic-server:8080/query
     schema:
       subgraph_url: http://shartube-short-comic-server:8080/query
-
+  like-service:
+    routing_url: http://shartube-like-server:8080/graphql
+    schema:
+      subgraph_url: http://shartube-like-server:8080/graphql

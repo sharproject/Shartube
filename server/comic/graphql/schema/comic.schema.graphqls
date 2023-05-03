@@ -43,19 +43,19 @@ type DeleteResult {
   id: String!
 }
 
-type UpdateComicInputModel  {
+type UpdateComicInputModel {
   name: String
   description: String
   thumbnail: String
 }
 
-type CreateComicResponse{
-  comic:Comic!
-  UploadToken:String
+type CreateComicResponse {
+  comic: Comic!
+  UploadToken: String
 }
-type UploadComicResponse{
-  comic:Comic!
-  UploadToken:String
+type UploadComicResponse {
+  comic: Comic!
+  UploadToken: String
 }
 
 extend type Mutation {

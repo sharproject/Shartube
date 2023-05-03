@@ -1,4 +1,4 @@
-version: "3.6"
+# version: "3.6"
 
 services:
   shartube-db:
@@ -90,9 +90,6 @@ services:
     depends_on:
       - shartube-db
     build: ./user
-    environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
     env_file:
       - ./user/.env
       - ./.base.env
@@ -143,6 +140,7 @@ services:
       - shartube-net
     depends_on:
       - shartube-db
+      - shartube-ws-server
     build: ./meme
     env_file:
       - ./.base.env
@@ -151,6 +149,22 @@ services:
       - 8080
     environment:
       - PORT=8080
+  shartube-like-server:
+    container_name: shartube-like-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-db
+      - shartube-ws-server
+    build: ./like-service
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080  	
+   
 
 networks:
   shartube-net:

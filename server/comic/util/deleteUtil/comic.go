@@ -28,12 +28,12 @@ func DeleteComic(id string, client *mongo.Client) (bool, error) {
 			return false, err
 		}
 		for _, ChapID := range ComicSessionData.ChapIds {
-			_, err = DeleteChap(ChapID, client, false)
+			_, err = DeleteComicChap(ChapID, client, false)
 			if err != nil {
 				return false, err
 			}
 		}
-		DeleteSession(sessionID, client, false)
+		DeleteComicSession(sessionID, client, false)
 	}
 	_, err = ComicModel.FindOneAndDeleteById(id)
 	if err != nil {

@@ -209,7 +209,7 @@ func (r *mutationResolver) DeleteComicChap(ctx context.Context, chapID string) (
 	if CreateID != comicChap.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
-	success, err := deleteUtil.DeleteChap(comicChap.ID, r.Client, true)
+	success, err := deleteUtil.DeleteComicChap(comicChap.ID, r.Client, true)
 	if err != nil {
 		return nil, err
 	}

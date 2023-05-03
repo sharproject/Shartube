@@ -15,13 +15,13 @@ RUN cargo build --release
 RUN rm -rf src
 
 COPY . .
-# RUN rm -rf ./target/release/..fingerprint/upload_service*
-# RUN rm -rf ./target/release/deps/upload_service*
+# RUN rm -rf ./target/release/..fingerprint/like-service*
+# RUN rm -rf ./target/release/deps/like-service*
 RUN cargo build --release
 
 FROM alpine
 WORKDIR /home/app
 
 
-COPY --from=rust-build /home/app/target/release/upload_service .
-CMD ["./upload_service"]
+COPY --from=rust-build /home/app/target/release/like-service .
+CMD ["./like-service"]

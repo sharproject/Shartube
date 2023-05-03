@@ -271,11 +271,12 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 				}
 			}
 		}
-	}else {
-	return &model.UpdateComicSessionResponse{
-		ComicSession: comicSessionDoc,
-		UploadToken:  nil,
-	}, nil}
+	} else {
+		return &model.UpdateComicSessionResponse{
+			ComicSession: comicSessionDoc,
+			UploadToken:  nil,
+		}, nil
+	}
 }
 
 // DeleteComicSession is the resolver for the DeleteComicSession field.
@@ -297,7 +298,7 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 	if CreateID != comicSession.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
-	success, err := deleteUtil.DeleteSession(sessionID, r.Client, true)
+	success, err := deleteUtil.DeleteComicSession(sessionID, r.Client, true)
 	if err != nil {
 		return nil, err
 	}
