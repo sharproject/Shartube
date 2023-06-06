@@ -8,16 +8,14 @@ RUN apk add git curl &&\
 COPY Cargo.toml ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 
-RUN cargo fetch
-
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 RUN rm -rf src
 
 COPY . .
 # RUN rm -rf ./target/release/..fingerprint/upload_service*
 # RUN rm -rf ./target/release/deps/upload_service*
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 FROM alpine
 WORKDIR /home/app

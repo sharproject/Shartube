@@ -8,7 +8,7 @@ use ws::listen;
 fn get_host() -> String {
     match std::env::var("HOST") {
         Ok(host) => host,
-        Err(_) => "localhost".to_string(),
+        Err(_) => "0.0.0.0".to_string(),
     }
 }
 

@@ -133,6 +133,8 @@ services:
       - CDN_SERVER=http://shartube-upload-server:3000/save
     ports:
       - "8080:8080"
+    volumes:
+      - ./api-gateway/config.json:/home/container/config.json
   
   shartube-meme-server:
     container_name: shartube-meme-server

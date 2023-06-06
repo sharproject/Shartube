@@ -1,13 +1,14 @@
 FROM golang:alpine as golang-compiler
 WORKDIR /home/container
+ENV CGO_ENABLED=0
+COPY go.* .
+RUN go mod download
 COPY . .
-RUN go mod tidy
-RUN go get .
-RUN go build -o ./main.exe .
+RUN --mount=type=cache,target=/root/.cache/go-build go build -o main.exe .
 
 FROM golang:alpine as golang-remover
 WORKDIR /home/container
-COPY --from=golang-compiler /home/container ./
+COPY --from=golang-compiler /home/container/main.exe ./
 
 
 FROM alpine

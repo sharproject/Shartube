@@ -1,1 +1,2 @@
-go.sum
+.gitignore
+config.json

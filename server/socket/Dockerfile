@@ -1,19 +1,18 @@
 FROM rust:alpine as rust-build
 WORKDIR /home/app
 
-COPY Cargo.toml ./
-RUN mkdir src && echo 'fn main() {}' > src/main.rs
-
-RUN cargo fetch
+COPY Cargo.toml Cargo.lock ./
 
 RUN mkdir -p src && echo 'fn main() {}' > src/main.rs
-RUN cargo build --release
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
+
 
 RUN rm -rf src
 
-COPY . .
-RUN cargo build --release
-RUN rm ./target/release/deps/socket*
+COPY ./src ./src
+
+RUN rm -rf ./target/release/deps/socket*
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 FROM alpine
 WORKDIR /home/app
