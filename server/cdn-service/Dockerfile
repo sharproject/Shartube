@@ -5,16 +5,16 @@ RUN apk add git curl &&\
       apk add pkgconfig openssl-dev gcc musl-dev rustup &&\
       rm -rf /var/cache/apk/*
 
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 RUN rm -rf src
 
-COPY . .
+COPY ./src ./src
 # RUN rm -rf ./target/release/..fingerprint/upload_service*
-# RUN rm -rf ./target/release/deps/upload_service*
+RUN rm -rf ./target/release/deps/upload_service*
 RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 FROM alpine

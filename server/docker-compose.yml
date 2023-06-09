@@ -1,8 +1,8 @@
 # version: "3.6"
 
 services:
-  shartube-db:
-    container_name: shartube-db
+  shartube-mongo-db:
+    container_name: shartube-mongo-db
     image: mongo
     networks:
       - shartube-net
@@ -38,8 +38,8 @@ services:
     restart: always
     expose:
       - 3012
-    environment:
-      - HOST=shartube-ws-server
+    # environment:
+    #   - HOST=shartube-ws-server
     env_file:
       - ./.base.env
 
@@ -48,12 +48,10 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-user-server
     build: ./comic
     environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
@@ -68,12 +66,10 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-user-server
     build: ./short_comic
     environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
@@ -88,7 +84,7 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
     build: ./user
     env_file:
       - ./user/.env
@@ -96,6 +92,8 @@ services:
     restart: always
     expose:
       - 8080
+    volumes:
+      - ./user/src/secret/key.private:/app/src/secret/key.private
 
   shartube-upload-server:
     container_name: shartube-upload-server
@@ -141,7 +139,7 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-ws-server
     build: ./meme
     env_file:
@@ -156,7 +154,7 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-ws-server
     build: ./like-service
     env_file:
