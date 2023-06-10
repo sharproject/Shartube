@@ -11,9 +11,9 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/model"
 )
 
-// FindComicChapByID is the resolver for the findComicChapByID field.
-func (r *entityResolver) FindComicChapByID(ctx context.Context, id string) (*model.ComicChap, error) {
-	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+// FindChapByID is the resolver for the findChapByID field.
+func (r *entityResolver) FindChapByID(ctx context.Context, id string) (*model.Chap, error) {
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}

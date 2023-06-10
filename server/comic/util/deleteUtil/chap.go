@@ -9,7 +9,7 @@ import (
 )
 
 func DeleteComicChap(id string, client *mongo.Client, update bool) (bool, error) {
-	chapModel, err := comic_chap_model.InitComicChapModel(client)
+	chapModel, err := comic_chap_model.InitChapModel(client)
 	if err != nil {
 		return false, err
 	}
@@ -30,20 +30,22 @@ func DeleteComicChap(id string, client *mongo.Client, update bool) (bool, error)
 	if err != nil {
 		return false, err
 	}
-	ComicSessionObjectID, err := primitive.ObjectIDFromHex(chap.SessionID)
-	if err != nil {
-		return false, err
-	}
-	if update {
-		_, err = ComicSessionModel.UpdateOne(bson.M{
-			"_id": ComicSessionObjectID,
-		}, bson.M{
-			"$pull": bson.M{
-				"ChapIds": ComicChapObjectID,
-			},
-		})
+	if chap.SessionID != nil {
+		ComicSessionObjectID, err := primitive.ObjectIDFromHex(*chap.SessionID)
 		if err != nil {
 			return false, err
+		}
+		if update {
+			_, err = ComicSessionModel.UpdateOne(bson.M{
+				"_id": ComicSessionObjectID,
+			}, bson.M{
+				"$pull": bson.M{
+					"ChapIds": ComicChapObjectID,
+				},
+			})
+			if err != nil {
+				return false, err
+			}
 		}
 	}
 	return true, nil

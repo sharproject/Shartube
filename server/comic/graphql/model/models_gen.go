@@ -6,17 +6,33 @@ import (
 	"time"
 )
 
-type CreateComic interface {
-	IsCreateComic()
+type CreateChap interface {
+	IsCreateChap()
 }
 
-type CreateComicChap interface {
-	IsCreateComicChap()
+type CreateComic interface {
+	IsCreateComic()
 }
 
 type CreateComicSession interface {
 	IsCreateComicSession()
 }
+
+type Chap struct {
+	ID          string         `json:"_id" bson:"_id"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	CreatedBy   *User          `json:"CreatedBy"`
+	CreatedByID string         `json:"CreatedByID"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description"`
+	SessionID   *string        `json:"SessionID"`
+	Session     *ComicSession  `json:"Session"`
+	Images      []*ImageResult `json:"Images"`
+}
+
+func (Chap) IsCreateChap() {}
+func (Chap) IsEntity()     {}
 
 type Comic struct {
 	ID          string          `json:"_id" bson:"_id"`
@@ -33,53 +49,37 @@ type Comic struct {
 
 func (Comic) IsCreateComic() {}
 
-type ComicChap struct {
-	ID          string         `json:"_id" bson:"_id"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	CreatedBy   *User          `json:"CreatedBy"`
-	CreatedByID string         `json:"CreatedByID"`
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	SessionID   string         `json:"SessionID"`
-	Session     *ComicSession  `json:"Session"`
-	Images      []*ImageResult `json:"Images"`
-}
-
-func (ComicChap) IsCreateComicChap() {}
-func (ComicChap) IsEntity()          {}
-
 type ComicSession struct {
-	ID          string       `json:"_id" bson:"_id"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	UpdatedAt   time.Time    `json:"updatedAt"`
-	CreatedBy   *User        `json:"CreatedBy"`
-	CreatedByID string       `json:"CreatedByID"`
-	Name        string       `json:"name"`
-	Description *string      `json:"description"`
-	ComicID     string       `json:"comicID"`
-	Comic       *Comic       `json:"Comic"`
-	Chaps       []*ComicChap `json:"Chaps"`
-	ChapIds     []string     `json:"ChapIds"`
-	Thumbnail   *string      `json:"thumbnail"`
+	ID          string    `json:"_id" bson:"_id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	CreatedBy   *User     `json:"CreatedBy"`
+	CreatedByID string    `json:"CreatedByID"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	ComicID     string    `json:"comicID"`
+	Comic       *Comic    `json:"Comic"`
+	Chaps       []*Chap   `json:"Chaps"`
+	ChapIds     []string  `json:"ChapIds"`
+	Thumbnail   *string   `json:"thumbnail"`
 }
 
 func (ComicSession) IsCreateComicSession() {}
 
-type CreateComicChapInput struct {
+type CreateChapInput struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
-	SessionID   string  `json:"SessionID"`
+	SessionID   *string `json:"SessionID"`
 }
 
-type CreateComicChapInputModel struct {
+type CreateChapInputModel struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 	CreatedByID string  `json:"CreatedByID"`
-	SessionID   string  `json:"SessionID"`
+	SessionID   *string `json:"SessionID"`
 }
 
-func (CreateComicChapInputModel) IsCreateComicChap() {}
+func (CreateChapInputModel) IsCreateChap() {}
 
 type CreateComicInput struct {
 	Name        string  `json:"name"`
@@ -133,7 +133,7 @@ type ImageResult struct {
 	URL string `json:"Url"`
 }
 
-type UpdateComicChapInput struct {
+type UpdateChapInput struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }

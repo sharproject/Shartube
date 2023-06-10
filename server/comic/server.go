@@ -143,7 +143,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				return nil, err
 			}
 			fmt.Printf("data.Payload.Data.ChapId: %v\n", data.Payload.Data.ChapId)
-			comicChapModel, err := comic_chap_model.InitComicChapModel(Client)
+			comicChapModel, err := comic_chap_model.InitChapModel(Client)
 			if err != nil {
 				return nil, err
 			}

@@ -80,21 +80,21 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}()
 
 		switch typeName {
-		case "ComicChap":
-			resolverName, err := entityResolverNameForComicChap(ctx, rep)
+		case "Chap":
+			resolverName, err := entityResolverNameForChap(ctx, rep)
 			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "ComicChap": %w`, err)
+				return fmt.Errorf(`finding resolver for Entity "Chap": %w`, err)
 			}
 			switch resolverName {
 
-			case "findComicChapByID":
+			case "findChapByID":
 				id0, err := ec.unmarshalNID2string(ctx, rep["_id"])
 				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findComicChapByID(): %w`, err)
+					return fmt.Errorf(`unmarshalling param 0 for findChapByID(): %w`, err)
 				}
-				entity, err := ec.resolvers.Entity().FindComicChapByID(ctx, id0)
+				entity, err := ec.resolvers.Entity().FindChapByID(ctx, id0)
 				if err != nil {
-					return fmt.Errorf(`resolving Entity "ComicChap": %w`, err)
+					return fmt.Errorf(`resolving Entity "Chap": %w`, err)
 				}
 
 				list[idx[i]] = entity
@@ -189,7 +189,7 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 	}
 }
 
-func entityResolverNameForComicChap(ctx context.Context, rep map[string]interface{}) (string, error) {
+func entityResolverNameForChap(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
 			m   map[string]interface{}
@@ -201,9 +201,9 @@ func entityResolverNameForComicChap(ctx context.Context, rep map[string]interfac
 		if _, ok = m["_id"]; !ok {
 			break
 		}
-		return "findComicChapByID", nil
+		return "findChapByID", nil
 	}
-	return "", fmt.Errorf("%w for ComicChap", ErrTypeNotFound)
+	return "", fmt.Errorf("%w for Chap", ErrTypeNotFound)
 }
 
 func entityResolverNameForUser(ctx context.Context, rep map[string]interface{}) (string, error) {
