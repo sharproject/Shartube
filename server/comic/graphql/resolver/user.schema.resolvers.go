@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Folody-Team/Shartube/database/comic_model"
 	"github.com/Folody-Team/Shartube/graphql/generated"
@@ -22,6 +23,11 @@ func (r *userResolver) Comics(ctx context.Context, obj *model.User) ([]*model.Co
 	return comicModel.Find(bson.M{
 		"createdbyid": obj.ID,
 	})
+}
+
+// ShortComics is the resolver for the ShortComics field.
+func (r *userResolver) ShortComics(ctx context.Context, obj *model.User) ([]*model.ShortComic, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // User returns generated.UserResolver implementation.

@@ -2,17 +2,20 @@ interface CreateChap {
   name: String!
   description: String
   SessionID: String
+  ShortComicID: String
 }
 input CreateChapInput {
   name: String!
   description: String
   SessionID: String
+  ShortComicID: String
 }
 type CreateChapInputModel implements CreateChap {
   name: String!
   description: String
   CreatedByID: String!
   SessionID: String
+  ShortComicID: String
 }
 type ImageResult {
   ID: String!
@@ -27,7 +30,9 @@ type Chap implements CreateChap @key(fields: "_id") {
   name: String!
   description: String
   SessionID: String
+  ShortComicID: String
   Session: ComicSession @goField(forceResolver: true)
+  ShortComic: ShortComic @goField(forceResolver: true)
   Images: [ImageResult!]!
 }
 
@@ -36,18 +41,12 @@ input UpdateChapInput {
   description: String
 }
 extend type Mutation {
-  CreateChap(input: CreateChapInput!): Chap!
-    @goField(forceResolver: true)
-    @auth
-  AddImageToChap(chapID: String!): String
-    @goField(forceResolver: true)
-    @auth
+  CreateChap(input: CreateChapInput!): Chap! @goField(forceResolver: true) @auth
+  AddImageToChap(chapID: String!): String @goField(forceResolver: true) @auth
   UpdateChap(chapID: String!, input: UpdateChapInput!): Chap!
     @goField(forceResolver: true)
     @auth
-  DeleteChap(chapID: String!): DeleteResult!
-    @goField(forceResolver: true)
-    @auth
+  DeleteChap(chapID: String!): DeleteResult! @goField(forceResolver: true) @auth
   DeleteChapImage(chapID: String!, imageID: [String!]!): Chap!
     @goField(forceResolver: true)
     @auth

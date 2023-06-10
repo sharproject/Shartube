@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -38,6 +39,11 @@ func (r *chapResolver) Session(ctx context.Context, obj *model.Chap) (*model.Com
 		return nil, nil
 	}
 	return comicSessionModel.FindById(*obj.SessionID)
+}
+
+// ShortComic is the resolver for the ShortComic field.
+func (r *chapResolver) ShortComic(ctx context.Context, obj *model.Chap) (*model.ShortComic, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // CreateChap is the resolver for the CreateChap field.
