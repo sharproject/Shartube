@@ -1535,7 +1535,7 @@ extend type Query {
     @goField(forceResolver: true)
 }
 `, BuiltIn: false},
-	{Name: "../schema/short.comic.schem.graphqls", Input: `interface CreateShortComic {
+	{Name: "../schema/short.comic.schema.graphqls", Input: `interface CreateShortComic {
   name: String!
   description: String
   thumbnail: String
@@ -1603,7 +1603,7 @@ extend type Mutation {
 }
 extend type Query {
   ShortComics: [ShortComic!]! @goField(forceResolver: true)
-  ShortComicByID(id:String!): ShortComic @goField(forceResolver: true)
+  ShortComicByID(id: String!): ShortComic @goField(forceResolver: true)
 }
 `, BuiltIn: false},
 	{Name: "../schema/user.schema.graphqls", Input: `extend type User @key(fields: "_id")  {
