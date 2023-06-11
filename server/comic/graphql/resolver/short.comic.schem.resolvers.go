@@ -9,10 +9,13 @@ import (
 	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
+	"github.com/Folody-Team/Shartube/database/comic_chap_model"
 	"github.com/Folody-Team/Shartube/database/short_comic_model"
 	"github.com/Folody-Team/Shartube/directives"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
+	"github.com/Folody-Team/Shartube/util"
+	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -137,22 +140,95 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 
 // DeleteShortComic is the resolver for the DeleteShortComic field.
 func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID string) (*model.DeleteResult, error) {
-	panic(fmt.Errorf("not implemented"))
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
+	ShortComicData, err := ShortComicModel.FindById(shortComicID)
+	if err != nil {
+		return nil, err
+	}
+	if ShortComicData == nil {
+		return nil, &gqlerror.Error{
+			Message: "comic not found",
+		}
+	}
+	if ShortComicData.CreatedByID != CreateID {
+		return nil, &gqlerror.Error{
+			Message: "Access Denied",
+		}
+	}
+	success, err := deleteUtil.DeleteShortComic(shortComicID, r.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	comicObjectData := LocalTypes.WsRequest{
+		Url:    "user/DeleteShortComic",
+		Header: nil,
+		Payload: bson.M{
+			"_id":    shortComicID,
+			"UserID": CreateID,
+		},
+		From: "ShortComic/DeleteComic",
+		Type: "message",
+	}
+
+	comicObject, err := json.Marshal(comicObjectData)
+	if err != nil {
+		return nil, err
+	}
+	r.Ws.WriteMessage(websocket.TextMessage, comicObject)
+
+	return &model.DeleteResult{
+		Success: success,
+		ID:      ShortComicData.ID,
+	}, nil
 }
 
 // ShortComics is the resolver for the ShortComics field.
 func (r *queryResolver) ShortComics(ctx context.Context) ([]*model.ShortComic, error) {
-	panic(fmt.Errorf("not implemented"))
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	return ShortComicModel.Find(bson.D{})
+}
+
+// ShortComicByID is the resolver for the ShortComicByID field.
+func (r *queryResolver) ShortComicByID(ctx context.Context, id string) (*model.ShortComic, error) {
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return ShortComicModel.FindById(id)
 }
 
 // CreatedBy is the resolver for the CreatedBy field.
 func (r *shortComicResolver) CreatedBy(ctx context.Context, obj *model.ShortComic) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	return util.GetUserByID(obj.CreatedByID)
 }
 
 // Chap is the resolver for the Chap field.
 func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([]*model.Chap, error) {
-	panic(fmt.Errorf("not implemented"))
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	comicChaps := []*model.Chap{}
+
+	for _, id := range obj.ChapIDs {
+		chap, err := comicChapModel.FindById(id)
+		if err != nil {
+			return nil, err
+		}
+		comicChaps = append(comicChaps, chap)
+	}
+
+	return comicChaps, nil
 }
 
 // ShortComic returns generated.ShortComicResolver implementation.
