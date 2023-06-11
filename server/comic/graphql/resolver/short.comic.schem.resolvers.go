@@ -6,7 +6,6 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -20,6 +19,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CreateShortComic is the resolver for the createShortComic field.
@@ -135,7 +135,103 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 
 // UpdateShortComic is the resolver for the updateShortComic field.
 func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID string, input model.UpdateShortComicInput) (*model.UpdateShortComicResponse, error) {
-	panic(fmt.Errorf("not implemented"))
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
+
+	ShortComic, err := ShortComicModel.FindById(shortComicID)
+	if err != nil {
+		return nil, err
+	}
+	if ShortComic == nil {
+		return nil, &gqlerror.Error{
+			Message: "comic not found",
+		}
+	}
+	if ShortComic.CreatedByID != CreateID {
+		return nil, &gqlerror.Error{
+			Message: "Access Denied",
+		}
+	}
+	ShortComicObjectId, err := primitive.ObjectIDFromHex(ShortComic.ID)
+	if err != nil {
+		return nil, err
+	}
+	updateData := bson.M{}
+	if input.Description != nil {
+		updateData["description"] = input.Description
+	}
+	if input.Name != nil {
+		updateData["name"] = input.Name
+	}
+	ShortComicDoc, err := ShortComicModel.FindOneAndUpdate(bson.M{
+		"_id": ShortComicObjectId,
+	}, bson.M{"$set": updateData})
+	if err != nil {
+		return nil, err
+	}
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := struct {
+			ID        string                                   `json:"id"`
+			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
+			EmitTo    string                                   `json:"emit_to"`
+			EventName string                                   `json:"event_name"`
+		}{
+			ID: requestId,
+			SaveData: LocalTypes.UploadedComicThumbnailPayload{
+				ComicId: ShortComicDoc.ID,
+			},
+			EmitTo:    "ShortComic",
+			EventName: "SocketChangeComicThumbnail",
+		}
+		requestData := LocalTypes.WsRequest{
+			Url:     "upload_token_registry/genToken",
+			Header:  nil,
+			Payload: &payload,
+			From:    "ShortComic/updateShortComic",
+			Type:    "message",
+		}
+		requestDataBytes, err := json.Marshal(requestData)
+		if err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		for {
+			_, message, err := r.Ws.ReadMessage()
+			if err != nil {
+				return nil, err
+			}
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			err = json.Unmarshal(message, &data)
+			if err != nil {
+				return nil, err
+			}
+			if data.Type == "rep" {
+				if data.Payload.ID == requestId {
+					if data.Error != nil {
+						return nil, &gqlerror.Error{
+							Message: *data.Error,
+						}
+					}
+					return &model.UpdateShortComicResponse{
+						ShortComic:  ShortComicDoc,
+						UploadToken: &data.Payload.Token,
+					}, nil
+				}
+			}
+		}
+	} else {
+		return &model.UpdateShortComicResponse{
+			ShortComic:  ShortComicDoc,
+			UploadToken: nil,
+		}, nil
+	}
 }
 
 // DeleteShortComic is the resolver for the DeleteShortComic field.
