@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"log"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,15 +31,41 @@ func setupProxy(app *fiber.App) {
 
 	api := app.Group("/api") // /api
 
-	app.Use("/meme/*", ProxyHandler(os.Getenv("MEME_SERVER")))
-	api.Use("/meme/*", ProxyHandler(os.Getenv("MEME_SERVER")))
+	configFile, err := os.ReadFile(path.Join(get__dirname(), "config.json"))
+	if err != nil {
+		panic(err)
+	}
 
+	var serviceList []ServiceInfo
+	err = json.Unmarshal([]byte(configFile), &serviceList)
+	if err != nil {
+		panic(err)
+	}
+	env_prefix := "env_"
 	// proxy.Forward
-	app.Use("/graphql/*", ProxyHandler(os.Getenv("GRAPHQL_SERVER")))
-	api.Use("/graphql/*", ProxyHandler(os.Getenv("GRAPHQL_SERVER")))
+	for _, v := range serviceList {
+		// if don't provide url
+		if strings.HasPrefix(v.Url, env_prefix) {
+			v.Url = strings.TrimSpace(os.Getenv(v.Url[len(env_prefix):]))
+		}
+		// byteArray, err := json.MarshalIndent(v, "", "  ")
+		// if err != nil {
+		// 	fmt.Println(err)
+		// }
+		// fmt.Println(string(byteArray))
+		if len(v.Url) <= 0 {
+			continue
+		}
 
-	app.Use("/user/*", ProxyHandler(os.Getenv("USER_SERVER")))
-	api.Use("/user/*", ProxyHandler(os.Getenv("USER_SERVER")))
+		app.Use(v.Endpoint, ProxyHandler(v.Url))
+		api.Use(v.Endpoint, ProxyHandler(v.Url))
+	}
+
+}
+
+type ServiceInfo struct {
+	Endpoint string `json:"endpoint"`
+	Url      string `json:"url"`
 }
 
 func main() {
@@ -58,7 +86,7 @@ func ProxyHandler(path string) func(*fiber.Ctx) error {
 			log.Println(err)
 			return err
 		}
-		url = strings.ReplaceAll(url,"%3F","?");
+		url = strings.ReplaceAll(url, "%3F", "?")
 		if err := proxy.Do(c, url); err != nil {
 			return err
 		}
@@ -66,4 +94,14 @@ func ProxyHandler(path string) func(*fiber.Ctx) error {
 		c.Response().Header.Del(fiber.HeaderServer)
 		return nil
 	}
+}
+
+// =>> js name
+func get__dirname() string {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := path.Dir(ex)
+	return exPath
 }

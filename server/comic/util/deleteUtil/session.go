@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func DeleteSession(id string, client *mongo.Client, update bool) (bool, error) {
+func DeleteComicSession(id string, client *mongo.Client, update bool) (bool, error) {
 	ComicSessionModel, err := comic_session_model.InitComicSessionModel(client)
 	if err != nil {
 		return false, err
@@ -36,7 +36,7 @@ func DeleteSession(id string, client *mongo.Client, update bool) (bool, error) {
 		return false, err
 	}
 	for _, v := range comicSession.ChapIds {
-		_, err = DeleteChap(v, client, false)
+		_, err = DeleteComicChap(v, client, false)
 		if err != nil {
 			return false, err
 		}

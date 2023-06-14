@@ -4,8 +4,6 @@ package model
 
 import (
 	"time"
-
-	"github.com/99designs/gqlgen/graphql"
 )
 
 type CreateComic interface {
@@ -84,9 +82,9 @@ type CreateComicChapInputModel struct {
 func (CreateComicChapInputModel) IsCreateComicChap() {}
 
 type CreateComicInput struct {
-	Name        string          `json:"name"`
-	Description *string         `json:"description"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type CreateComicInputModel struct {
@@ -98,11 +96,16 @@ type CreateComicInputModel struct {
 
 func (CreateComicInputModel) IsCreateComic() {}
 
+type CreateComicResponse struct {
+	Comic       *Comic  `json:"comic"`
+	UploadToken *string `json:"UploadToken"`
+}
+
 type CreateComicSessionInput struct {
-	Name        string          `json:"name"`
-	Description *string         `json:"description"`
-	ComicID     string          `json:"comicID"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	ComicID     string  `json:"comicID"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type CreateComicSessionInputModel struct {
@@ -114,6 +117,11 @@ type CreateComicSessionInputModel struct {
 }
 
 func (CreateComicSessionInputModel) IsCreateComicSession() {}
+
+type CreateComicSessionResponse struct {
+	ComicSession *ComicSession `json:"ComicSession"`
+	UploadToken  *string       `json:"UploadToken"`
+}
 
 type DeleteResult struct {
 	Success bool   `json:"success"`
@@ -131,9 +139,9 @@ type UpdateComicChapInput struct {
 }
 
 type UpdateComicInput struct {
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type UpdateComicInputModel struct {
@@ -143,9 +151,9 @@ type UpdateComicInputModel struct {
 }
 
 type UpdateComicSessionInput struct {
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	Thumbnail   *graphql.Upload `json:"thumbnail"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
 }
 
 type UpdateComicSessionInputModel struct {
@@ -154,9 +162,14 @@ type UpdateComicSessionInputModel struct {
 	Thumbnail   *string `json:"thumbnail"`
 }
 
-type UploadFile struct {
-	ID   int            `json:"id"`
-	File graphql.Upload `json:"file"`
+type UpdateComicSessionResponse struct {
+	ComicSession *ComicSession `json:"ComicSession"`
+	UploadToken  *string       `json:"UploadToken"`
+}
+
+type UploadComicResponse struct {
+	Comic       *Comic  `json:"comic"`
+	UploadToken *string `json:"UploadToken"`
 }
 
 type User struct {

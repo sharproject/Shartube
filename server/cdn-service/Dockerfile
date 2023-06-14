@@ -1,23 +1,25 @@
-FROM node:gallium-alpine as ts-compiler
+FROM rust:alpine as rust-build
 WORKDIR /home/app
 
-COPY ./package.json .
-RUN yarn install
+RUN apk add git curl &&\
+      apk add pkgconfig openssl-dev gcc musl-dev rustup &&\
+      rm -rf /var/cache/apk/*
 
-COPY . .
-RUN yarn run build
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo 'fn main() {}' > src/main.rs
 
-FROM node:gallium-alpine as ts-remover
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
+
+RUN rm -rf src
+
+COPY ./src ./src
+# RUN rm -rf ./target/release/..fingerprint/upload_service*
+RUN rm -rf ./target/release/deps/upload_service*
+RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
+
+FROM alpine
 WORKDIR /home/app
 
-COPY --from=ts-compiler /home/app/package.json ./
-COPY --from=ts-compiler /home/app/dist ./
 
-RUN yarn install --production
-
-FROM node:gallium-alpine
-WORKDIR /home/app
-COPY --from=ts-remover /home/app ./
-ENV PORT=3000
-EXPOSE 3000
-CMD ["node","index.js"]
+COPY --from=rust-build /home/app/target/release/upload_service .
+CMD ["./upload_service"]

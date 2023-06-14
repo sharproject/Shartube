@@ -10,7 +10,7 @@ func InitComicModel(client *mongo.Client) (*base_model.BaseModel[model.CreateSho
 	var UserModel = base_model.BaseModel[model.CreateShortComicInputModel, model.ShortComic]{
 		BaseModelInitValue: &base_model.BaseModelInitValue{
 			Client:         client,
-			CollectionName: "comics",
+			CollectionName: "short_comics",
 			Timestamp:      true,
 			DeleteAfter:    nil,
 		},

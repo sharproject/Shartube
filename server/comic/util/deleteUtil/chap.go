@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func DeleteChap(id string, client *mongo.Client, update bool) (bool, error) {
+func DeleteComicChap(id string, client *mongo.Client, update bool) (bool, error) {
 	chapModel, err := comic_chap_model.InitComicChapModel(client)
 	if err != nil {
 		return false, err

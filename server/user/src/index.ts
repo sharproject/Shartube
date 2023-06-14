@@ -15,7 +15,7 @@ config({
 })
 
 const app = new Application({
-	proxy:true
+	proxy: true,
 })
 new WsListen(`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`)
 
@@ -30,25 +30,20 @@ app.use(async (ctx, next) => {
 	const ms = Date.now() - start
 	ctx.response.headers.set('X-Response-Time', `${ms}ms`)
 })
-
-await mongoose.connect(getDbUrl())
+;(async () => {
+	try {
+		let url = getDbUrl()
+		await mongoose.connect(url, {})
+	} catch (error) {
+		console.log({ error })
+	}
+})()
 
 // endpoint for get user info by id
 app.use(async (ctx, next) => {
 	const pathname = ctx.request.url.pathname.trim()
-	if (pathname.startsWith('/user/comics')) {
-		const id = ctx.request.url.searchParams.get('id')
-		if (!id) {
-			ctx.response.status = 400
-			ctx.response.body = 'id is required'
-			return
-		}
 
-		ctx.response.body = (
-			(await UserModel.findById(id)) || (await TeamModel.findById(id))
-		)?.comicIDs
-	}
-	if (pathname.startsWith('/user/info')) {
+	if (pathname.startsWith('public/user/info')) {
 		const id = ctx.request.url.searchParams.get('id')
 		if (!id) {
 			ctx.response.status = 400

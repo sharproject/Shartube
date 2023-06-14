@@ -1,6 +1,6 @@
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 import { GQLError } from 'https://deno.land/x/oak_graphql/mod.ts'
 import { IResolvers } from 'https://deno.land/x/oak_graphql@0.6.4/graphql-tools/utils/Interfaces.ts'
+import { Team, TeamModel } from '../../model/team.ts'
 import { User, UserModel } from '../../model/user.ts'
 import { TypeDefsString } from '../../typeDefs/index.ts'
 import { PromiseOrType } from '../../types/util.ts'
@@ -29,6 +29,12 @@ export interface IQuery {
 		context: any,
 		info: unknown
 	): Promise<User | typeof GQLError>
+	PageFromId(
+		root: IResolvers,
+		args: { id: string },
+		context: any,
+		info: unknown
+	): Promise<User | typeof GQLError | null | undefined | Team>
 }
 
 export const query: IQuery = {
@@ -37,7 +43,7 @@ export const query: IQuery = {
 		return { sdl: stringResult }
 	},
 	_entities: async (root, args) => {
-		const returnValue = []
+		const returnValue = [] as any[]
 		for (const data of args.representations) {
 			const TypeObj = root[data.__typename as string] as {
 				__resolveReference: (
@@ -63,7 +69,7 @@ export const query: IQuery = {
 			})
 		}
 		const UserSession = await DecodeToken(
-			context.request.headers.get('authorization').replace('Bearer ', ''),
+			context.request.headers.get('authorization').replace('Bearer ', '')
 		)
 		if (!UserSession) {
 			throw new GQLError({
@@ -71,11 +77,17 @@ export const query: IQuery = {
 				message: 'You are not authorized to access this resource',
 			})
 		}
-		return {
-			...(await UserModel.findOne({
-				_id: UserSession.userID,
-			})),
-			password: '',
+		const user = await UserModel.findById(UserSession.userID)
+		if (user) {
+			user.password = ''
 		}
+		console.log(user?.toJSON())
+		return user
+	},
+	PageFromId: async (_root, arg, _ctx) => {
+		const user =
+			(await UserModel.findById(arg.id))?.toObject<User>() ||
+			(await TeamModel.findById(arg.id))?.toObject<Team>()
+		return user
 	},
 }

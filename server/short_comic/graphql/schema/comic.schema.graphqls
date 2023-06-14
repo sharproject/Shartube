@@ -9,7 +9,7 @@ interface CreateShortComic {
 input CreateShortComicInput {
   name: String!
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type CreateShortComicInputModel implements CreateShortComic {
@@ -35,7 +35,7 @@ type ShortComic implements CreateShortComic {
 input UpdateShortComicInput {
   name: String
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
 }
 
 type DeleteResult {
@@ -49,11 +49,21 @@ type UpdateShortComicInputModel  {
   thumbnail: String
 }
 
+type CreateShortComicResponse{
+  ShortComic:ShortComic!
+  UploadToken:String
+}
+
+type UpdateShortComicResponse{
+  ShortComic:ShortComic!
+  UploadToken:String
+}
+
 extend type Mutation {
-  createShortComic(input: CreateShortComicInput!): ShortComic!
+  createShortComic(input: CreateShortComicInput!): CreateShortComicResponse!
     @goField(forceResolver: true)
     @auth
-  updateShortComic(ShortComicID: String!, input: UpdateShortComicInput!): ShortComic!
+  updateShortComic(ShortComicID: String!, input: UpdateShortComicInput!): UpdateShortComicResponse!
     @goField(forceResolver: true)
     @auth
   DeleteShortComic(ShortComicID: String!): DeleteResult!

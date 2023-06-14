@@ -6,9 +6,6 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"log"
-	"net/url"
-	"os"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -18,13 +15,15 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/model"
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
-	"github.com/sacOO7/gowebsocket"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CreateShortComic is the resolver for the createShortComic field.
-func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.CreateShortComicInput) (*model.ShortComic, error) {
+func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.CreateShortComicInput) (*model.CreateShortComicResponse, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -35,13 +34,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		return nil, err
 	}
 	ThumbnailUrl := ""
-	if input.Thumbnail != nil {
-		ThumbnailUrlPointer, err := util.UploadImageForGraphql(*input.Thumbnail)
-		if err != nil {
-			return nil, err
-		}
-		ThumbnailUrl = *ThumbnailUrlPointer
-	}
+
 	comicID, err := comicModel.New(&model.CreateShortComicInputModel{
 		CreatedByID: CreateID,
 		Name:        input.Name,
@@ -52,29 +45,6 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	if err != nil {
 		return nil, err
 	}
-
-	// get data from comic model
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	socket := gowebsocket.New(u.String())
-
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
-	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
-
 	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/UpdateUserShortComic",
 		Header: nil,
@@ -82,7 +52,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 			"_id":    comicID.Hex(),
 			"UserID": CreateID,
 		},
-		From: "ShortComic/CreateShortComic",
+		From: "ShortComic/createComic",
 		Type: "message",
 	}
 
@@ -90,15 +60,81 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
+	r.Ws.WriteMessage(websocket.TextMessage, []byte(comicObject))
+	// get data from comic model
+	comicDoc, err := comicModel.FindById(comicID.Hex())
+	if err != nil {
+		return nil, err
+	}
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := struct {
+			ID        string                                   `json:"id"`
+			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
+			EmitTo    string                                   `json:"emit_to"`
+			EventName string                                   `json:"event_name"`
+		}{
+			ID: requestId,
+			SaveData: LocalTypes.UploadedComicThumbnailPayload{
+				ComicId: comicDoc.ID,
+			},
+			EmitTo:    "ShortComic",
+			EventName: "SocketChangeComicThumbnail",
+		}
+		requestData := LocalTypes.WsRequest{
+			Url:     "upload_token_registry/genToken",
+			Header:  nil,
+			Payload: &payload,
+			From:    "ShortComic/addImages",
+			Type:    "message",
+		}
+		requestDataBytes, err := json.Marshal(requestData)
+		if err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		for {
+			_, message, err := r.Ws.ReadMessage()
+			if err != nil {
+				return nil, err
+			}
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			err = json.Unmarshal(message, &data)
+			if err != nil {
+				return nil, err
+			}
+			if data.Type == "rep" {
+				if data.Payload.ID == requestId {
+					if data.Error != nil {
+						return nil, &gqlerror.Error{
+							Message: *data.Error,
+						}
+					}
+					return &model.CreateShortComicResponse{
+						ShortComic:  comicDoc,
+						UploadToken: &data.Payload.Token,
+					}, nil
 
-	socket.Close()
-	return comicModel.FindById(comicID.Hex())
+					// return nil, &gqlerror.Error{
+					// 	Message: "500 server error",
+					// }
+
+				}
+			}
+		}
+	} else {
+		return &model.CreateShortComicResponse{
+			ShortComic:  comicDoc,
+			UploadToken: nil,
+		}, nil
+	}
 }
 
 // UpdateShortComic is the resolver for the updateShortComic field.
-func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID string, input model.UpdateShortComicInput) (*model.ShortComic, error) {
+func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID string, input model.UpdateShortComicInput) (*model.UpdateShortComicResponse, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -119,10 +155,83 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 			Message: "Access Denied",
 		}
 	}
-
-	return comicModel.FindOneAndUpdate(bson.M{
-		"_id": comic.ID,
-	}, input)
+	comicObjectId, err := primitive.ObjectIDFromHex(comic.ID)
+	if err != nil {
+		return nil, err
+	}
+	updateData := bson.M{}
+	if input.Description != nil {
+		updateData["description"] = input.Description
+	}
+	if input.Name != nil {
+		updateData["name"] = input.Name
+	}
+	comicDoc, err := comicModel.FindOneAndUpdate(bson.M{
+		"_id": comicObjectId,
+	}, bson.M{"$set": updateData})
+	if err != nil {
+		return nil, err
+	}
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := struct {
+			ID        string                                   `json:"id"`
+			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
+			EmitTo    string                                   `json:"emit_to"`
+			EventName string                                   `json:"event_name"`
+		}{
+			ID: requestId,
+			SaveData: LocalTypes.UploadedComicThumbnailPayload{
+				ComicId: comicDoc.ID,
+			},
+			EmitTo:    "ShortComic",
+			EventName: "SocketChangeComicThumbnail",
+		}
+		requestData := LocalTypes.WsRequest{
+			Url:     "upload_token_registry/genToken",
+			Header:  nil,
+			Payload: &payload,
+			From:    "ShortComic/updateShortComic",
+			Type:    "message",
+		}
+		requestDataBytes, err := json.Marshal(requestData)
+		if err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, err
+		}
+		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		for {
+			_, message, err := r.Ws.ReadMessage()
+			if err != nil {
+				return nil, err
+			}
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			err = json.Unmarshal(message, &data)
+			if err != nil {
+				return nil, err
+			}
+			if data.Type == "rep" {
+				if data.Payload.ID == requestId {
+					if data.Error != nil {
+						return nil, &gqlerror.Error{
+							Message: *data.Error,
+						}
+					}
+					return &model.UpdateShortComicResponse{
+						ShortComic:  comicDoc,
+						UploadToken: &data.Payload.Token,
+					}, nil
+				}
+			}
+		}
+	} else {
+		return &model.UpdateShortComicResponse{
+			ShortComic:  comicDoc,
+			UploadToken: nil,
+		}, nil
+	}
 }
 
 // DeleteShortComic is the resolver for the DeleteShortComic field.
@@ -150,26 +259,6 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 	if err != nil {
 		return nil, err
 	}
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	socket := gowebsocket.New(u.String())
-
-	socket.OnConnected = func(socket gowebsocket.Socket) {
-		log.Println("Connected to server")
-	}
-
-	socket.OnTextMessage = func(message string, socket gowebsocket.Socket) {
-		log.Println("Got messages " + message)
-	}
-
-	socket.Connect()
-
-	if err != nil {
-		return nil, err
-	}
 
 	comicObjectData := LocalTypes.WsRequest{
 		Url:    "user/DeleteShortComic",
@@ -186,12 +275,8 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 	if err != nil {
 		return nil, err
 	}
-	comicObjectString := string(comicObject)
-	socket.SendText(comicObjectString)
+	r.Ws.WriteMessage(websocket.TextMessage, comicObject)
 
-	socket.Close()
-
-	// send to user service to pull comic
 	return &model.DeleteResult{
 		Success: success,
 		ID:      ComicData.ID,
@@ -215,19 +300,22 @@ func (r *shortComicResolver) CreatedBy(ctx context.Context, obj *model.ShortComi
 
 // Chap is the resolver for the Chap field.
 func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([]*model.ShortComicChap, error) {
-	ComicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	AllComicSession := []*model.ShortComicChap{}
-	for _, v := range obj.ChapIDs {
-		data, err := ComicChapModel.FindById(v)
+
+	comicChaps := []*model.ShortComicChap{}
+
+	for _, id := range obj.ChapIDs {
+		chap, err := comicChapModel.FindById(id)
 		if err != nil {
 			return nil, err
 		}
-		AllComicSession = append(AllComicSession, data)
+		comicChaps = append(comicChaps, chap)
 	}
-	return AllComicSession, nil
+
+	return comicChaps, nil
 }
 
 // ShortComic returns generated.ShortComicResolver implementation.

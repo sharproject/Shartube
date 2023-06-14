@@ -1,8 +1,8 @@
-version: "3.6"
+# version: "3.6"
 
 services:
-  shartube-db:
-    container_name: shartube-db
+  shartube-mongo-db:
+    container_name: shartube-mongo-db
     image: mongo
     networks:
       - shartube-net
@@ -24,10 +24,6 @@ services:
       - shartube-comic-server
       - shartube-user-server
       - shartube-short-comic-server
-    environment:
-      - COMIC_SERVER_HOST=http://shartube-comic-server:8080/query
-      - USER_SERVER_HOST=http://shartube-user-server:8080/graphql
-      - SHORT_COMIC_SERVER_HOST=http://shartube-short-comic-server:8080/query
     build: ./graphql-gateway
     env_file:
       - ./graphql-gateway/.env
@@ -42,8 +38,8 @@ services:
     restart: always
     expose:
       - 3012
-    environment:
-      - HOST=shartube-ws-server
+    # environment:
+    #   - HOST=shartube-ws-server
     env_file:
       - ./.base.env
 
@@ -52,12 +48,10 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-user-server
     build: ./comic
     environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
@@ -72,12 +66,10 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
       - shartube-user-server
     build: ./short_comic
     environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
@@ -92,17 +84,16 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
     build: ./user
-    environment:
-      - WS_HOST=shartube-ws-server
-      - WS_PORT=3012
     env_file:
       - ./user/.env
       - ./.base.env
     restart: always
     expose:
       - 8080
+    volumes:
+      - ./user/src/secret/key.private:/app/src/secret/key.private
 
   shartube-upload-server:
     container_name: shartube-upload-server
@@ -137,15 +128,19 @@ services:
       - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
       - MEME_SERVER=http://shartube-meme-server:8080
       - USER_SERVER=http://shartube-user-server:8080
+      - CDN_SERVER=http://shartube-upload-server:3000/save
     ports:
       - "8080:8080"
+    volumes:
+      - ./api-gateway/config.json:/home/container/config.json
   
   shartube-meme-server:
     container_name: shartube-meme-server
     networks:
       - shartube-net
     depends_on:
-      - shartube-db
+      - shartube-mongo-db
+      - shartube-ws-server
     build: ./meme
     env_file:
       - ./.base.env
@@ -154,6 +149,22 @@ services:
       - 8080
     environment:
       - PORT=8080
+  shartube-like-server:
+    container_name: shartube-like-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-mongo-db
+      - shartube-ws-server
+    build: ./like-service
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080  	
+   
 
 networks:
   shartube-net:

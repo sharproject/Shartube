@@ -13,11 +13,11 @@ import (
 
 // FindShortComicChapByID is the resolver for the findShortComicChapByID field.
 func (r *entityResolver) FindShortComicChapByID(ctx context.Context, id string) (*model.ShortComicChap, error) {
-	ComicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	return ComicChapModel.FindOneAndDeleteById(id)
+	return comicChapModel.FindById(id)
 }
 
 // FindUserByID is the resolver for the findUserByID field.

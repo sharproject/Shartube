@@ -15,8 +15,8 @@ export function getDbUrl() {
 		)}`
 		dbUrl += '/?authSource=admin&readPreference=primary&ssl=false'
 	} else {
-		dbUrl += `mongodb+srv://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}`
-		dbUrl += `/${DB_NAME}?retryWrites=true&w=majority`
-    }
-    return dbUrl
+		dbUrl += `mongodb+srv://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority`
+	}
+	console.log(dbUrl)
+	return dbUrl
 }

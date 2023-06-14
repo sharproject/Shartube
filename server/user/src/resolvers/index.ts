@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
 
 import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
 import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
@@ -11,7 +10,7 @@ import { User, UserModel } from '../model/user.ts'
 config({
 	path: PathJoin(import.meta.url, './../../.env'),
 })
-const DB_NAME = Deno.env.get('DB_NAME') || 'users'
+
 
 export interface IResolvers {
 	Query: IQuery
