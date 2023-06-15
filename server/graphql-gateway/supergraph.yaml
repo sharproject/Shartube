@@ -1,4 +1,4 @@
-federation_version: 2
+# federation_version: 2
 
 subgraphs:
   comic-service:
@@ -9,8 +9,6 @@ subgraphs:
     routing_url: http://shartube-user-server:8080/graphql
     schema:
       subgraph_url: http://shartube-user-server:8080/graphql
-  short_comic-service:
-    routing_url: http://shartube-short-comic-server:8080/query
     schema:
       subgraph_url: http://shartube-short-comic-server:8080/query
   like-service:

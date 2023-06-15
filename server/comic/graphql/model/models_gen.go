@@ -6,17 +6,39 @@ import (
 	"time"
 )
 
-type CreateComic interface {
-	IsCreateComic()
+type CreateChap interface {
+	IsCreateChap()
 }
 
-type CreateComicChap interface {
-	IsCreateComicChap()
+type CreateComic interface {
+	IsCreateComic()
 }
 
 type CreateComicSession interface {
 	IsCreateComicSession()
 }
+
+type CreateShortComic interface {
+	IsCreateShortComic()
+}
+
+type Chap struct {
+	ID           string         `json:"_id" bson:"_id"`
+	CreatedAt    time.Time      `json:"createdAt"`
+	UpdatedAt    time.Time      `json:"updatedAt"`
+	CreatedBy    *User          `json:"CreatedBy"`
+	CreatedByID  string         `json:"CreatedByID"`
+	Name         string         `json:"name"`
+	Description  *string        `json:"description"`
+	SessionID    *string        `json:"SessionID"`
+	ShortComicID *string        `json:"ShortComicID"`
+	Session      *ComicSession  `json:"Session"`
+	ShortComic   *ShortComic    `json:"ShortComic"`
+	Images       []*ImageResult `json:"Images"`
+}
+
+func (Chap) IsCreateChap() {}
+func (Chap) IsEntity()     {}
 
 type Comic struct {
 	ID          string          `json:"_id" bson:"_id"`
@@ -33,53 +55,39 @@ type Comic struct {
 
 func (Comic) IsCreateComic() {}
 
-type ComicChap struct {
-	ID          string         `json:"_id" bson:"_id"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	CreatedBy   *User          `json:"CreatedBy"`
-	CreatedByID string         `json:"CreatedByID"`
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	SessionID   string         `json:"SessionID"`
-	Session     *ComicSession  `json:"Session"`
-	Images      []*ImageResult `json:"Images"`
-}
-
-func (ComicChap) IsCreateComicChap() {}
-func (ComicChap) IsEntity()          {}
-
 type ComicSession struct {
-	ID          string       `json:"_id" bson:"_id"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	UpdatedAt   time.Time    `json:"updatedAt"`
-	CreatedBy   *User        `json:"CreatedBy"`
-	CreatedByID string       `json:"CreatedByID"`
-	Name        string       `json:"name"`
-	Description *string      `json:"description"`
-	ComicID     string       `json:"comicID"`
-	Comic       *Comic       `json:"Comic"`
-	Chaps       []*ComicChap `json:"Chaps"`
-	ChapIds     []string     `json:"ChapIds"`
-	Thumbnail   *string      `json:"thumbnail"`
+	ID          string    `json:"_id" bson:"_id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	CreatedBy   *User     `json:"CreatedBy"`
+	CreatedByID string    `json:"CreatedByID"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	ComicID     string    `json:"comicID"`
+	Comic       *Comic    `json:"Comic"`
+	Chaps       []*Chap   `json:"Chaps"`
+	ChapIds     []string  `json:"ChapIds"`
+	Thumbnail   *string   `json:"thumbnail"`
 }
 
 func (ComicSession) IsCreateComicSession() {}
 
-type CreateComicChapInput struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	SessionID   string  `json:"SessionID"`
+type CreateChapInput struct {
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	SessionID    *string `json:"SessionID"`
+	ShortComicID *string `json:"ShortComicID"`
 }
 
-type CreateComicChapInputModel struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	CreatedByID string  `json:"CreatedByID"`
-	SessionID   string  `json:"SessionID"`
+type CreateChapInputModel struct {
+	Name         string  `json:"name"`
+	Description  *string `json:"description"`
+	CreatedByID  string  `json:"CreatedByID"`
+	SessionID    *string `json:"SessionID"`
+	ShortComicID *string `json:"ShortComicID"`
 }
 
-func (CreateComicChapInputModel) IsCreateComicChap() {}
+func (CreateChapInputModel) IsCreateChap() {}
 
 type CreateComicInput struct {
 	Name        string  `json:"name"`
@@ -123,6 +131,26 @@ type CreateComicSessionResponse struct {
 	UploadToken  *string       `json:"UploadToken"`
 }
 
+type CreateShortComicInput struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
+}
+
+type CreateShortComicInputModel struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	CreatedByID string  `json:"CreatedByID"`
+	Thumbnail   *string `json:"thumbnail"`
+}
+
+func (CreateShortComicInputModel) IsCreateShortComic() {}
+
+type CreateShortComicResponse struct {
+	ShortComic  *ShortComic `json:"ShortComic"`
+	UploadToken *string     `json:"UploadToken"`
+}
+
 type DeleteResult struct {
 	Success bool   `json:"success"`
 	ID      string `json:"id"`
@@ -133,7 +161,22 @@ type ImageResult struct {
 	URL string `json:"Url"`
 }
 
-type UpdateComicChapInput struct {
+type ShortComic struct {
+	ID          string    `json:"_id" bson:"_id"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	CreatedBy   *User     `json:"CreatedBy"`
+	CreatedByID string    `json:"CreatedByID"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	ChapIDs     []string  `json:"ChapIDs"`
+	Chap        []*Chap   `json:"Chap"`
+	Thumbnail   *string   `json:"thumbnail"`
+}
+
+func (ShortComic) IsCreateShortComic() {}
+
+type UpdateChapInput struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }
@@ -167,15 +210,34 @@ type UpdateComicSessionResponse struct {
 	UploadToken  *string       `json:"UploadToken"`
 }
 
+type UpdateShortComicInput struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *bool   `json:"thumbnail"`
+}
+
+type UpdateShortComicInputModel struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Thumbnail   *string `json:"thumbnail"`
+}
+
+type UpdateShortComicResponse struct {
+	ShortComic  *ShortComic `json:"ShortComic"`
+	UploadToken *string     `json:"UploadToken"`
+}
+
 type UploadComicResponse struct {
 	Comic       *Comic  `json:"comic"`
 	UploadToken *string `json:"UploadToken"`
 }
 
 type User struct {
-	ID       string    `json:"_id" bson:"_id"`
-	Comics   []*Comic  `json:"comics"`
-	ComicIDs []*string `json:"comicIDs"`
+	ID            string        `json:"_id" bson:"_id"`
+	Comics        []*Comic      `json:"comics"`
+	ComicIDs      []*string     `json:"comicIDs"`
+	ShortComics   []*ShortComic `json:"ShortComics"`
+	ShortComicIDs []*string     `json:"ShortComicIDs"`
 }
 
 func (User) IsEntity() {}

@@ -1,16 +1,16 @@
 package deleteUtil
 
 import (
-	"github.com/Folody-Team/Shartube/database/comic_model"
+	"github.com/Folody-Team/Shartube/database/short_comic_model"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func DeleteComic(id string, client *mongo.Client) (bool, error) {
-	ComicModel, err := comic_model.InitComicModel(client)
+func DeleteShortComic(id string, client *mongo.Client) (bool, error) {
+	ShortComicModel, err := short_comic_model.InitShortComicModel(client)
 	if err != nil {
 		return false, err
 	}
-	ComicData, err := ComicModel.FindById(id)
+	ComicData, err := ShortComicModel.FindById(id)
 	if err != nil {
 		return false, err
 	}
@@ -20,7 +20,7 @@ func DeleteComic(id string, client *mongo.Client) (bool, error) {
 	for _, ChapID := range ComicData.ChapIDs {
 		DeleteChap(ChapID, client, false)
 	}
-	_, err = ComicModel.FindOneAndDeleteById(id)
+	_, err = ShortComicModel.FindOneAndDeleteById(id)
 	if err != nil {
 		return false, err
 	}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
-	"github.com/Folody-Team/Shartube/database/comic_model"
+	"github.com/Folody-Team/Shartube/database/short_comic_model"
 	"github.com/Folody-Team/Shartube/directives"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
@@ -24,7 +24,7 @@ import (
 
 // CreateShortComic is the resolver for the createShortComic field.
 func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.CreateShortComicInput) (*model.CreateShortComicResponse, error) {
-	comicModel, err := comic_model.InitComicModel(r.Client)
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	}
 	ThumbnailUrl := ""
 
-	comicID, err := comicModel.New(&model.CreateShortComicInputModel{
+	ShortcomicID, err := ShortComicModel.New(&model.CreateShortComicInputModel{
 		CreatedByID: CreateID,
 		Name:        input.Name,
 		Description: input.Description,
@@ -45,24 +45,24 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	if err != nil {
 		return nil, err
 	}
-	comicObjectData := LocalTypes.WsRequest{
-		Url:    "user/UpdateUserShortComic",
+	ShortComicObjectData := LocalTypes.WsRequest{
+		Url:    "user/UpdateUserShortShortComic",
 		Header: nil,
 		Payload: bson.M{
-			"_id":    comicID.Hex(),
+			"_id":    ShortcomicID.Hex(),
 			"UserID": CreateID,
 		},
-		From: "ShortComic/createComic",
+		From: "ShortShortComic/createShortComic",
 		Type: "message",
 	}
 
-	comicObject, err := json.Marshal(comicObjectData)
+	ShortComicObject, err := json.Marshal(ShortComicObjectData)
 	if err != nil {
 		return nil, err
 	}
-	r.Ws.WriteMessage(websocket.TextMessage, []byte(comicObject))
-	// get data from comic model
-	comicDoc, err := comicModel.FindById(comicID.Hex())
+	r.Ws.WriteMessage(websocket.TextMessage, []byte(ShortComicObject))
+	// get data from Shortcomic model
+	ShortComicDoc, err := ShortComicModel.FindById(ShortcomicID.Hex())
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		}{
 			ID: requestId,
 			SaveData: LocalTypes.UploadedComicThumbnailPayload{
-				ComicId: comicDoc.ID,
+				ComicId: ShortComicDoc.ID,
 			},
 			EmitTo:    "ShortComic",
 			EventName: "SocketChangeComicThumbnail",
@@ -114,7 +114,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 						}
 					}
 					return &model.CreateShortComicResponse{
-						ShortComic:  comicDoc,
+						ShortComic:  ShortComicDoc,
 						UploadToken: &data.Payload.Token,
 					}, nil
 
@@ -127,7 +127,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		}
 	} else {
 		return &model.CreateShortComicResponse{
-			ShortComic:  comicDoc,
+			ShortComic:  ShortComicDoc,
 			UploadToken: nil,
 		}, nil
 	}
@@ -135,27 +135,27 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 
 // UpdateShortComic is the resolver for the updateShortComic field.
 func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID string, input model.UpdateShortComicInput) (*model.UpdateShortComicResponse, error) {
-	comicModel, err := comic_model.InitComicModel(r.Client)
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
-	comic, err := comicModel.FindById(shortComicID)
+	ShortComic, err := ShortComicModel.FindById(shortComicID)
 	if err != nil {
 		return nil, err
 	}
-	if comic == nil {
+	if ShortComic == nil {
 		return nil, &gqlerror.Error{
 			Message: "comic not found",
 		}
 	}
-	if comic.CreatedByID != CreateID {
+	if ShortComic.CreatedByID != CreateID {
 		return nil, &gqlerror.Error{
 			Message: "Access Denied",
 		}
 	}
-	comicObjectId, err := primitive.ObjectIDFromHex(comic.ID)
+	ShortComicObjectId, err := primitive.ObjectIDFromHex(ShortComic.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +166,8 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 	if input.Name != nil {
 		updateData["name"] = input.Name
 	}
-	comicDoc, err := comicModel.FindOneAndUpdate(bson.M{
-		"_id": comicObjectId,
+	ShortComicDoc, err := ShortComicModel.FindOneAndUpdate(bson.M{
+		"_id": ShortComicObjectId,
 	}, bson.M{"$set": updateData})
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 		}{
 			ID: requestId,
 			SaveData: LocalTypes.UploadedComicThumbnailPayload{
-				ComicId: comicDoc.ID,
+				ComicId: ShortComicDoc.ID,
 			},
 			EmitTo:    "ShortComic",
 			EventName: "SocketChangeComicThumbnail",
@@ -220,7 +220,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 						}
 					}
 					return &model.UpdateShortComicResponse{
-						ShortComic:  comicDoc,
+						ShortComic:  ShortComicDoc,
 						UploadToken: &data.Payload.Token,
 					}, nil
 				}
@@ -228,7 +228,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 		}
 	} else {
 		return &model.UpdateShortComicResponse{
-			ShortComic:  comicDoc,
+			ShortComic:  ShortComicDoc,
 			UploadToken: nil,
 		}, nil
 	}
@@ -236,26 +236,26 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 
 // DeleteShortComic is the resolver for the DeleteShortComic field.
 func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID string) (*model.DeleteResult, error) {
-	ComicModel, err := comic_model.InitComicModel(r.Client)
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
-	ComicData, err := ComicModel.FindById(shortComicID)
+	ShortComicData, err := ShortComicModel.FindById(shortComicID)
 	if err != nil {
 		return nil, err
 	}
-	if ComicData == nil {
+	if ShortComicData == nil {
 		return nil, &gqlerror.Error{
 			Message: "comic not found",
 		}
 	}
-	if ComicData.CreatedByID != CreateID {
+	if ShortComicData.CreatedByID != CreateID {
 		return nil, &gqlerror.Error{
 			Message: "Access Denied",
 		}
 	}
-	success, err := deleteUtil.DeleteComic(shortComicID, r.Client)
+	success, err := deleteUtil.DeleteShortComic(shortComicID, r.Client)
 	if err != nil {
 		return nil, err
 	}
@@ -279,18 +279,27 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 
 	return &model.DeleteResult{
 		Success: success,
-		ID:      ComicData.ID,
+		ID:      ShortComicData.ID,
 	}, nil
 }
 
 // ShortComics is the resolver for the ShortComics field.
 func (r *queryResolver) ShortComics(ctx context.Context) ([]*model.ShortComic, error) {
-	comicModel, err := comic_model.InitComicModel(r.Client)
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 
-	return comicModel.Find(bson.D{})
+	return ShortComicModel.Find(bson.D{})
+}
+
+// ShortComicByID is the resolver for the ShortComicByID field.
+func (r *queryResolver) ShortComicByID(ctx context.Context, id string) (*model.ShortComic, error) {
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return ShortComicModel.FindById(id)
 }
 
 // CreatedBy is the resolver for the CreatedBy field.
@@ -299,13 +308,13 @@ func (r *shortComicResolver) CreatedBy(ctx context.Context, obj *model.ShortComi
 }
 
 // Chap is the resolver for the Chap field.
-func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([]*model.ShortComicChap, error) {
-	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([]*model.Chap, error) {
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 
-	comicChaps := []*model.ShortComicChap{}
+	comicChaps := []*model.Chap{}
 
 	for _, id := range obj.ChapIDs {
 		chap, err := comicChapModel.FindById(id)

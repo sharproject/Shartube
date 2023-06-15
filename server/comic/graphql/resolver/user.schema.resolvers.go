@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/Folody-Team/Shartube/database/comic_model"
+	"github.com/Folody-Team/Shartube/database/short_comic_model"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,18 @@ func (r *userResolver) Comics(ctx context.Context, obj *model.User) ([]*model.Co
 	}
 
 	return comicModel.Find(bson.M{
+		"createdbyid": obj.ID,
+	})
+}
+
+// ShortComics is the resolver for the ShortComics field.
+func (r *userResolver) ShortComics(ctx context.Context, obj *model.User) ([]*model.ShortComic, error) {
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	return ShortComicModel.Find(bson.M{
 		"createdbyid": obj.ID,
 	})
 }

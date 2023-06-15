@@ -1,5 +1,3 @@
-directive @inherits(type: String!) on OBJECT
-
 interface CreateShortComic {
   name: String!
   description: String
@@ -28,7 +26,7 @@ type ShortComic implements CreateShortComic {
   name: String!
   description: String
   ChapIDs: [String!]
-  Chap: [ShortComicChap!] @goField(forceResolver: true)
+  Chap: [Chap!] @goField(forceResolver: true)
   thumbnail: String
 }
 
@@ -38,38 +36,35 @@ input UpdateShortComicInput {
   thumbnail: Boolean
 }
 
-type DeleteResult {
-  success: Boolean!
-  id: String!
-}
-
-type UpdateShortComicInputModel  {
+type UpdateShortComicInputModel {
   name: String
   description: String
   thumbnail: String
 }
 
-type CreateShortComicResponse{
-  ShortComic:ShortComic!
-  UploadToken:String
+type CreateShortComicResponse {
+  ShortComic: ShortComic!
+  UploadToken: String
 }
 
-type UpdateShortComicResponse{
-  ShortComic:ShortComic!
-  UploadToken:String
+type UpdateShortComicResponse {
+  ShortComic: ShortComic!
+  UploadToken: String
 }
 
 extend type Mutation {
   createShortComic(input: CreateShortComicInput!): CreateShortComicResponse!
     @goField(forceResolver: true)
     @auth
-  updateShortComic(ShortComicID: String!, input: UpdateShortComicInput!): UpdateShortComicResponse!
-    @goField(forceResolver: true)
-    @auth
+  updateShortComic(
+    ShortComicID: String!
+    input: UpdateShortComicInput!
+  ): UpdateShortComicResponse! @goField(forceResolver: true) @auth
   DeleteShortComic(ShortComicID: String!): DeleteResult!
     @goField(forceResolver: true)
     @auth
 }
 extend type Query {
   ShortComics: [ShortComic!]! @goField(forceResolver: true)
+  ShortComicByID(id: String!): ShortComic @goField(forceResolver: true)
 }

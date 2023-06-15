@@ -23,7 +23,6 @@ services:
     depends_on:
       - shartube-comic-server
       - shartube-user-server
-      - shartube-short-comic-server
     build: ./graphql-gateway
     env_file:
       - ./graphql-gateway/.env
@@ -61,23 +60,6 @@ services:
     expose:
       - 8080
 
-  shartube-short-comic-server:
-    container_name: shartube-short-comic-server
-    networks:
-      - shartube-net
-    depends_on:
-      - shartube-mongo-db
-      - shartube-user-server
-    build: ./short_comic
-    environment:
-      - UserHost=shartube-user-server
-      - UploadServer=http://shartube-upload-server:3000/save
-    env_file:
-      - ./short_comic/.env
-      - ./.base.env
-    restart: always
-    expose:
-      - 8080
 
   shartube-user-server:
     container_name: shartube-user-server

@@ -257,7 +257,6 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 			UploadToken: nil,
 		}, nil
 	}
-
 }
 
 // DeleteComic is the resolver for the DeleteComic field.

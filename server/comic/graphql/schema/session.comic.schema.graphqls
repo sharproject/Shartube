@@ -30,7 +30,7 @@ type ComicSession implements CreateComicSession {
   description: String
   comicID: String!
   Comic: Comic! @goField(forceResolver: true)
-  Chaps: [ComicChap!] @goField(forceResolver: true)
+  Chaps: [Chap!] @goField(forceResolver: true)
   ChapIds: [String!]
   thumbnail: String
 }

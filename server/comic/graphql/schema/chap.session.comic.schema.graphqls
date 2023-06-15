@@ -1,24 +1,27 @@
-interface CreateComicChap {
+interface CreateChap {
   name: String!
   description: String
-  SessionID: String!
+  SessionID: String
+  ShortComicID: String
 }
-input CreateComicChapInput {
+input CreateChapInput {
   name: String!
   description: String
-  SessionID: String!
+  SessionID: String
+  ShortComicID: String
 }
-type CreateComicChapInputModel implements CreateComicChap {
+type CreateChapInputModel implements CreateChap {
   name: String!
   description: String
   CreatedByID: String!
-  SessionID: String!
+  SessionID: String
+  ShortComicID: String
 }
 type ImageResult {
   ID: String!
   Url: String!
 }
-type ComicChap implements CreateComicChap @key(fields: "_id") {
+type Chap implements CreateChap @key(fields: "_id") {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
@@ -26,33 +29,29 @@ type ComicChap implements CreateComicChap @key(fields: "_id") {
   CreatedByID: String!
   name: String!
   description: String
-  SessionID: String!
-  Session: ComicSession! @goField(forceResolver: true)
+  SessionID: String
+  ShortComicID: String
+  Session: ComicSession @goField(forceResolver: true)
+  ShortComic: ShortComic @goField(forceResolver: true)
   Images: [ImageResult!]!
 }
 
-input UpdateComicChapInput {
+input UpdateChapInput {
   name: String
   description: String
 }
 extend type Mutation {
-  CreateComicChap(input: CreateComicChapInput!): ComicChap!
+  CreateChap(input: CreateChapInput!): Chap! @goField(forceResolver: true) @auth
+  AddImageToChap(chapID: String!): String @goField(forceResolver: true) @auth
+  UpdateChap(chapID: String!, input: UpdateChapInput!): Chap!
     @goField(forceResolver: true)
     @auth
-  AddImageToChap(chapID: String!): String
-    @goField(forceResolver: true)
-    @auth
-  UpdateComicChap(chapID: String!, input: UpdateComicChapInput!): ComicChap!
-    @goField(forceResolver: true)
-    @auth
-  DeleteComicChap(chapID: String!): DeleteResult!
-    @goField(forceResolver: true)
-    @auth
-  DeleteComicChapImage(chapID: String!, imageID: [String!]!): ComicChap!
+  DeleteChap(chapID: String!): DeleteResult! @goField(forceResolver: true) @auth
+  DeleteChapImage(chapID: String!, imageID: [String!]!): Chap!
     @goField(forceResolver: true)
     @auth
 }
 
 extend type Query {
-  ChapBySession(SessionID: String!): [ComicChap!] @goField(forceResolver: true)
+  ChapBySession(SessionID: String!): [Chap!] @goField(forceResolver: true)
 }

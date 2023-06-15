@@ -38,12 +38,12 @@ func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSessio
 }
 
 // Chaps is the resolver for the Chaps field.
-func (r *comicSessionResolver) Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.ComicChap, error) {
-	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+func (r *comicSessionResolver) Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.Chap, error) {
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	AllChaps := []*model.ComicChap{}
+	AllChaps := []*model.Chap{}
 	for _, ChapId := range obj.ChapIds {
 		data, err := comicChapModel.FindById(ChapId)
 		if err != nil {

@@ -6,9 +6,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func InitComicChapModel(client *mongo.Client) (*base_model.BaseModel[model.CreateComicChapInputModel, model.ComicChap], error) {
+func InitChapModel(client *mongo.Client) (*base_model.BaseModel[model.CreateChapInputModel, model.Chap], error) {
 
-	var UserModel = base_model.BaseModel[model.CreateComicChapInputModel, model.ComicChap]{
+	var UserModel = base_model.BaseModel[model.CreateChapInputModel, model.Chap]{
 		BaseModelInitValue: &base_model.BaseModelInitValue{
 			Client:         client,
 			CollectionName: "comic_chaps",
