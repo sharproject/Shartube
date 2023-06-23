@@ -18,6 +18,7 @@ services:
 
   shartube-graphql-gateway:
     container_name: shartube-graphql-gateway
+    image: tritranduc11/shartube-graphql-gateway
     networks:
       - shartube-net
     depends_on:
@@ -31,6 +32,7 @@ services:
 
   shartube-ws-server:
     container_name: shartube-ws-server
+    image: tritranduc11/shartube-ws-server
     networks:
       - shartube-net
     build: ./socket
@@ -44,6 +46,7 @@ services:
 
   shartube-comic-server:
     container_name: shartube-comic-server
+    image: tritranduc11/shartube-comic-server
     networks:
       - shartube-net
     depends_on:
@@ -63,6 +66,7 @@ services:
 
   shartube-user-server:
     container_name: shartube-user-server
+    image: tritranduc11/shartube-user-server
     networks:
       - shartube-net
     depends_on:
@@ -79,6 +83,7 @@ services:
 
   shartube-upload-server:
     container_name: shartube-upload-server
+    image: tritranduc11/shartube-user-server
     networks:
       - shartube-net
     depends_on:
@@ -95,6 +100,7 @@ services:
   
   shartube-api-gateway:
     container_name: shartube-api-gateway
+    image: tritranduc11/shartube-api-gateway
     networks:
       - shartube-net
     depends_on:
@@ -118,6 +124,7 @@ services:
   
   shartube-meme-server:
     container_name: shartube-meme-server
+    image: tritranduc11/shartube-meme-server
     networks:
       - shartube-net
     depends_on:
@@ -133,6 +140,7 @@ services:
       - PORT=8080
   shartube-like-server:
     container_name: shartube-like-server
+    image: tritranduc11/shartube-like-server
     networks:
       - shartube-net
     depends_on:
