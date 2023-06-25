@@ -83,7 +83,7 @@ services:
 
   shartube-upload-server:
     container_name: shartube-upload-server
-    image: tritranduc11/shartube-user-server
+    image: tritranduc11/shartube-upload-server
     networks:
       - shartube-net
     depends_on:
