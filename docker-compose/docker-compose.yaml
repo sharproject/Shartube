@@ -1,0 +1,155 @@
+# version: "3.6"
+
+services:
+  shartube-mongo-db:
+    container_name: shartube-mongo-db
+    image: mongo
+    networks:
+      - shartube-net
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    depends_on:
+      - shartube-ws-server
+    restart: always
+    volumes:
+      - mongoDB:/data/db
+    command: --quiet --logpath /dev/null
+
+  shartube-graphql-gateway:
+    container_name: shartube-graphql-gateway
+    image: tritranduc11/shartube-graphql-gateway
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-comic-server
+      - shartube-user-server
+    env_file:
+      - ./.graphql-gateway.env
+      - ./.base.env
+    restart: always
+
+  shartube-ws-server:
+    container_name: shartube-ws-server
+    image: tritranduc11/shartube-ws-server
+    networks:
+      - shartube-net
+    restart: always
+    expose:
+      - 3012
+    # environment:
+    #   - HOST=shartube-ws-server
+    env_file:
+      - ./.base.env
+
+  shartube-comic-server:
+    container_name: shartube-comic-server
+    image: tritranduc11/shartube-comic-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-mongo-db
+      - shartube-user-server
+    environment:
+      - UserHost=shartube-user-server
+      - UploadServer=http://shartube-upload-server:3000/save
+    env_file:
+      - ./.comic.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+
+
+  shartube-user-server:
+    container_name: shartube-user-server
+    image: tritranduc11/shartube-user-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-mongo-db
+    env_file:
+      - ./.user.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    volumes:
+      - ./user/src/secret/key.private:/app/src/secret/key.private
+
+  shartube-upload-server:
+    container_name: shartube-upload-server
+    image: tritranduc11/shartube-upload-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-ws-server
+    env_file:
+      - ./.cdn-service.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 3000
+    environment:
+      - CHANNEL_ID=1043368131390885968
+  
+  shartube-api-gateway:
+    container_name: shartube-api-gateway
+    image: tritranduc11/shartube-api-gateway
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-graphql-gateway
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+      - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
+      - MEME_SERVER=http://shartube-meme-server:8080
+      - USER_SERVER=http://shartube-user-server:8080
+      - CDN_SERVER=http://shartube-upload-server:3000/save
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api-gateway/config.json:/home/container/config.json
+  
+  shartube-meme-server:
+    container_name: shartube-meme-server
+    image: tritranduc11/shartube-meme-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-mongo-db
+      - shartube-ws-server
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+  shartube-like-server:
+    container_name: shartube-like-server
+    image: tritranduc11/shartube-like-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-mongo-db
+      - shartube-ws-server
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080  	
+   
+
+networks:
+  shartube-net:
+
+volumes:
+  mongoDB:
