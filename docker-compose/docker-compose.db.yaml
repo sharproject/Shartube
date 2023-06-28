@@ -15,6 +15,18 @@ services:
     volumes:
       - mongoDB:/data/db
     command: --quiet --logpath /dev/null
+  shartube-comic-server:
+    depends_on:
+      - shartube-mongo-db
+  shartube-user-server:
+    depends_on:
+      - shartube-mongo-db
+  shartube-meme-server:
+    depends_on:
+      - shartube-mongo-db
+  shartube-like-server:
+    depends_on:
+      - shartube-mongo-db
 
 networks:
   shartube-net:

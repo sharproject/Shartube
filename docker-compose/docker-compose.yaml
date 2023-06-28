@@ -33,7 +33,6 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-mongo-db
       - shartube-user-server
     environment:
       - UserHost=shartube-user-server
@@ -51,8 +50,6 @@ services:
     image: tritranduc11/shartube-user-server
     networks:
       - shartube-net
-    depends_on:
-      - shartube-mongo-db
     env_file:
       - ./.user.env
       - ./.base.env
@@ -107,7 +104,6 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-mongo-db
       - shartube-ws-server
     env_file:
       - ./.base.env
@@ -122,7 +118,6 @@ services:
     networks:
       - shartube-net
     depends_on:
-      - shartube-mongo-db
       - shartube-ws-server
     env_file:
       - ./.base.env
