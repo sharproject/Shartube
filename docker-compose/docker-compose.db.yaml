@@ -11,9 +11,13 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
-    depends_on:
-      - shartube-ws-server
     restart: always
     volumes:
       - mongoDB:/data/db
     command: --quiet --logpath /dev/null
+
+networks:
+  shartube-net:
+
+volumes:
+  mongoDB:
