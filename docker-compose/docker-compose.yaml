@@ -1,21 +1,6 @@
 # version: "3.6"
 
 services:
-  shartube-mongo-db:
-    container_name: shartube-mongo-db
-    image: mongo
-    networks:
-      - shartube-net
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-    depends_on:
-      - shartube-ws-server
-    restart: always
-    volumes:
-      - mongoDB:/data/db
-    command: --quiet --logpath /dev/null
-
   shartube-graphql-gateway:
     container_name: shartube-graphql-gateway
     image: tritranduc11/shartube-graphql-gateway
@@ -111,8 +96,8 @@ services:
       - MEME_SERVER=http://shartube-meme-server:8080
       - USER_SERVER=http://shartube-user-server:8080
       - CDN_SERVER=http://shartube-upload-server:3000/save
-    ports:
-      - "8080:8080"
+    # ports:
+    #   - "8080:8080"
     volumes:
       - ./api-gateway/config.json:/home/container/config.json
   
