@@ -117,14 +117,6 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 					return fmt.Errorf(`resolving Entity "User": %w`, err)
 				}
 
-				entity.ComicIDs, err = ec.unmarshalNString2ᚕᚖstring(ctx, rep["comicIDs"])
-				if err != nil {
-					return err
-				}
-				entity.ShortComicIDs, err = ec.unmarshalNString2ᚕᚖstring(ctx, rep["ShortComicIDs"])
-				if err != nil {
-					return err
-				}
 				list[idx[i]] = entity
 				return nil
 			}

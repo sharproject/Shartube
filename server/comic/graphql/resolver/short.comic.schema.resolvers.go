@@ -66,6 +66,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	if err != nil {
 		return nil, err
 	}
+	ShortComicDoc
 	if input.Thumbnail != nil && *input.Thumbnail {
 		requestId := uuid.New().String()
 		payload := struct {

@@ -1,7 +1,5 @@
 extend type User @key(fields: "_id") {
   _id: ID! @external
-  comics: [Comic] @goField(forceResolver: true) @requires(fields: "comicIDs")
-  comicIDs: [String]! @external
-  ShortComics: [ShortComic] @goField(forceResolver: true) @requires(fields: "ShortComicIDs")
-  ShortComicIDs: [String]! @external
+  comics: [Comic]! @goField(forceResolver: true)
+  ShortComics: [ShortComic]! @goField(forceResolver: true)
 }

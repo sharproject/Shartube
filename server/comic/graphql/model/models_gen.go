@@ -233,11 +233,9 @@ type UploadComicResponse struct {
 }
 
 type User struct {
-	ID            string        `json:"_id" bson:"_id"`
-	Comics        []*Comic      `json:"comics"`
-	ComicIDs      []*string     `json:"comicIDs"`
-	ShortComics   []*ShortComic `json:"ShortComics"`
-	ShortComicIDs []*string     `json:"ShortComicIDs"`
+	ID          string        `json:"_id" bson:"_id"`
+	Comics      []*Comic      `json:"comics"`
+	ShortComics []*ShortComic `json:"ShortComics"`
 }
 
 func (User) IsEntity() {}
