@@ -302,11 +302,6 @@ func (r *queryResolver) ShortComicByID(ctx context.Context, id string) (*model.S
 	return ShortComicModel.FindById(id)
 }
 
-// CreatedBy is the resolver for the CreatedBy field.
-func (r *shortComicResolver) CreatedBy(ctx context.Context, obj *model.ShortComic) (*model.User, error) {
-	return util.GetUserByID(obj.CreatedByID)
-}
-
 // Chap is the resolver for the Chap field.
 func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([]*model.Chap, error) {
 	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
@@ -331,3 +326,13 @@ func (r *shortComicResolver) Chap(ctx context.Context, obj *model.ShortComic) ([
 func (r *Resolver) ShortComic() generated.ShortComicResolver { return &shortComicResolver{r} }
 
 type shortComicResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *shortComicResolver) CreatedBy(ctx context.Context, obj *model.ShortComic) (*model.User, error) {
+	return util.GetUserByID(obj.CreatedByID)
+}

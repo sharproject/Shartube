@@ -26,7 +26,6 @@ type Chap struct {
 	ID           string         `json:"_id" bson:"_id"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
-	CreatedBy    *User          `json:"CreatedBy"`
 	CreatedByID  string         `json:"CreatedByID"`
 	Name         string         `json:"name"`
 	Description  *string        `json:"description"`
@@ -44,7 +43,6 @@ type Comic struct {
 	ID          string          `json:"_id" bson:"_id"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   time.Time       `json:"updatedAt"`
-	CreatedBy   *User           `json:"CreatedBy"`
 	CreatedByID string          `json:"CreatedByID"`
 	Name        string          `json:"name"`
 	Description *string         `json:"description"`
@@ -59,7 +57,6 @@ type ComicSession struct {
 	ID          string    `json:"_id" bson:"_id"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	CreatedBy   *User     `json:"CreatedBy"`
 	CreatedByID string    `json:"CreatedByID"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description"`
@@ -165,7 +162,6 @@ type ShortComic struct {
 	ID          string    `json:"_id" bson:"_id"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
-	CreatedBy   *User     `json:"CreatedBy"`
 	CreatedByID string    `json:"CreatedByID"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description"`

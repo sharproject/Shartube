@@ -15,3 +15,6 @@ headers:
     request:
       - propagate:
           matching: .*
+
+plugins:
+  experimental.expose_query_plan: true

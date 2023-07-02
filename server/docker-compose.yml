@@ -29,6 +29,9 @@ services:
       - ./graphql-gateway/.env
       - ./.base.env
     restart: always
+    volumes:
+      - ./graphql-gateway/router.yaml:/app/dev/router.yaml
+      - ./graphql-gateway/supergraph.yaml:/app/dev/supergraph.yaml
 
   shartube-ws-server:
     container_name: shartube-ws-server

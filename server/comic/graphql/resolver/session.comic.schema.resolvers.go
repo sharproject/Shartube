@@ -23,11 +23,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CreatedBy is the resolver for the CreatedBy field.
-func (r *comicSessionResolver) CreatedBy(ctx context.Context, obj *model.ComicSession) (*model.User, error) {
-	return util.GetUserByID(obj.CreatedByID)
-}
-
 // Comic is the resolver for the Comic field.
 func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSession) (*model.Comic, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
@@ -321,3 +316,13 @@ func (r *queryResolver) SessionByComic(ctx context.Context, comicID string) ([]*
 func (r *Resolver) ComicSession() generated.ComicSessionResolver { return &comicSessionResolver{r} }
 
 type comicSessionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *comicSessionResolver) CreatedBy(ctx context.Context, obj *model.ComicSession) (*model.User, error) {
+	return util.GetUserByID(obj.CreatedByID)
+}

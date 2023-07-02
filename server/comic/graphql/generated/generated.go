@@ -58,7 +58,6 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Chap struct {
 		CreatedAt    func(childComplexity int) int
-		CreatedBy    func(childComplexity int) int
 		CreatedByID  func(childComplexity int) int
 		Description  func(childComplexity int) int
 		ID           func(childComplexity int) int
@@ -73,7 +72,6 @@ type ComplexityRoot struct {
 
 	Comic struct {
 		CreatedAt   func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
 		CreatedByID func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -90,7 +88,6 @@ type ComplexityRoot struct {
 		Comic       func(childComplexity int) int
 		ComicID     func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
 		CreatedByID func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -190,7 +187,6 @@ type ComplexityRoot struct {
 		Chap        func(childComplexity int) int
 		ChapIDs     func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
 		CreatedByID func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -244,19 +240,13 @@ type ComplexityRoot struct {
 }
 
 type ChapResolver interface {
-	CreatedBy(ctx context.Context, obj *model.Chap) (*model.User, error)
-
 	Session(ctx context.Context, obj *model.Chap) (*model.ComicSession, error)
 	ShortComic(ctx context.Context, obj *model.Chap) (*model.ShortComic, error)
 }
 type ComicResolver interface {
-	CreatedBy(ctx context.Context, obj *model.Comic) (*model.User, error)
-
 	Session(ctx context.Context, obj *model.Comic) ([]*model.ComicSession, error)
 }
 type ComicSessionResolver interface {
-	CreatedBy(ctx context.Context, obj *model.ComicSession) (*model.User, error)
-
 	Comic(ctx context.Context, obj *model.ComicSession) (*model.Comic, error)
 	Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.Chap, error)
 }
@@ -288,8 +278,6 @@ type QueryResolver interface {
 	ShortComicByID(ctx context.Context, id string) (*model.ShortComic, error)
 }
 type ShortComicResolver interface {
-	CreatedBy(ctx context.Context, obj *model.ShortComic) (*model.User, error)
-
 	Chap(ctx context.Context, obj *model.ShortComic) ([]*model.Chap, error)
 }
 type UserResolver interface {
@@ -318,13 +306,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Chap.CreatedAt(childComplexity), true
-
-	case "Chap.CreatedBy":
-		if e.complexity.Chap.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Chap.CreatedBy(childComplexity), true
 
 	case "Chap.CreatedByID":
 		if e.complexity.Chap.CreatedByID == nil {
@@ -402,13 +383,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Comic.CreatedAt(childComplexity), true
-
-	case "Comic.CreatedBy":
-		if e.complexity.Comic.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Comic.CreatedBy(childComplexity), true
 
 	case "Comic.CreatedByID":
 		if e.complexity.Comic.CreatedByID == nil {
@@ -500,13 +474,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ComicSession.CreatedAt(childComplexity), true
-
-	case "ComicSession.CreatedBy":
-		if e.complexity.ComicSession.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ComicSession.CreatedBy(childComplexity), true
 
 	case "ComicSession.CreatedByID":
 		if e.complexity.ComicSession.CreatedByID == nil {
@@ -1028,13 +995,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ShortComic.CreatedAt(childComplexity), true
 
-	case "ShortComic.CreatedBy":
-		if e.complexity.ShortComic.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.ShortComic.CreatedBy(childComplexity), true
-
 	case "ShortComic.CreatedByID":
 		if e.complexity.ShortComic.CreatedByID == nil {
 			break
@@ -1313,7 +1273,7 @@ type Chap implements CreateChap @key(fields: "_id") {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
@@ -1369,7 +1329,7 @@ type Comic implements CreateComic {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
@@ -1467,7 +1427,7 @@ type ComicSession implements CreateComicSession {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
@@ -1541,7 +1501,7 @@ type ShortComic implements CreateShortComic {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
@@ -2178,55 +2138,6 @@ func (ec *executionContext) fieldContext_Chap_updatedAt(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Chap_CreatedBy(ctx context.Context, field graphql.CollectedField, obj *model.Chap) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Chap_CreatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Chap().CreatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Chap_CreatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Chap",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "_id":
-				return ec.fieldContext_User__id(ctx, field)
-			case "comics":
-				return ec.fieldContext_User_comics(ctx, field)
-			case "ShortComics":
-				return ec.fieldContext_User_ShortComics(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Chap_CreatedByID(ctx context.Context, field graphql.CollectedField, obj *model.Chap) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Chap_CreatedByID(ctx, field)
 	if err != nil {
@@ -2480,8 +2391,6 @@ func (ec *executionContext) fieldContext_Chap_Session(ctx context.Context, field
 				return ec.fieldContext_ComicSession_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ComicSession_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicSession_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ComicSession_CreatedByID(ctx, field)
 			case "name":
@@ -2547,8 +2456,6 @@ func (ec *executionContext) fieldContext_Chap_ShortComic(ctx context.Context, fi
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -2745,55 +2652,6 @@ func (ec *executionContext) fieldContext_Comic_updatedAt(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Comic_CreatedBy(ctx context.Context, field graphql.CollectedField, obj *model.Comic) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Comic_CreatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Comic().CreatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Comic_CreatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Comic",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "_id":
-				return ec.fieldContext_User__id(ctx, field)
-			case "comics":
-				return ec.fieldContext_User_comics(ctx, field)
-			case "ShortComics":
-				return ec.fieldContext_User_ShortComics(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -3011,8 +2869,6 @@ func (ec *executionContext) fieldContext_Comic_session(ctx context.Context, fiel
 				return ec.fieldContext_ComicSession_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ComicSession_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicSession_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ComicSession_CreatedByID(ctx, field)
 			case "name":
@@ -3204,55 +3060,6 @@ func (ec *executionContext) fieldContext_ComicSession_updatedAt(ctx context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _ComicSession_CreatedBy(ctx context.Context, field graphql.CollectedField, obj *model.ComicSession) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ComicSession_CreatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ComicSession().CreatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ComicSession_CreatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ComicSession",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "_id":
-				return ec.fieldContext_User__id(ctx, field)
-			case "comics":
-				return ec.fieldContext_User_comics(ctx, field)
-			case "ShortComics":
-				return ec.fieldContext_User_ShortComics(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
 	}
 	return fc, nil
@@ -3476,8 +3283,6 @@ func (ec *executionContext) fieldContext_ComicSession_Comic(ctx context.Context,
 				return ec.fieldContext_Comic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Comic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Comic_CreatedByID(ctx, field)
 			case "name":
@@ -3539,8 +3344,6 @@ func (ec *executionContext) fieldContext_ComicSession_Chaps(ctx context.Context,
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -4072,8 +3875,6 @@ func (ec *executionContext) fieldContext_CreateComicResponse_comic(ctx context.C
 				return ec.fieldContext_Comic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Comic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Comic_CreatedByID(ctx, field)
 			case "name":
@@ -4393,8 +4194,6 @@ func (ec *executionContext) fieldContext_CreateComicSessionResponse_ComicSession
 				return ec.fieldContext_ComicSession_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ComicSession_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicSession_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ComicSession_CreatedByID(ctx, field)
 			case "name":
@@ -4674,8 +4473,6 @@ func (ec *executionContext) fieldContext_CreateShortComicResponse_ShortComic(ctx
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -4869,8 +4666,6 @@ func (ec *executionContext) fieldContext_Entity_findChapByID(ctx context.Context
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -5121,8 +4916,6 @@ func (ec *executionContext) fieldContext_Mutation_CreateChap(ctx context.Context
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -5294,8 +5087,6 @@ func (ec *executionContext) fieldContext_Mutation_UpdateChap(ctx context.Context
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -5476,8 +5267,6 @@ func (ec *executionContext) fieldContext_Mutation_DeleteChapImage(ctx context.Co
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -6283,8 +6072,6 @@ func (ec *executionContext) fieldContext_Query_ChapBySession(ctx context.Context
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -6364,8 +6151,6 @@ func (ec *executionContext) fieldContext_Query_Comics(ctx context.Context, field
 				return ec.fieldContext_Comic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Comic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Comic_CreatedByID(ctx, field)
 			case "name":
@@ -6427,8 +6212,6 @@ func (ec *executionContext) fieldContext_Query_SessionByComic(ctx context.Contex
 				return ec.fieldContext_ComicSession_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ComicSession_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicSession_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ComicSession_CreatedByID(ctx, field)
 			case "name":
@@ -6508,8 +6291,6 @@ func (ec *executionContext) fieldContext_Query_ShortComics(ctx context.Context, 
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -6571,8 +6352,6 @@ func (ec *executionContext) fieldContext_Query_ShortComicByID(ctx context.Contex
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -6967,55 +6746,6 @@ func (ec *executionContext) fieldContext_ShortComic_updatedAt(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _ShortComic_CreatedBy(ctx context.Context, field graphql.CollectedField, obj *model.ShortComic) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ShortComic_CreatedBy(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ShortComic().CreatedBy(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.User)
-	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_ShortComic_CreatedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "ShortComic",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "_id":
-				return ec.fieldContext_User__id(ctx, field)
-			case "comics":
-				return ec.fieldContext_User_comics(ctx, field)
-			case "ShortComics":
-				return ec.fieldContext_User_ShortComics(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ShortComic_CreatedByID(ctx context.Context, field graphql.CollectedField, obj *model.ShortComic) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 	if err != nil {
@@ -7228,8 +6958,6 @@ func (ec *executionContext) fieldContext_ShortComic_Chap(ctx context.Context, fi
 				return ec.fieldContext_Chap_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Chap_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Chap_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Chap_CreatedByID(ctx, field)
 			case "name":
@@ -7585,8 +7313,6 @@ func (ec *executionContext) fieldContext_UpdateComicSessionResponse_ComicSession
 				return ec.fieldContext_ComicSession_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ComicSession_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ComicSession_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ComicSession_CreatedByID(ctx, field)
 			case "name":
@@ -7819,8 +7545,6 @@ func (ec *executionContext) fieldContext_UpdateShortComicResponse_ShortComic(ctx
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -7926,8 +7650,6 @@ func (ec *executionContext) fieldContext_UploadComicResponse_comic(ctx context.C
 				return ec.fieldContext_Comic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Comic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Comic_CreatedByID(ctx, field)
 			case "name":
@@ -8077,8 +7799,6 @@ func (ec *executionContext) fieldContext_User_comics(ctx context.Context, field 
 				return ec.fieldContext_Comic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_Comic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_Comic_CreatedByID(ctx, field)
 			case "name":
@@ -8143,8 +7863,6 @@ func (ec *executionContext) fieldContext_User_ShortComics(ctx context.Context, f
 				return ec.fieldContext_ShortComic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
-			case "CreatedBy":
-				return ec.fieldContext_ShortComic_CreatedBy(ctx, field)
 			case "CreatedByID":
 				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
 			case "name":
@@ -10492,23 +10210,6 @@ func (ec *executionContext) _Chap(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "CreatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Chap_CreatedBy(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "CreatedByID":
 
 			out.Values[i] = ec._Chap_CreatedByID(ctx, field, obj)
@@ -10618,23 +10319,6 @@ func (ec *executionContext) _Comic(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "CreatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Comic_CreatedBy(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "CreatedByID":
 
 			out.Values[i] = ec._Comic_CreatedByID(ctx, field, obj)
@@ -10720,23 +10404,6 @@ func (ec *executionContext) _ComicSession(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "CreatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ComicSession_CreatedBy(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "CreatedByID":
 
 			out.Values[i] = ec._ComicSession_CreatedByID(ctx, field, obj)
@@ -11621,23 +11288,6 @@ func (ec *executionContext) _ShortComic(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "CreatedBy":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ShortComic_CreatedBy(ctx, field, obj)
-				return res
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "CreatedByID":
 
 			out.Values[i] = ec._ShortComic_CreatedByID(ctx, field, obj)
@@ -13377,13 +13027,6 @@ func (ec *executionContext) unmarshalOUpdateComicSessionInput2ᚖgithubᚗcomᚋ
 	}
 	res, err := ec.unmarshalInputUpdateComicSessionInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._User(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO_Entity2githubᚗcomᚋ99designsᚋgqlgenᚋpluginᚋfederationᚋfedruntimeᚐEntity(ctx context.Context, sel ast.SelectionSet, v fedruntime.Entity) graphql.Marshaler {

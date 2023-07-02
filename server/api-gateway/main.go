@@ -15,6 +15,7 @@ import (
 	"github.com/valyala/fasthttp"
 
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func setupProxy(app *fiber.App) {
@@ -73,6 +74,7 @@ func main() {
 
 	app.Use(logger.New())
 	app.Use(compress.New())
+	app.Use(cors.New())
 
 	setupProxy(app)
 	app.Listen(":" + os.Getenv("PORT"))

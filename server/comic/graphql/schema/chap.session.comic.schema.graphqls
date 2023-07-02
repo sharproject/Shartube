@@ -25,7 +25,7 @@ type Chap implements CreateChap @key(fields: "_id") {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String

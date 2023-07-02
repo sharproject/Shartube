@@ -24,7 +24,7 @@ type ComicSession implements CreateComicSession {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
+  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
