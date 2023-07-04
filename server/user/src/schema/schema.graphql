@@ -1,0 +1,68 @@
+# type _Service {
+# 	sdl: String
+# }
+scalar Time
+# scalar _FieldSet
+# scalar _Any
+
+# directive @key(
+# 	fields: _FieldSet!
+# 	resolvable: Boolean = true
+# ) repeatable on OBJECT | INTERFACE
+input RegisterUserInput {
+	name: String!
+	email: String!
+	password: String!
+}
+input LoginUserInput {
+	UsernameOrEmail: String!
+	password: String!
+}
+type Profile @key(fields: "_id") {
+	_id: ID!
+	CreateID: ID!
+}
+type Team @key(fields: "_id") {
+	_id: ID!
+	name: String!
+	createdAt: Time!
+	updatedAt: Time!
+	member: [String]!
+	owner: String!
+	profile: Profile
+}
+type User @key(fields: "_id") {
+	_id: ID!
+	name: String!
+	email: String!
+	password: String!
+	createdAt: Time!
+	updatedAt: Time!
+	profile: Profile
+}
+type UserLoginOrRegisterResponse {
+	user: User!
+	accessToken: String!
+}
+# union _Entity = User
+input CreateTeamInput {
+	name: String!
+}
+input AddUserToTeamInput {
+	TeamID: String!
+	UserID: String!
+}
+extend type Mutation {
+	Login(input: LoginUserInput!): UserLoginOrRegisterResponse!
+	Register(input: RegisterUserInput!): UserLoginOrRegisterResponse!
+	CreateTeam(input: CreateTeamInput!): Team!
+	AddUserToTeam(input: AddUserToTeamInput!): Team!
+	RemoveUserInTeam(input: AddUserToTeamInput!): Team!
+}
+union UserOrTeam = User | Team
+extend type Query {
+	# _service: _Service!
+	# _entities(representations: [_Any!]!): [_Entity]!
+	Me: User!
+	PageFromId(id: String!): UserOrTeam
+}

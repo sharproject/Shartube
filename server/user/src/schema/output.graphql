@@ -1,0 +1,81 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+directive @external on FIELD_DEFINITION
+
+directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
+
+directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
+
+directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+
+input AddUserToTeamInput {
+  TeamID: String!
+  UserID: String!
+}
+
+input CreateTeamInput {
+  name: String!
+}
+
+input LoginUserInput {
+  UsernameOrEmail: String!
+  password: String!
+}
+
+type Mutation {
+  AddUserToTeam(input: AddUserToTeamInput!): Team!
+  CreateTeam(input: CreateTeamInput!): Team!
+  Login(input: LoginUserInput!): UserLoginOrRegisterResponse!
+  Register(input: RegisterUserInput!): UserLoginOrRegisterResponse!
+  RemoveUserInTeam(input: AddUserToTeamInput!): Team!
+}
+
+type Profile @key(fields: "_id") {
+  CreateID: ID!
+  _id: ID!
+}
+
+type Query {
+  Me: User!
+  PageFromId(id: String!): UserOrTeam
+}
+
+input RegisterUserInput {
+  email: String!
+  name: String!
+  password: String!
+}
+
+type Team @key(fields: "_id") {
+  _id: ID!
+  createdAt: Time!
+  member: [String]!
+  name: String!
+  owner: String!
+  profile: Profile
+  updatedAt: Time!
+}
+
+scalar Time
+
+type User @key(fields: "_id") {
+  _id: ID!
+  createdAt: Time!
+  email: String!
+  name: String!
+  password: String!
+  profile: Profile
+  updatedAt: Time!
+}
+
+type UserLoginOrRegisterResponse {
+  accessToken: String!
+  user: User!
+}
+
+union UserOrTeam = Team | User
+
+scalar _FieldSet

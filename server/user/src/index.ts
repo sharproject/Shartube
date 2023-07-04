@@ -1,73 +1,49 @@
-import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
-import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts'
-import { applyGraphQL } from 'https://deno.land/x/oak_graphql/mod.ts'
-import { resolvers } from './resolvers/index.ts'
-import { typeDefs } from './typeDefs/index.ts'
-import { WsListen } from './ws/index.ts'
-import mongoose from 'npm:mongoose'
-import { getDbUrl } from './util/GetDBUrl.ts'
-import { UserModel } from './model/user.ts'
-import { TeamModel } from './model/team.ts'
+import { readFileSync } from 'fs';
+import path from "path"
+import { ApolloServer } from "@apollo/server"
+import { resolvers } from './resolvers';
+import { WsListen } from "./ws"
+import mongoose from "mongoose"
+import { getDbUrl, ParseGraphqlContext, type ParseGraphqlContextResult } from './util';
+import express from "express"
+import http from "http"
+import { expressMiddleware } from "@apollo/server/express4"
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import cors from "cors"
 
-config({
-	path: PathJoin(import.meta.url, '..', '.env'),
-})
+const typeDefs = readFileSync(path.join(__dirname, './schema/output.graphql'), { encoding: 'utf-8' });
 
-const app = new Application({
-	proxy: true,
-})
-new WsListen(`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`)
+export type GraphQLContext = ParseGraphqlContextResult
 
-app.use(async (ctx, next) => {
-	await next()
-	const rt = ctx.response.headers.get('X-Response-Time')
-	console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`)
-})
-app.use(async (ctx, next) => {
-	const start = Date.now()
-	await next()
-	const ms = Date.now() - start
-	ctx.response.headers.set('X-Response-Time', `${ms}ms`)
-})
-;(async () => {
-	try {
-		let url = getDbUrl()
-		await mongoose.connect(url, {})
-	} catch (error) {
-		console.log({ error })
-	}
-})()
+    ; (async () => {
+        try {
+            new WsListen(`ws://${Bun.env['WS_HOST']}:${Bun.env['WS_PORT']}`)
+            const url = getDbUrl()
+            await mongoose.connect(url, {})
+        } catch (error) {
+            console.log({ error })
+        }
+    })()
 
-// endpoint for get user info by id
-app.use(async (ctx, next) => {
-	const pathname = ctx.request.url.pathname.trim()
+const app = express();
+const httpServer = http.createServer(app)
+const server = new ApolloServer<GraphQLContext>({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+});
 
-	if (pathname.startsWith('public/user/info')) {
-		const id = ctx.request.url.searchParams.get('id')
-		if (!id) {
-			ctx.response.status = 400
-			ctx.response.body = 'id is required'
-			return
-		}
-		console.log({ id })
-		ctx.response.body =
-			(await UserModel.findById(id)) || (await TeamModel.findById(id))
-	}
-	await next()
-})
+await server.start();
+app.use(
+    '/graphql',
+    cors(),
+    express.json(),
+    expressMiddleware(server, {
+        context: async (input) => await ParseGraphqlContext(input),
+    }),
+);
 
-const GraphQLService = await applyGraphQL<Router>({
-	Router,
-	typeDefs: typeDefs,
-	resolvers: resolvers,
-	context: (ctx) => {
-		// this line is for passing a user context for the auth
-		return { request: ctx.request }
-	},
-})
-
-app.use(GraphQLService.routes(), GraphQLService.allowedMethods())
-
-console.log('Server start at http://localhost:8080')
-await app.listen({ port: 8080 })
+const PORT = 8080
+httpServer.listen({ port: PORT }, () =>
+    console.log(`🚀 Server ready at http://localhost:${PORT}`)
+);

@@ -1,8 +1,14 @@
-FROM denoland/deno:alpine
-EXPOSE 8080
+FROM oven/bun as build
 WORKDIR /app
-COPY ./src ./src
-RUN deno cache ./src/index.ts
-ENV DB_NAME=users
-RUN mkdir -p /var/tmp/log
-CMD ["deno","run", "-A","--unstable", "./src/index.ts"]
+COPY package.json package.json
+COPY bun.lockb bun.lockb
+RUN bun install
+COPY ./codegen.yml .
+COPY ./src/schema/schema.graphql /app/src/schema/schema.graphql
+RUN bun run graphql:codegen
+COPY . .
+RUN bun run build
+FROM ubuntu
+COPY --from=build /app/main .
+EXPOSE 3000
+ENTRYPOINT ["sh"]
