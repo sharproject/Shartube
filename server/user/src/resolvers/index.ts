@@ -3,7 +3,9 @@ import { UserModel, TeamModel, Team, User } from "../model"
 import { DecodeToken, GenToken } from "../util"
 import { BadRequest, UnauthorizedError, ServerError, NotFound } from "../error"
 import { ProfileModel } from "../model/Profile";
+import bcrypt from "bcrypt"
 
+const saltRound = Number(process.env.SALT_ROUND || 10)
 
 export const resolvers: Resolvers = {
     Query: {
@@ -58,7 +60,7 @@ export const resolvers: Resolvers = {
                     'email or password or user name is incorrect',
                 )
             }
-            const IsValidPassword = await Bun.password.verify(
+            const IsValidPassword = await bcrypt.compare(
                 args.input.password,
                 user.password
             )
@@ -98,7 +100,7 @@ export const resolvers: Resolvers = {
 
             const User = new UserModel({
                 ...args.input,
-                ...{ password: await Bun.password.hash(args.input.password, "bcrypt") },
+                ...{ password: await bcrypt.hash(args.input.password, saltRound) },
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 comicIDs: [],
@@ -265,6 +267,15 @@ export const resolvers: Resolvers = {
             return await ProfileModel.findOne({
                 CreateID: input._id
             })
+        }
+    }, Profile: {
+        __resolveReference: async (reference) => {
+            const CreateID = reference.CreateID
+            const profile = await ProfileModel.findOne({
+                CreateID: CreateID
+            })
+            if (!profile) throw new ServerError()
+            return profile.toObject()
         }
     }
 }

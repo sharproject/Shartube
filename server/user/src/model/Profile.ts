@@ -1,18 +1,18 @@
 import mongoose from 'mongoose'
 
 const ProfileSchema = new mongoose.Schema({
-    CreateID: { type: mongoose.Types.ObjectId, required: true },
+    CreateID: { type: mongoose.Schema.Types.ObjectId, required: true },
     createdAt: { type: Date, default: new Date() },
     updatedAt: { type: Date, default: new Date() },
     comicIDs: [
         {
-            type: mongoose.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             default: [],
         },
     ],
     ShortComicIDs: [
         {
-            type: mongoose.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             default: [],
         },
     ],

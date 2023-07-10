@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 export const timeByMinus = 180 * 60 // 180h
 
 const SessionSchema = new mongoose.Schema({
-    userID: { type: mongoose.Types.ObjectId, required: true },
+    userID: { type: mongoose.Schema.Types.ObjectId, required: true },
     createdAt: { type: Date, default: new Date(), expires: timeByMinus },
     updatedAt: { type: Date, default: new Date() },
 })

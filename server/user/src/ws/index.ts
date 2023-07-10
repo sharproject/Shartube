@@ -1,6 +1,7 @@
 import { ProfileModel } from "../model/Profile";
 import { TeamModel } from '../model/team'
-import { DecodeToken } from '../util/Token.ts'
+import { DecodeToken } from '../util/Token'
+import { client as WebSocketClient, connection, Message } from "websocket"
 
 interface SenderData {
     url: string
@@ -14,17 +15,28 @@ interface SenderData {
     type: 'rep' | 'message'
 }
 
-export class WsListen extends WebSocket {
-    constructor(url: string | URL, protocols?: string | string[]) {
-        super(url, protocols)
+export class WsListen {
+    socketClient: WebSocketClient
+    onopen?: (this: WsListen, connection: connection) => any
+    onmessage: (this: WsListen, message: Message, connection: connection) => any
+    constructor(url: string) {
+        this.socketClient = new WebSocketClient()
+        this.socketClient.connect(url)
+
         this.handlers()
     }
     handlers() {
-        this.onopen = () => console.log('connect to ws success')
-        this.onmessage = async (message) => {
-            if (typeof message.data == "string") {
-                const data: SenderData = JSON.parse(message.data)
-                const send = (result: SenderData) => this.send(JSON.stringify(result))
+        const _this = this
+        this.socketClient.on('connect', function (connection) {
+            if (_this.onopen) _this.onopen.bind(_this, connection)()
+            connection.on('message', function (message) {
+                _this.onmessage.bind(_this, message, connection)()
+            });
+        })
+        this.onmessage = async (message, connection) => {
+            if (message.type == "utf8") {
+                const data: SenderData = JSON.parse(message.utf8Data)
+                const send = (result: SenderData) => connection.sendUTF(JSON.stringify(result))
                 let result: SenderData | null = null
                 if (data.url == 'user/decodeToken') {
                     result = await this.decodeToken(data)

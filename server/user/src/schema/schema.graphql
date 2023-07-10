@@ -18,7 +18,7 @@ input LoginUserInput {
 	UsernameOrEmail: String!
 	password: String!
 }
-type Profile @key(fields: "_id") {
+type Profile @key(fields: "CreateID") {
 	_id: ID!
 	CreateID: ID!
 }

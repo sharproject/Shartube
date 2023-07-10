@@ -252,7 +252,7 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
 }>;
 
 export type ProfileResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Profile'] = ResolversParentTypes['Profile']> = ResolversObject<{
-  __resolveReference?: ReferenceResolver<Maybe<ResolversTypes['Profile']>, { __typename: 'Profile' } & GraphQLRecursivePick<ParentType, {"_id":true}>, ContextType>;
+  __resolveReference?: ReferenceResolver<Maybe<ResolversTypes['Profile']>, { __typename: 'Profile' } & GraphQLRecursivePick<ParentType, {"CreateID":true}>, ContextType>;
   CreateID?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

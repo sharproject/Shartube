@@ -1,11 +1,11 @@
-export const DB_NAME = Bun.env['DB_NAME'] || 'users'
+export const DB_NAME = process.env['DB_NAME'] || 'users'
 export function getDbUrl() {
-    const DB_USERNAME = Bun.env['DB_USERNAME'] || 'root'
-    const DB_PASSWORD = Bun.env['DB_PASSWORD'] || 'root'
-    const DB_HOST = Bun.env['DB_HOST'] || 'localhost'
+    const DB_USERNAME = process.env['DB_USERNAME'] || 'root'
+    const DB_PASSWORD = process.env['DB_PASSWORD'] || 'root'
+    const DB_HOST = process.env['DB_HOST'] || 'localhost'
     let dbUrl = ''
-    if (Bun.env['DB_PORT']) {
-        dbUrl += `mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${Bun.env[
+    if (process.env['DB_PORT']) {
+        dbUrl += `mongodb://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${process.env[
             'DB_PORT'
         ]}`
         dbUrl += '/?authSource=admin&readPreference=primary&ssl=false'

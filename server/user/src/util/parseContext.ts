@@ -13,7 +13,7 @@ export async function ParseGraphqlContext(input: ExpressContextFunctionArgument)
     const request: RequestType = {
         headers: {
             get(name) {
-                return input.req.get(name)
+                return input.req.headers[name]
             },
         }
     }

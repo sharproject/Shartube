@@ -6,12 +6,12 @@ const TeamSchema = BaseUserSchema()
 TeamSchema.add({
     member: [
         {
-            type: mongoose.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             default: [],
         },
     ],
     owner: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
     },
 })

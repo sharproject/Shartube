@@ -14,30 +14,30 @@ import (
 )
 
 // Comics is the resolver for the comics field.
-func (r *userResolver) Comics(ctx context.Context, obj *model.User) ([]*model.Comic, error) {
+func (r *profileResolver) Comics(ctx context.Context, obj *model.Profile) ([]*model.Comic, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 
 	return comicModel.Find(bson.M{
-		"createdbyid": obj.ID,
+		"createdbyid": obj.CreateID,
 	})
 }
 
 // ShortComics is the resolver for the ShortComics field.
-func (r *userResolver) ShortComics(ctx context.Context, obj *model.User) ([]*model.ShortComic, error) {
+func (r *profileResolver) ShortComics(ctx context.Context, obj *model.Profile) ([]*model.ShortComic, error) {
 	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 
 	return ShortComicModel.Find(bson.M{
-		"createdbyid": obj.ID,
+		"createdbyid": obj.CreateID,
 	})
 }
 
-// User returns generated.UserResolver implementation.
-func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
+// Profile returns generated.ProfileResolver implementation.
+func (r *Resolver) Profile() generated.ProfileResolver { return &profileResolver{r} }
 
-type userResolver struct{ *Resolver }
+type profileResolver struct{ *Resolver }

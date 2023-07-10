@@ -33,7 +33,7 @@ type Mutation {
   RemoveUserInTeam(input: AddUserToTeamInput!): Team!
 }
 
-type Profile @key(fields: "_id") {
+type Profile @key(fields: "CreateID") {
   CreateID: ID!
   _id: ID!
 }

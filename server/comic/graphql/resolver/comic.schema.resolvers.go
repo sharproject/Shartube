@@ -13,7 +13,6 @@ import (
 	"github.com/Folody-Team/Shartube/directives"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
-	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -317,13 +316,3 @@ func (r *queryResolver) Comics(ctx context.Context) ([]*model.Comic, error) {
 func (r *Resolver) Comic() generated.ComicResolver { return &comicResolver{r} }
 
 type comicResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *comicResolver) CreatedBy(ctx context.Context, obj *model.Comic) (*model.User, error) {
-	return util.GetUserByID(obj.CreatedByID)
-}

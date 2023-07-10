@@ -1,14 +1,19 @@
-FROM oven/bun as build
+FROM node:alpine as build-ts
 WORKDIR /app
 COPY package.json package.json
-COPY bun.lockb bun.lockb
-RUN bun install
+COPY package-lock.json package-lock.json
+RUN npm install --save-dev
 COPY ./codegen.yml .
 COPY ./src/schema/schema.graphql /app/src/schema/schema.graphql
-RUN bun run graphql:codegen
+RUN npm run graphql:codegen
 COPY . .
-RUN bun run build
-FROM ubuntu
-COPY --from=build /app/main .
-EXPOSE 3000
-ENTRYPOINT ["sh"]
+RUN npm run build
+FROM node:alpine as ts-remove
+WORKDIR /app
+COPY --from=build-ts /app/package.json .
+COPY --from=build-ts /app/package-lock.json .
+RUN npm i --production
+COPY --from=build-ts /app/dist ./dist
+FROM node:alpine
+COPY --from=ts-remove /app .
+CMD [ "npm", "run","start" ]
