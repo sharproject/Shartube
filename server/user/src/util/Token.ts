@@ -1,11 +1,21 @@
 import * as jose from 'jose'
 import { SessionModel } from '../model'
 import mongoose from 'mongoose'
+import { readFileSync } from "fs"
+import path from "path"
+import { KeyObject } from "node:crypto"
 
 
-const secret = new TextEncoder().encode(
-    'cc7e0d44fd473002f1c42167459001140ec6389b7353f8088f4d9a95f2f596f2',
-)
+const secretString = readFileSync(path.join(__dirname, "../secret/key.private"), "utf-8")
+const key = crypto.subtle.importKey("jwk", JSON.parse(secretString), {
+    name: "HMAC",
+    hash: 'SHA-512',
+    length: 512
+}, true, ["sign", "verify"])
+
+const secret = (async () => {
+    return KeyObject.from(await key)
+})()
 
 export async function GenToken(userID: string) {
     const session = await new SessionModel({
@@ -26,7 +36,7 @@ export async function GenToken(userID: string) {
         }
     }
 
-    const alg = 'HS256'
+    const alg = 'HS512'
 
     const jwt = await new jose.SignJWT({ 'urn:example:claim': true, sessionID: session._id })
         .setProtectedHeader({ alg })
@@ -34,12 +44,12 @@ export async function GenToken(userID: string) {
         .setIssuer('urn:example:issuer')
         .setAudience('urn:example:audience')
         .setExpirationTime('180h') // i think we should use the timeByMinus
-        .sign(secret)
+        .sign(await secret)
     return jwt
 }
 
 async function VerifyToken(token: string) {
-    return await jose.jwtVerify(token, secret, {
+    return await jose.jwtVerify(token, await secret, {
         issuer: 'urn:example:issuer',
         audience: 'urn:example:audience',
     })

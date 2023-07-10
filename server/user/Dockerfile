@@ -15,5 +15,6 @@ COPY --from=build-ts /app/package-lock.json .
 RUN npm i --production
 COPY --from=build-ts /app/dist ./dist
 FROM node:alpine
+WORKDIR /app
 COPY --from=ts-remove /app .
 CMD [ "npm", "run","start" ]
