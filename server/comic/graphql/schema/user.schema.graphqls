@@ -1,5 +1,6 @@
-extend type User @key(fields: "_id") {
-  _id: ID! @external
+extend type Profile @key(fields: "CreateID") {
+  # _id: ID! @external
+  CreateID: ID! @external
   comics: [Comic]! @goField(forceResolver: true)
   ShortComics: [ShortComic]! @goField(forceResolver: true)
 }

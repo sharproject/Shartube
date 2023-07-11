@@ -21,7 +21,6 @@ type ShortComic implements CreateShortComic {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  # CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String

@@ -158,6 +158,14 @@ type ImageResult struct {
 	URL string `json:"Url"`
 }
 
+type Profile struct {
+	CreateID    string        `json:"CreateID"`
+	Comics      []*Comic      `json:"comics"`
+	ShortComics []*ShortComic `json:"ShortComics"`
+}
+
+func (Profile) IsEntity() {}
+
 type ShortComic struct {
 	ID          string    `json:"_id" bson:"_id"`
 	CreatedAt   time.Time `json:"createdAt"`
@@ -227,11 +235,3 @@ type UploadComicResponse struct {
 	Comic       *Comic  `json:"comic"`
 	UploadToken *string `json:"UploadToken"`
 }
-
-type User struct {
-	ID          string        `json:"_id" bson:"_id"`
-	Comics      []*Comic      `json:"comics"`
-	ShortComics []*ShortComic `json:"ShortComics"`
-}
-
-func (User) IsEntity() {}

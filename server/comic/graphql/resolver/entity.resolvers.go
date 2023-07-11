@@ -20,10 +20,10 @@ func (r *entityResolver) FindChapByID(ctx context.Context, id string) (*model.Ch
 	return comicChapModel.FindById(id)
 }
 
-// FindUserByID is the resolver for the findUserByID field.
-func (r *entityResolver) FindUserByID(ctx context.Context, id string) (*model.User, error) {
-	return &model.User{
-		ID: id,
+// FindProfileByCreateID is the resolver for the findProfileByCreateID field.
+func (r *entityResolver) FindProfileByCreateID(ctx context.Context, createID string) (*model.Profile, error) {
+	return &model.Profile{
+		CreateID: createID,
 	}, nil
 }
 

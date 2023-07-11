@@ -1,73 +1,87 @@
-import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
-import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts'
-import { applyGraphQL } from 'https://deno.land/x/oak_graphql/mod.ts'
-import { resolvers } from './resolvers/index.ts'
-import { typeDefs } from './typeDefs/index.ts'
-import { WsListen } from './ws/index.ts'
-import mongoose from 'npm:mongoose'
-import { getDbUrl } from './util/GetDBUrl.ts'
-import { UserModel } from './model/user.ts'
-import { TeamModel } from './model/team.ts'
+import { readFileSync, existsSync, writeFileSync } from "fs";
+import path from "path";
+import { ApolloServer } from "@apollo/server";
+import { resolvers } from "./resolvers";
+import { WsListen } from "./ws";
+import mongoose from "mongoose";
+import {
+    getDbUrl,
+    ParseGraphqlContext,
+    type ParseGraphqlContextResult,
+} from "./util";
+import express from "express";
+import * as http from "node:http";
+import { expressMiddleware } from "@apollo/server/express4";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import cors from "cors";
+import { buildSubgraphSchema } from "@apollo/subgraph";
+import { parse as GraphqlParse } from "graphql"
+import crypto from "crypto"
 
-config({
-	path: PathJoin(import.meta.url, '..', '.env'),
-})
+const typeDefs = readFileSync(path.join(__dirname, "./schema/output.graphql"), {
+    encoding: "utf-8",
+});
 
-const app = new Application({
-	proxy: true,
-})
-new WsListen(`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`)
+export type GraphQLContext = ParseGraphqlContextResult;
 
-app.use(async (ctx, next) => {
-	await next()
-	const rt = ctx.response.headers.get('X-Response-Time')
-	console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`)
-})
-app.use(async (ctx, next) => {
-	const start = Date.now()
-	await next()
-	const ms = Date.now() - start
-	ctx.response.headers.set('X-Response-Time', `${ms}ms`)
-})
-;(async () => {
-	try {
-		let url = getDbUrl()
-		await mongoose.connect(url, {})
-	} catch (error) {
-		console.log({ error })
-	}
-})()
+const connect = async () => {
+    try {
+        const ws = new WsListen(
+            `ws://${process.env["WS_HOST"]}:${process.env["WS_PORT"]}`,
+        );
+        ws.onopen = () => console.log("Connect to Ws server success");
+        const url = getDbUrl();
+        await mongoose.connect(url, {});
+        console.log("Connect to mongodb server success");
+    } catch (error) {
+        console.log({ error });
+    }
+};
 
-// endpoint for get user info by id
-app.use(async (ctx, next) => {
-	const pathname = ctx.request.url.pathname.trim()
 
-	if (pathname.startsWith('public/user/info')) {
-		const id = ctx.request.url.searchParams.get('id')
-		if (!id) {
-			ctx.response.status = 400
-			ctx.response.body = 'id is required'
-			return
-		}
-		console.log({ id })
-		ctx.response.body =
-			(await UserModel.findById(id)) || (await TeamModel.findById(id))
-	}
-	await next()
-})
+const setupPrivate = async () => {
+    const privateKeyDir = path.join(__dirname, "./secret/key.private")
+    if (existsSync(privateKeyDir)) return
+    const key = await crypto.subtle.generateKey({
+        name: 'HMAC',
+        hash: 'SHA-512',
+        length: 512,
+    }, true, ['sign', 'verify']);
+    writeFileSync(privateKeyDir, JSON.stringify((await crypto.subtle.exportKey("jwk", key))))
+}
 
-const GraphQLService = await applyGraphQL<Router>({
-	Router,
-	typeDefs: typeDefs,
-	resolvers: resolvers,
-	context: (ctx) => {
-		// this line is for passing a user context for the auth
-		return { request: ctx.request }
-	},
-})
+const main = async () => {
+    const app = express();
+    app.use(cors({
+        credentials: true,
+    }));
+    app.use(express.json());
+    const httpServer = http.createServer(app);
+    await connect();
+    const server = new ApolloServer<GraphQLContext>({
+        schema: buildSubgraphSchema({ typeDefs: GraphqlParse(typeDefs), resolvers }),
+        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+        csrfPrevention: false,
+    });
 
-app.use(GraphQLService.routes(), GraphQLService.allowedMethods())
+    await server.start();
+    app.use(
+        "/graphql",
+        expressMiddleware(server, {
+            context: async (input) => await ParseGraphqlContext(input),
+        }),
+    );
+    setupPrivate()
+    app.get("/", (_req, res) => {
+        res.send("Hello world");
+    });
 
-console.log('Server start at http://localhost:8080')
-await app.listen({ port: 8080 })
+    const PORT = 8080;
+    httpServer.listen(
+        PORT,
+        () => console.log(`🚀 Server ready at http://localhost:${PORT}`),
+    );
+};
+
+main().then(() => console.log("Start server success"));
+
