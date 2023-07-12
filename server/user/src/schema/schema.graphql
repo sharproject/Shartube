@@ -65,4 +65,5 @@ extend type Query {
 	# _entities(representations: [_Any!]!): [_Entity]!
 	Me: User!
 	PageFromId(id: String!): UserOrTeam
+	FindProfileById(UserOrTeamId: String!): Profile!
 }

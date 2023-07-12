@@ -39,6 +39,7 @@ type Profile @key(fields: "CreateID") {
 }
 
 type Query {
+  FindProfileById(UserOrTeamId: String!): Profile!
   Me: User!
   PageFromId(id: String!): UserOrTeam
 }

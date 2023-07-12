@@ -75,8 +75,14 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  FindProfileById: Profile;
   Me: User;
   PageFromId?: Maybe<UserOrTeam>;
+};
+
+
+export type QueryFindProfileByIdArgs = {
+  UserOrTeamId: Scalars['String']['input'];
 };
 
 
@@ -259,6 +265,7 @@ export type ProfileResolvers<ContextType = GraphQLContext, ParentType extends Re
 }>;
 
 export type QueryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  FindProfileById?: Resolver<ResolversTypes['Profile'], ParentType, ContextType, RequireFields<QueryFindProfileByIdArgs, 'UserOrTeamId'>>;
   Me?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   PageFromId?: Resolver<Maybe<ResolversTypes['UserOrTeam']>, ParentType, ContextType, RequireFields<QueryPageFromIdArgs, 'id'>>;
 }>;

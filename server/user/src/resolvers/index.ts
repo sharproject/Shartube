@@ -45,6 +45,13 @@ export const resolvers: Resolvers = {
                 profile: null
             }
         },
+        FindProfileById: async (_root, arg, _ctx) => {
+            const profile = await ProfileModel.findOne({
+                CreateID: arg.UserOrTeamId
+            })
+            if (!profile) throw new NotFound()
+            return profile.toObject()
+        }
     },
     Mutation: {
         async Login(_, args) {
