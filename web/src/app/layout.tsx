@@ -1,4 +1,3 @@
-'use client'
 import './globals.css'
 import { Inter, Roboto } from 'next/font/google'
 import { ApolloProvider } from '@apollo/client'
