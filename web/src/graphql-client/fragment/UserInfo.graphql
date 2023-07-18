@@ -1,0 +1,10 @@
+fragment userInfo on User {
+  _id
+  email
+  name
+  ShortComicIDs
+  comicIDs
+  updatedAt
+  createdAt
+  password
+}
