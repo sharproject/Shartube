@@ -1,4 +1,3 @@
-import { readFileSync, existsSync, writeFileSync } from "fs";
 import path from "path";
 import { ApolloServer } from "@apollo/server";
 import { resolvers } from "./resolvers";
@@ -16,7 +15,7 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import cors from "cors";
 import { buildSubgraphSchema } from "@apollo/subgraph";
 import { parse as GraphqlParse } from "graphql"
-import crypto from "crypto"
+import { readFileSync } from "fs";
 
 const typeDefs = readFileSync(path.join(__dirname, "./schema/output.graphql"), {
     encoding: "utf-8",
@@ -39,16 +38,6 @@ const connect = async () => {
 };
 
 
-const setupPrivate = async () => {
-    const privateKeyDir = path.join(__dirname, "./secret/key.private")
-    if (existsSync(privateKeyDir)) return
-    const key = await crypto.subtle.generateKey({
-        name: 'HMAC',
-        hash: 'SHA-512',
-        length: 512,
-    }, true, ['sign', 'verify']);
-    writeFileSync(privateKeyDir, JSON.stringify((await crypto.subtle.exportKey("jwk", key))))
-}
 
 const main = async () => {
     const app = express();
@@ -71,7 +60,6 @@ const main = async () => {
             context: async (input) => await ParseGraphqlContext(input),
         }),
     );
-    setupPrivate()
     app.get("/", (_req, res) => {
         res.send("Hello world");
     });
