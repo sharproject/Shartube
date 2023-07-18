@@ -57,7 +57,7 @@ services:
     expose:
       - 8080
     volumes:
-      - ./user/src/secret:/app/src/secret
+      - ./user/src/secret:/app/dist/secret
 
   shartube-upload-server:
     container_name: shartube-upload-server
