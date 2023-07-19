@@ -18,3 +18,7 @@ headers:
 
 plugins:
   experimental.expose_query_plan: true
+
+cors:
+  allow_any_origin: true
+  allow_credentials: true
