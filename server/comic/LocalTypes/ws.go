@@ -56,3 +56,8 @@ type UploadedComicThumbnailPayload struct {
 type UploadSessionComicThumbnailPayload struct {
 	ComicSessionId string `json:"comicSessionId"`
 }
+
+type CheckIdRealPayload struct {
+	Id string `json:"id"`
+	ObjectType string `json:"objectType"`
+}
