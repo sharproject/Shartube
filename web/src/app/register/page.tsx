@@ -1,19 +1,33 @@
 'use client'
+import React, { useState, useEffect } from 'react'
+
 import { useRouter } from 'next/navigation'
-import { useCheckAuth } from '@/hooks/useCheckAuth'
-import { useEffect, useState } from 'react'
-import { useMutation } from '@apollo/client'
-import {
-	loginMutationDocument,
-	meQueryDocument,
-} from '@/util/rawSchemaDocument'
-import { MeQuery } from '@/generated/graphql/graphql'
 import { LogoLoading } from '@/components/logo'
-export default function LoginPage() {
-	const { data: authData, loading: authLoading } = useCheckAuth()
-	let emailOrUsername: HTMLInputElement | null
+import { useCheckAuth } from '@/hooks/useCheckAuth'
+import { useMutation } from '@apollo/client'
+import { registerMutationDocument } from '@/util/rawSchemaDocument'
+import { MeDocument, MeQuery } from '@/generated/graphql/graphql'
+
+/**
+ *
+ * @returns {JSX.Element}
+ * Afk time
+ */
+
+export default function Register() {
+	let username: HTMLInputElement | null
+	let email: HTMLInputElement | null
 	let password: HTMLInputElement | null
+
+	/**
+	 *
+	 *
+	 *
+	 */
+
 	const router = useRouter()
+
+	const { data: authData, loading: authLoading } = useCheckAuth()
 
 	const [inputContainWidth, setInputContainWidth] = useState(0)
 
@@ -39,35 +53,35 @@ export default function LoginPage() {
 		}
 	})
 
-	const [login, { data, loading, error }] = useMutation(loginMutationDocument)
+	const [register, { data, loading, error }] = useMutation(
+		registerMutationDocument
+	)
 	const OnSubmit = async () => {
-		if (emailOrUsername && password) {
-			const response = await login({
+		if (username && email && password) {
+			const response = await register({
 				variables: {
 					input: {
-						UsernameOrEmail: emailOrUsername.value,
+						name: username.value,
+						email: email.value,
 						password: password.value,
 					},
 				},
 				update(cache, { data }) {
-					if (data?.Login.user && data.Login.accessToken) {
+					if (data?.Register.user && data.Register.accessToken) {
 						cache.writeQuery<MeQuery>({
-							query: meQueryDocument,
+							query: MeDocument,
 							data: {
-								Me: data.Login.user,
+								Me: data.Register.user,
 							},
 						})
 					}
-				},
-				onError(error, clientOptions) {
-					console.log(error.message)
 				},
 			})
 			if (response.errors) {
 				// làm gì đó cho user bik
 			}
-			if (response.data && response.data.Login.accessToken) {
-				localStorage.setItem('token', response.data.Login.accessToken)
+			if (response.data && response.data.Register.accessToken) {
+				localStorage.setItem('token', response.data.Register.accessToken)
 
 				router.push('/')
 			}
@@ -83,84 +97,101 @@ export default function LoginPage() {
 			) : (
 				<div
 					className='
-          bg-[#141518] 
-          h-[100vh] 
-          text-[#B7B7B7]
-          flex
-          flex-col
-          justify-center
-          items-center
-        '
+      bg-[#141518] 
+      h-[100vh] 
+      text-[#B7B7B7]
+      flex
+      flex-col
+      justify-center
+      items-center
+    '
 				>
 					<div
 						className={`
-            flex
-            flex-col
-            justify-center
-            items-center
-          `}
+        flex
+        flex-col
+        justify-center
+        items-center
+      `}
 						style={{
 							width: inputContainWidth + '%',
 						}}
 					>
 						<h1
 							className={`
-              text-[#e4e4e4]
-              text-[2em]
-              mb-[20px]
-            `}
+          text-[#e4e4e4]
+          text-[2em]
+          mb-[20px]
+        `}
 						>
-							Login
+							Register
 						</h1>
 						<div
 							className='
-              w-[100%] 
-              mt-[5px]
-              flex
-              flex-col
-            '
+          w-[100%] 
+          mt-[5px]
+          flex
+          flex-col
+        '
 						>
 							{error?.message && (
 								<div className='bg-red-200 rounded-lg border border-spacing-0 border-red-500 text-center my-2 py-2.5'>
 									{error?.message}
 								</div>
 							)}
-							<label>Email or username</label>
+							<label>Username</label>
 							<input
-								id='email'
-								className='bg-[#212328] w-[100] p-[6px] px-[10px] rounded-[6px] outline-none hover:bg-[#2a2d33] mt-[8px]'
-								placeholder='Enter email or username'
+								id='username'
 								ref={(e) => {
-									emailOrUsername = e
+									username = e
 								}}
+								className='bg-[#212328] w-[100] p-[6px] px-[10px] rounded-[6px] outline-none hover:bg-[#2a2d33] mt-[8px]'
+								placeholder='Enter username'
 							/>
 						</div>
 						<div
 							className='
-              w-[100%] 
-              mt-[5px]      
-              flex
-              flex-col
-            '
+          w-[100%] 
+          mt-[5px]
+          flex
+          flex-col
+        '
+						>
+							<label>Email</label>
+							<input
+								id='email'
+								ref={(e) => {
+									email = e
+								}}
+								className='bg-[#212328] w-[100] p-[6px] px-[10px] rounded-[6px] outline-none hover:bg-[#2a2d33] mt-[8px]'
+								placeholder='Enter email'
+							/>
+						</div>
+						<div
+							className='
+          w-[100%] 
+          mt-[5px]      
+          flex
+          flex-col
+        '
 						>
 							<label>Password</label>
 							<input
 								id='password'
-								className='bg-[#212328] w-[100] p-[6px] px-[10px] rounded-[6px] outline-none hover:bg-[#2a2d33] mt-[8px]'
-								placeholder='Enter password'
-								type='password'
 								ref={(e) => {
 									password = e
 								}}
+								className='bg-[#212328] w-[100] p-[6px] px-[10px] rounded-[6px] outline-none hover:bg-[#2a2d33] mt-[8px]'
+								placeholder='Enter password'
+								type='password'
 							/>
 						</div>
 
 						<button
 							className='bg-[#2F4DEE] w-[100%] py-[8px] mt-[20px] rounded-[6px] hover:bg-[#3b58fa]'
-							disabled={loading}
 							onClick={OnSubmit}
 						>
-							Login
+							Register
 						</button>
 					</div>
 				</div>

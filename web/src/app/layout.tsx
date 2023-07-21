@@ -1,7 +1,6 @@
 import './globals.css'
 import { Inter, Roboto } from 'next/font/google'
-import { ApolloProvider } from '@apollo/client'
-import client from '@/util/apollo-client'
+import { ApolloWrapper } from '@/libs/apollo-wrapper'
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'] })
 const roboto = Roboto({
@@ -22,7 +21,7 @@ export default function RootLayout({
 	return (
 		<html lang='en'>
 			<body className={`${inter.className} ${roboto.className}`}>
-				<ApolloProvider client={client}>{children}</ApolloProvider>
+				<ApolloWrapper>{children}</ApolloWrapper>
 			</body>
 		</html>
 	)

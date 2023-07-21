@@ -13,7 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "fragment userInfo on User {\n  _id\n  email\n  name\n  ShortComicIDs\n  comicIDs\n  updatedAt\n  createdAt\n  password\n}": types.UserInfoFragmentDoc,
+    "fragment userInfo on User {\n  _id\n  email\n  name\n  updatedAt\n  createdAt\n  password\n  profile {\n    _id\n    comics {\n      _id\n    }\n    ShortComics {\n      _id\n    }\n  }\n}": types.UserInfoFragmentDoc,
     "mutation Login($input: LoginUserInput!) {\n  Login(input: $input) {\n    accessToken\n    user {\n      ...userInfo\n    }\n  }\n}": types.LoginDocument,
     "mutation Register($input: RegisterUserInput!) {\n  Register(input: $input) {\n    accessToken\n    user {\n      ...userInfo\n    }\n  }\n}": types.RegisterDocument,
     "query Me {\n  Me {\n    ...userInfo\n  }\n}": types.MeDocument,
@@ -36,7 +36,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "fragment userInfo on User {\n  _id\n  email\n  name\n  ShortComicIDs\n  comicIDs\n  updatedAt\n  createdAt\n  password\n}"): (typeof documents)["fragment userInfo on User {\n  _id\n  email\n  name\n  ShortComicIDs\n  comicIDs\n  updatedAt\n  createdAt\n  password\n}"];
+export function graphql(source: "fragment userInfo on User {\n  _id\n  email\n  name\n  updatedAt\n  createdAt\n  password\n  profile {\n    _id\n    comics {\n      _id\n    }\n    ShortComics {\n      _id\n    }\n  }\n}"): (typeof documents)["fragment userInfo on User {\n  _id\n  email\n  name\n  updatedAt\n  createdAt\n  password\n  profile {\n    _id\n    comics {\n      _id\n    }\n    ShortComics {\n      _id\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
