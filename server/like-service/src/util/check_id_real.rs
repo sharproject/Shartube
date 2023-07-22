@@ -17,6 +17,8 @@ pub fn check_id_real(
         header: serde_json::Value::Null,
         payload: serde_json::json! {{
             "id":message_id,
+            "objectId":id,
+            "objectType":object_type
         }},
         error: serde_json::Value::Null,
     };

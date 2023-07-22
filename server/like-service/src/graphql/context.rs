@@ -4,12 +4,17 @@ use actix_web::{
     http::header::{self, HeaderMap},
     web,
 };
-use mongodb::Database;
+use mongodb::{Collection, Database};
 
 use crate::util::{
     auth::{get_user_session, AuthSessionDataReturn},
-    checkIdReal::check_id_real,
+    check_id_real::check_id_real,
 };
+
+use crate::graphql::types::{LikeInfo, Likes};
+
+const LIKES_COLLECTION_NAME: &'static str = "likes";
+const LIKE_INFO_COLLECTION_NAME: &'static str = "like_info";
 
 #[derive(Clone)]
 pub struct ContextUtil {
@@ -19,6 +24,8 @@ pub struct ContextUtil {
     >,
     pub sdl: String,
     pub db: web::Data<Database>,
+    pub likes_collection: Collection<Likes>,
+    pub like_info_collection: Collection<LikeInfo>,
 }
 
 impl juniper::Context for ContextUtil {}
@@ -32,11 +39,15 @@ impl ContextUtil {
         sdl: String,
         db: web::Data<Database>,
     ) -> ContextUtil {
+        let likes_collection = db.collection::<Likes>(LIKES_COLLECTION_NAME);
+        let like_info_collection = db.collection::<LikeInfo>(LIKE_INFO_COLLECTION_NAME);
         return Self {
             headers: headers.clone(),
             socket: socket.clone(),
             sdl,
             db,
+            likes_collection,
+            like_info_collection,
         };
     }
     pub fn is_authentication(&self) -> Option<AuthSessionDataReturn> {

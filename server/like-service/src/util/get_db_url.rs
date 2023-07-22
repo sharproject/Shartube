@@ -4,7 +4,7 @@ pub fn get_db_url() -> String {
     let db_password = option_env!("DB_PASSWORD").unwrap_or("root");
     let db_host = option_env!("DB_HOST").unwrap_or("localhost");
     let db_port = option_env!("DB_PORT");
-    let mut db_url = match db_port {
+    let db_url = match db_port {
         Some(port) => format!(
             "mongodb://{}:{}@{}:{}/?authSource=admin&readPreference=primary&ssl=false",
             db_username, db_password, db_host, port
