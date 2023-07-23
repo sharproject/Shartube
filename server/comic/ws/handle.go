@@ -75,6 +75,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					Payload: AllImages,
 					From:    "comic/AddImageForChap",
 					Type:    "message",
+					ID:      uuid.NewString(),
 				}
 
 				comicObject, err := json.Marshal(comicObjectData)
@@ -176,6 +177,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					Payload: AllImages,
 					From:    "ShortComic/AddImageForChap",
 					Type:    "message",
+					ID:      uuid.NewString(),
 				}
 
 				comicObject, err := json.Marshal(comicObjectData)
@@ -223,7 +225,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 }
 
 func writeCheckIDRealMessage(
-	ws *websocket.Conn, 
+	ws *websocket.Conn,
 	from string,
 	objetType string,
 	real bool,

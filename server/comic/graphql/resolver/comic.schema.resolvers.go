@@ -70,6 +70,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		},
 		From: "comic/createComic",
 		Type: "message",
+		ID:   uuid.New().String(),
 	}
 
 	comicObject, err := json.Marshal(comicObjectData)
@@ -103,6 +104,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 			Payload: &payload,
 			From:    "comic/addImages",
 			Type:    "message",
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {
@@ -212,6 +214,7 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 			Payload: &payload,
 			From:    "comic/updateComic",
 			Type:    "message",
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {
@@ -288,6 +291,7 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 		},
 		From: "comic/DeleteComic",
 		Type: "message",
+		ID:   uuid.NewString(),
 	}
 
 	comicObject, err := json.Marshal(comicObjectData)

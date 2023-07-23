@@ -123,6 +123,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 			Payload: &payload,
 			From:    "comic/addImages",
 			Type:    "message",
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {
@@ -231,6 +232,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			Payload: &payload,
 			From:    "comic/updateComicSession",
 			Type:    "message",
+			ID: requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {

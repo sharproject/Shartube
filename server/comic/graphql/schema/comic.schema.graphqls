@@ -4,12 +4,14 @@ interface CreateComic {
   name: String!
   description: String
   thumbnail: String
+  background: String
 }
 
 input CreateComicInput {
   name: String!
   description: String
   thumbnail: Boolean
+  background: Boolean
 }
 
 type CreateComicInputModel implements CreateComic {
@@ -17,6 +19,7 @@ type CreateComicInputModel implements CreateComic {
   description: String
   CreatedByID: String!
   thumbnail: String
+  background: String
 }
 
 type Comic implements CreateComic {
@@ -29,11 +32,13 @@ type Comic implements CreateComic {
   sessionId: [String!]
   session: [ComicSession!] @goField(forceResolver: true)
   thumbnail: String
+  background: String
 }
 
 input UpdateComicInput {
   name: String
   description: String
+  background: Boolean
   thumbnail: Boolean
 }
 
@@ -46,6 +51,7 @@ type UpdateComicInputModel {
   name: String
   description: String
   thumbnail: String
+  background: String
 }
 
 type CreateComicResponse {

@@ -182,6 +182,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		Payload: &payload,
 		From:    "comic/addImages",
 		Type:    "message",
+		ID:      requestId,
 	}
 	requestDataBytes, err := json.Marshal(requestData)
 	if err != nil {
@@ -307,6 +308,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		Payload: imageID,
 		From:    "comic/RemoveImageForChap",
 		Type:    "message",
+		ID:      uuid.New().String(),
 	}
 
 	chapObject, err := json.Marshal(chapObjectData)

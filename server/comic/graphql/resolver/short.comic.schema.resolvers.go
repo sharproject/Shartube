@@ -53,6 +53,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		},
 		From: "ShortShortComic/createShortComic",
 		Type: "message",
+		ID:   uuid.NewString(),
 	}
 
 	ShortComicObject, err := json.Marshal(ShortComicObjectData)
@@ -86,6 +87,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 			Payload: &payload,
 			From:    "ShortComic/addImages",
 			Type:    "message",
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {
@@ -192,6 +194,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 			Payload: &payload,
 			From:    "ShortComic/updateShortComic",
 			Type:    "message",
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {
@@ -268,6 +271,7 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 		},
 		From: "ShortComic/DeleteComic",
 		Type: "message",
+		ID:   uuid.NewString(),
 	}
 
 	comicObject, err := json.Marshal(comicObjectData)

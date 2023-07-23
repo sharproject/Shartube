@@ -49,6 +49,7 @@ type Comic struct {
 	SessionID   []string        `json:"sessionId"`
 	Session     []*ComicSession `json:"session"`
 	Thumbnail   *string         `json:"thumbnail"`
+	Background  *string         `json:"background"`
 }
 
 func (Comic) IsCreateComic() {}
@@ -90,6 +91,7 @@ type CreateComicInput struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *bool   `json:"thumbnail"`
+	Background  *bool   `json:"background"`
 }
 
 type CreateComicInputModel struct {
@@ -97,6 +99,7 @@ type CreateComicInputModel struct {
 	Description *string `json:"description"`
 	CreatedByID string  `json:"CreatedByID"`
 	Thumbnail   *string `json:"thumbnail"`
+	Background  *string `json:"background"`
 }
 
 func (CreateComicInputModel) IsCreateComic() {}
@@ -188,6 +191,7 @@ type UpdateChapInput struct {
 type UpdateComicInput struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
+	Background  *bool   `json:"background"`
 	Thumbnail   *bool   `json:"thumbnail"`
 }
 
@@ -195,6 +199,7 @@ type UpdateComicInputModel struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *string `json:"thumbnail"`
+	Background  *string `json:"background"`
 }
 
 type UpdateComicSessionInput struct {

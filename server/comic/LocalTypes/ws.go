@@ -15,6 +15,7 @@ type WsRequest struct {
 	Payload any          `json:"payload"`
 	From    string       `json:"from"`
 	Type    string       `json:"type"`
+	ID      string       `json:"id"`
 }
 
 type BaseReturn struct {
@@ -58,6 +59,6 @@ type UploadSessionComicThumbnailPayload struct {
 }
 
 type CheckIdRealPayload struct {
-	Id string `json:"objectId"`
+	Id         string `json:"objectId"`
 	ObjectType string `json:"objectType"`
 }
