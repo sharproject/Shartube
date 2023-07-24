@@ -14,9 +14,10 @@ pub fn get_user_session(
         header: serde_json::Value::Null,
         payload: serde_json::json! {{
             "token":token,
-            "id":message_id
+            "id":message_id.clone()
         }},
         error: serde_json::Value::Null,
+        id: message_id.clone(),
     };
     let mut socket = socket.lock().unwrap();
     socket
@@ -86,4 +87,5 @@ pub struct SenderData<T = serde_json::Value> {
     pub error: serde_json::Value,
     #[serde(rename = "type")]
     pub message_type: String,
+    pub id: String,
 }

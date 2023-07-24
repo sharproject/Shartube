@@ -16,11 +16,12 @@ pub fn check_id_real(
         from: "like/checkIdReal".to_string(),
         header: serde_json::Value::Null,
         payload: serde_json::json! {{
-            "id":message_id,
+            "id":message_id.clone(),
             "objectId":id,
             "objectType":object_type
         }},
         error: serde_json::Value::Null,
+        id: message_id.clone(),
     };
     let mut socket = socket.lock().unwrap();
     socket
