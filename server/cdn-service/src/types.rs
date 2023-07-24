@@ -8,4 +8,5 @@ pub struct SenderData {
     pub error: serde_json::Value,
     #[serde(rename = "type")]
     pub message_type: String,
+    pub id: String,
 }

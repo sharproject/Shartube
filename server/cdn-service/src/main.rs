@@ -56,20 +56,9 @@ async fn main() {
                         continue;
                     }
                     if json_data.url.eq("upload_token_registry/genToken") {
-                        let sender_data = None;
+                        let mut sender_data = None;
                         if let serde_json::Value::Array(a) = json_data.payload {
-                            let tokens = vec![];
-                            let sender_data = SenderData {
-                                url: json_data.from,
-                                message_type: "rep".to_string(),
-                                from: json_data.url,
-                                header: serde_json::Value::Null,
-                                payload: serde_json::json! {{
-                                    "id":id,
-                                    "token":id
-                                }},
-                                error: (serde_json::Value::Null),
-                            };
+                            let mut tokens = vec![];
                             for v in a {
                                 let (id, data, emit_to, event_name) = (
                                     v.get("id").unwrap().as_str().unwrap(),
@@ -77,15 +66,30 @@ async fn main() {
                                     v.get("emit_to").unwrap().as_str().unwrap(),
                                     v.get("event_name").unwrap().as_str().unwrap(),
                                 );
+                                let token = gen_token(id.to_string());
+
                                 token_storage.lock().unwrap().insert(
-                                    id.to_string(),
+                                    token.to_string(),
                                     TokenStorageTableNode {
                                         data: data.clone(),
                                         emit_to: emit_to.to_string(),
                                         event_name: event_name.to_string(),
                                     },
                                 );
+                                tokens.push(token.clone());
                             }
+                            sender_data = Some(SenderData {
+                                url: json_data.from,
+                                message_type: "rep".to_string(),
+                                from: json_data.url,
+                                header: serde_json::Value::Null,
+                                payload: serde_json::json! {{
+                                    "id":json_data.id.to_string(),
+                                    "token":tokens.clone()
+                                }},
+                                error: (serde_json::Value::Null),
+                                id: json_data.id.to_string(),
+                            });
                         } else if let serde_json::Value::Object(o) = json_data.payload {
                             let (id, data, emit_to, event_name) = (
                                 o.get("id").unwrap().as_str().unwrap(),
@@ -108,10 +112,11 @@ async fn main() {
                                 from: json_data.url,
                                 header: serde_json::Value::Null,
                                 payload: serde_json::json! {{
-                                    "id":id,
+                                    "id":id.to_string(),
                                     "token":token.clone()
                                 }},
                                 error: (serde_json::Value::Null),
+                                id: id.to_string(),
                             });
                         }
                         match socket.write_message(Message::Text(
@@ -245,10 +250,11 @@ fn send_uploaded_message(
             error: (serde_json::Value::Null),
             url: socket_url.to_string(),
             payload: serde_json::json!({
-                "id":id,
+                "id":id.clone(),
                 "url":images_url,
                 "data": data
             }),
+            id: id.clone(),
         };
         match socket.write_message(Message::Text(serde_json::to_string(&sender_data).unwrap())) {
             Ok(_) => {}
