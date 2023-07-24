@@ -13,6 +13,7 @@ interface SenderData {
     from: string
     error?: string | null
     type: 'rep' | 'message'
+    id: string
 }
 
 export class WsListen {
@@ -93,6 +94,7 @@ export class WsListen {
                 type: 'rep',
                 error: null,
                 from: 'user/decodeToken',
+                id: data.payload.id
             }
         } catch (error: any) {
             return {
@@ -105,6 +107,7 @@ export class WsListen {
                 type: 'rep',
                 error: error.message,
                 from: 'user/decodeToken',
+                id: data.payload.id
             }
         }
     }
@@ -131,6 +134,7 @@ export class WsListen {
                 type: 'rep',
                 error: null,
                 from: 'user/updateUserComic',
+                id: data.payload.id
             }
         } catch (error: any) {
             return {
@@ -143,6 +147,7 @@ export class WsListen {
                 type: 'rep',
                 error: error.message,
                 from: 'user/updateUserComic',
+                id: data.payload.id
             }
         }
     }
@@ -169,6 +174,7 @@ export class WsListen {
                 type: 'rep',
                 error: null,
                 from: 'user/UpdateUserShortComic',
+                id: data.payload.id
             }
         } catch (error: any) {
             return {
@@ -181,6 +187,7 @@ export class WsListen {
                 type: 'rep',
                 error: error.message,
                 from: 'user/UpdateUserShortComic',
+                id: data.payload.id
             }
         }
     }
@@ -207,6 +214,7 @@ export class WsListen {
                 type: 'rep',
                 error: null,
                 from: 'user/DeleteUserComic',
+                id: data.payload.id
             }
         } catch (error: any) {
             return {
@@ -219,6 +227,7 @@ export class WsListen {
                 type: 'rep',
                 error: error.message,
                 from: 'user/DeleteUserComic',
+                id: data.payload.id
             }
         }
     }
@@ -247,6 +256,7 @@ export class WsListen {
                 type: 'rep',
                 error: null,
                 from: 'user/DeleteUserShortComic',
+                id: data.payload.id
             }
         } catch (error: any) {
             return {
@@ -259,6 +269,7 @@ export class WsListen {
                 type: 'rep',
                 error: error.message,
                 from: 'user/DeleteUserShortComic',
+                id: data.payload.id
             }
         }
     }
