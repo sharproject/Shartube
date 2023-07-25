@@ -132,6 +132,7 @@ type ComplexityRoot struct {
 	}
 
 	CreateShortComicInputModel struct {
+		Background  func(childComplexity int) int
 		CreatedByID func(childComplexity int) int
 		Description func(childComplexity int) int
 		Name        func(childComplexity int) int
@@ -192,6 +193,7 @@ type ComplexityRoot struct {
 	}
 
 	ShortComic struct {
+		Background  func(childComplexity int) int
 		Chap        func(childComplexity int) int
 		ChapIDs     func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
@@ -222,6 +224,7 @@ type ComplexityRoot struct {
 	}
 
 	UpdateShortComicInputModel struct {
+		Background  func(childComplexity int) int
 		Description func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Thumbnail   func(childComplexity int) int
@@ -660,6 +663,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CreateComicSessionResponse.UploadToken(childComplexity), true
 
+	case "CreateShortComicInputModel.background":
+		if e.complexity.CreateShortComicInputModel.Background == nil {
+			break
+		}
+
+		return e.complexity.CreateShortComicInputModel.Background(childComplexity), true
+
 	case "CreateShortComicInputModel.CreatedByID":
 		if e.complexity.CreateShortComicInputModel.CreatedByID == nil {
 			break
@@ -1012,6 +1022,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]interface{})), true
 
+	case "ShortComic.background":
+		if e.complexity.ShortComic.Background == nil {
+			break
+		}
+
+		return e.complexity.ShortComic.Background(childComplexity), true
+
 	case "ShortComic.Chap":
 		if e.complexity.ShortComic.Chap == nil {
 			break
@@ -1137,6 +1154,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UpdateComicSessionResponse.UploadToken(childComplexity), true
+
+	case "UpdateShortComicInputModel.background":
+		if e.complexity.UpdateShortComicInputModel.Background == nil {
+			break
+		}
+
+		return e.complexity.UpdateShortComicInputModel.Background(childComplexity), true
 
 	case "UpdateShortComicInputModel.description":
 		if e.complexity.UpdateShortComicInputModel.Description == nil {
@@ -1385,11 +1409,11 @@ type UpdateComicInputModel {
 
 type CreateComicResponse {
   comic: Comic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 type UploadComicResponse {
   comic: Comic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 extend type Mutation {
@@ -1509,12 +1533,14 @@ extend type Query {
   name: String!
   description: String
   thumbnail: String
+  background: String
 }
 
 input CreateShortComicInput {
   name: String!
   description: String
   thumbnail: Boolean
+  background: Boolean
 }
 
 type CreateShortComicInputModel implements CreateShortComic {
@@ -1522,6 +1548,7 @@ type CreateShortComicInputModel implements CreateShortComic {
   description: String
   CreatedByID: String!
   thumbnail: String
+  background: String
 }
 
 type ShortComic implements CreateShortComic {
@@ -1534,28 +1561,31 @@ type ShortComic implements CreateShortComic {
   ChapIDs: [String!]
   Chap: [Chap!] @goField(forceResolver: true)
   thumbnail: String
+  background: String
 }
 
 input UpdateShortComicInput {
   name: String
   description: String
   thumbnail: Boolean
+  background: Boolean
 }
 
 type UpdateShortComicInputModel {
   name: String
   description: String
   thumbnail: String
+  background: [String]
 }
 
 type CreateShortComicResponse {
   ShortComic: ShortComic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 type UpdateShortComicResponse {
   ShortComic: ShortComic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 extend type Mutation {
@@ -2495,6 +2525,8 @@ func (ec *executionContext) fieldContext_Chap_ShortComic(ctx context.Context, fi
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -4030,9 +4062,9 @@ func (ec *executionContext) _CreateComicResponse_UploadToken(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CreateComicResponse_UploadToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4541,6 +4573,47 @@ func (ec *executionContext) fieldContext_CreateShortComicInputModel_thumbnail(ct
 	return fc, nil
 }
 
+func (ec *executionContext) _CreateShortComicInputModel_background(ctx context.Context, field graphql.CollectedField, obj *model.CreateShortComicInputModel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CreateShortComicInputModel_background(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Background, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CreateShortComicInputModel_background(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreateShortComicInputModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CreateShortComicResponse_ShortComic(ctx context.Context, field graphql.CollectedField, obj *model.CreateShortComicResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CreateShortComicResponse_ShortComic(ctx, field)
 	if err != nil {
@@ -4598,6 +4671,8 @@ func (ec *executionContext) fieldContext_CreateShortComicResponse_ShortComic(ctx
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -4628,9 +4703,9 @@ func (ec *executionContext) _CreateShortComicResponse_UploadToken(ctx context.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CreateShortComicResponse_UploadToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -6310,6 +6385,8 @@ func (ec *executionContext) fieldContext_Profile_ShortComics(ctx context.Context
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -6592,6 +6669,8 @@ func (ec *executionContext) fieldContext_Query_ShortComics(ctx context.Context, 
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -6653,6 +6732,8 @@ func (ec *executionContext) fieldContext_Query_ShortComicByID(ctx context.Contex
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -7311,6 +7392,47 @@ func (ec *executionContext) fieldContext_ShortComic_thumbnail(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _ShortComic_background(ctx context.Context, field graphql.CollectedField, obj *model.ShortComic) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ShortComic_background(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Background, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ShortComic_background(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ShortComic",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UpdateComicInputModel_name(ctx context.Context, field graphql.CollectedField, obj *model.UpdateComicInputModel) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UpdateComicInputModel_name(ctx, field)
 	if err != nil {
@@ -7830,6 +7952,47 @@ func (ec *executionContext) fieldContext_UpdateShortComicInputModel_thumbnail(ct
 	return fc, nil
 }
 
+func (ec *executionContext) _UpdateShortComicInputModel_background(ctx context.Context, field graphql.CollectedField, obj *model.UpdateShortComicInputModel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UpdateShortComicInputModel_background(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Background, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*string)
+	fc.Result = res
+	return ec.marshalOString2ᚕᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UpdateShortComicInputModel_background(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateShortComicInputModel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UpdateShortComicResponse_ShortComic(ctx context.Context, field graphql.CollectedField, obj *model.UpdateShortComicResponse) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UpdateShortComicResponse_ShortComic(ctx, field)
 	if err != nil {
@@ -7887,6 +8050,8 @@ func (ec *executionContext) fieldContext_UpdateShortComicResponse_ShortComic(ctx
 				return ec.fieldContext_ShortComic_Chap(ctx, field)
 			case "thumbnail":
 				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
 		},
@@ -7917,9 +8082,9 @@ func (ec *executionContext) _UpdateShortComicResponse_UploadToken(ctx context.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UpdateShortComicResponse_UploadToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8024,9 +8189,9 @@ func (ec *executionContext) _UploadComicResponse_UploadToken(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UploadComicResponse_UploadToken(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10019,7 +10184,7 @@ func (ec *executionContext) unmarshalInputCreateShortComicInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "thumbnail"}
+	fieldsInOrder := [...]string{"name", "description", "thumbnail", "background"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10047,6 +10212,14 @@ func (ec *executionContext) unmarshalInputCreateShortComicInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("thumbnail"))
 			it.Thumbnail, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "background":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("background"))
+			it.Background, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10195,7 +10368,7 @@ func (ec *executionContext) unmarshalInputUpdateShortComicInput(ctx context.Cont
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "thumbnail"}
+	fieldsInOrder := [...]string{"name", "description", "thumbnail", "background"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10223,6 +10396,14 @@ func (ec *executionContext) unmarshalInputUpdateShortComicInput(ctx context.Cont
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("thumbnail"))
 			it.Thumbnail, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "background":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("background"))
+			it.Background, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10905,6 +11086,10 @@ func (ec *executionContext) _CreateShortComicInputModel(ctx context.Context, sel
 
 			out.Values[i] = ec._CreateShortComicInputModel_thumbnail(ctx, field, obj)
 
+		case "background":
+
+			out.Values[i] = ec._CreateShortComicInputModel_background(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11583,6 +11768,10 @@ func (ec *executionContext) _ShortComic(ctx context.Context, sel ast.SelectionSe
 
 			out.Values[i] = ec._ShortComic_thumbnail(ctx, field, obj)
 
+		case "background":
+
+			out.Values[i] = ec._ShortComic_background(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11717,6 +11906,10 @@ func (ec *executionContext) _UpdateShortComicInputModel(ctx context.Context, sel
 		case "thumbnail":
 
 			out.Values[i] = ec._UpdateShortComicInputModel_thumbnail(ctx, field, obj)
+
+		case "background":
+
+			out.Values[i] = ec._UpdateShortComicInputModel_background(ctx, field, obj)
 
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -13188,6 +13381,38 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 		if e == graphql.Null {
 			return graphql.Null
 		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
 	}
 
 	return ret

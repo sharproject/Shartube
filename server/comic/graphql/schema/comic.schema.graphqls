@@ -56,11 +56,11 @@ type UpdateComicInputModel {
 
 type CreateComicResponse {
   comic: Comic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 type UploadComicResponse {
   comic: Comic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 extend type Mutation {

@@ -232,7 +232,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			Payload: &payload,
 			From:    "comic/updateComicSession",
 			Type:    "message",
-			ID: requestId,
+			ID:      requestId,
 		}
 		requestDataBytes, err := json.Marshal(requestData)
 		if err != nil {

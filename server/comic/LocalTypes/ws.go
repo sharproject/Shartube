@@ -40,6 +40,10 @@ type GetUploadTokenReturn struct {
 	BaseReturn
 	Token string `json:"token"`
 }
+type GetUploadTokensReturn struct {
+	BaseReturn
+	Token []string `json:"token"`
+}
 
 type BaseUploadedSocketPayload[T any] struct {
 	BaseReturn
@@ -50,7 +54,7 @@ type UploadedChapImagesSocketPayload struct {
 	ChapId string `json:"chapId"`
 }
 
-type UploadedComicThumbnailPayload struct {
+type UploadComicThumbnailAndBackgroundPayload struct {
 	ComicId string `json:"comicId"`
 }
 

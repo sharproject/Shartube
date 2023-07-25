@@ -84,7 +84,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				}
 				ws.WriteMessage(websocket.TextMessage, comicObject)
 			} else if data.Url == "comic/SocketChangeComicThumbnail" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedComicThumbnailPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
@@ -101,6 +101,28 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					"_id": comicDocObjectId,
 				}, bson.M{
 					"$set": bson.M{"thumbnail": data.Payload.Url[0]},
+				})
+				if err != nil {
+					return nil, err
+				}
+			} else if data.Url == "comic/SocketChangeComicBackground" {
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
+				err := json.Unmarshal(message, &data)
+				if err != nil {
+					return nil, err
+				}
+				comicModel, err := comic_model.InitComicModel(Client)
+				if err != nil {
+					return nil, err
+				}
+				comicDocObjectId, err := primitive.ObjectIDFromHex(data.Payload.Data.ComicId)
+				if err != nil {
+					return nil, err
+				}
+				_, err = comicModel.FindOneAndUpdate(bson.M{
+					"_id": comicDocObjectId,
+				}, bson.M{
+					"$set": bson.M{"background": data.Payload.Url[0]},
 				})
 				if err != nil {
 					return nil, err
@@ -186,7 +208,7 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				}
 				ws.WriteMessage(websocket.TextMessage, comicObject)
 			} else if data.Url == "ShortComic/SocketChangeComicThumbnail" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedComicThumbnailPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
