@@ -10,7 +10,8 @@ use actix_web::{
 };
 use graphql::{context::ContextUtil, schema::GraphqlSchema as Schema};
 use juniper_actix::graphql_handler;
-
+use mongodb::{options::ClientOptions, Client, Database};
+use util::get_db_url::get_db_url;
 mod graphql;
 mod repository;
 mod rest;
@@ -23,8 +24,14 @@ async fn graphql_route(
     socket: web::Data<
         Mutex<tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>>,
     >,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, Error> {
-    let context = ContextUtil::new(req.headers(), socket, schema.clone().as_schema_language());
+    let context = ContextUtil::new(
+        req.headers(),
+        socket,
+        schema.clone().as_schema_language(),
+        db,
+    );
 
     graphql_handler(&schema, &context, req, payload).await
 }
@@ -33,6 +40,8 @@ async fn graphql_route(
 async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
+    let db_name = option_env!("DB_NAME").unwrap_or("likes");
+    let client_options = ClientOptions::parse(get_db_url()).unwrap();
     let server = HttpServer::new(move || {
         let schema = graphql::schema::schema();
         let (socket, _response) = {
@@ -51,10 +60,13 @@ async fn main() -> std::io::Result<()> {
 
             ((Mutex::new(tmp.0)), tmp.1)
         };
+        let client = Client::with_options(client_options.clone()).unwrap();
+        let db = client.database(db_name.clone());
 
         App::new()
             .app_data(Data::new(schema))
             .app_data(Data::new(socket))
+            .app_data(Data::new(db))
             .wrap(
                 Cors::default()
                     .allow_any_origin()

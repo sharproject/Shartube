@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_model"
@@ -70,6 +71,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		},
 		From: "comic/createComic",
 		Type: "message",
+		ID:   uuid.New().String(),
 	}
 
 	comicObject, err := json.Marshal(comicObjectData)
@@ -82,70 +84,83 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 	if err != nil {
 		return nil, err
 	}
-	if input.Thumbnail != nil && *input.Thumbnail {
-		requestId := uuid.New().String()
-		payload := struct {
-			ID        string                                   `json:"id"`
-			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
-			EmitTo    string                                   `json:"emit_to"`
-			EventName string                                   `json:"event_name"`
-		}{
-			ID: requestId,
-			SaveData: LocalTypes.UploadedComicThumbnailPayload{
-				ComicId: comicDoc.ID,
-			},
-			EmitTo:    "comic",
-			EventName: "SocketChangeComicThumbnail",
+	requestTokensList := []string{}
+	if (input.Thumbnail != nil && *input.Thumbnail) || (input.Background != nil && *input.Background) {
+		if *input.Thumbnail {
+			requestTokensList = append(requestTokensList, "Thumbnail")
 		}
-		requestData := LocalTypes.WsRequest{
-			Url:     "upload_token_registry/genToken",
-			Header:  nil,
-			Payload: &payload,
-			From:    "comic/addImages",
-			Type:    "message",
-		}
-		requestDataBytes, err := json.Marshal(requestData)
-		if err != nil {
-			return nil, err
-		}
-		if err != nil {
-			return nil, err
-		}
-		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-		for {
-			_, message, err := r.Ws.ReadMessage()
-			if err != nil {
-				return nil, err
-			}
-			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
-			err = json.Unmarshal(message, &data)
-			if err != nil {
-				return nil, err
-			}
-			if data.Type == "rep" {
-				if data.Payload.ID == requestId {
-					if data.Error != nil {
-						return nil, &gqlerror.Error{
-							Message: *data.Error,
-						}
-					}
-					return &model.CreateComicResponse{
-						Comic:       comicDoc,
-						UploadToken: &data.Payload.Token,
-					}, nil
-
-					// return nil, &gqlerror.Error{
-					// 	Message: "500 server error",
-					// }
-
-				}
-			}
+		if *input.Background {
+			requestTokensList = append(requestTokensList, "Background")
 		}
 	} else {
 		return &model.CreateComicResponse{
 			Comic:       comicDoc,
 			UploadToken: nil,
 		}, nil
+	}
+	requestId := uuid.New().String()
+	type GenUploadTokenPayload struct {
+		ID        string                                              `json:"id"`
+		SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
+		EmitTo    string                                              `json:"emit_to"`
+		EventName string                                              `json:"event_name"`
+	}
+	payload := []GenUploadTokenPayload{}
+	for _, v := range requestTokensList {
+		payload = append(payload, GenUploadTokenPayload{
+			ID: uuid.NewString(),
+			SaveData: LocalTypes.UploadComicThumbnailAndBackgroundPayload{
+				ComicId: comicDoc.ID,
+			},
+			EmitTo:    "comic",
+			EventName: fmt.Sprintf("SocketChangeComic%s", v),
+		})
+
+	}
+	requestData := LocalTypes.WsRequest{
+		Url:     "upload_token_registry/genToken",
+		Header:  nil,
+		Payload: &payload,
+		From:    "comic/addImages",
+		Type:    "message",
+		ID:      requestId,
+	}
+	requestDataBytes, err := json.Marshal(requestData)
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	for {
+		_, message, err := r.Ws.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		err = json.Unmarshal(message, &data)
+		if err != nil {
+			return nil, err
+		}
+		if data.Type == "rep" {
+			if data.Payload.ID == requestId {
+				if data.Error != nil {
+					return nil, &gqlerror.Error{
+						Message: *data.Error,
+					}
+				}
+				return &model.CreateComicResponse{
+					Comic:       comicDoc,
+					UploadToken: data.Payload.Token,
+				}, nil
+
+				// return nil, &gqlerror.Error{
+				// 	Message: "500 server error",
+				// }
+
+			}
+		}
 	}
 }
 
@@ -191,65 +206,83 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 	if err != nil {
 		return nil, err
 	}
-	if input.Thumbnail != nil && *input.Thumbnail {
-		requestId := uuid.New().String()
-		payload := struct {
-			ID        string                                   `json:"id"`
-			SaveData  LocalTypes.UploadedComicThumbnailPayload `json:"data"`
-			EmitTo    string                                   `json:"emit_to"`
-			EventName string                                   `json:"event_name"`
-		}{
-			ID: requestId,
-			SaveData: LocalTypes.UploadedComicThumbnailPayload{
-				ComicId: comicDoc.ID,
-			},
-			EmitTo:    "comic",
-			EventName: "SocketChangeComicThumbnail",
+	requestTokensList := []string{}
+	if (input.Thumbnail != nil && *input.Thumbnail) || (input.Background != nil && *input.Background) {
+		if *input.Thumbnail {
+			requestTokensList = append(requestTokensList, "Thumbnail")
 		}
-		requestData := LocalTypes.WsRequest{
-			Url:     "upload_token_registry/genToken",
-			Header:  nil,
-			Payload: &payload,
-			From:    "comic/updateComic",
-			Type:    "message",
-		}
-		requestDataBytes, err := json.Marshal(requestData)
-		if err != nil {
-			return nil, err
-		}
-		if err != nil {
-			return nil, err
-		}
-		r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-		for {
-			_, message, err := r.Ws.ReadMessage()
-			if err != nil {
-				return nil, err
-			}
-			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
-			err = json.Unmarshal(message, &data)
-			if err != nil {
-				return nil, err
-			}
-			if data.Type == "rep" {
-				if data.Payload.ID == payload.ID {
-					if data.Error != nil {
-						return nil, &gqlerror.Error{
-							Message: *data.Error,
-						}
-					}
-					return &model.UploadComicResponse{
-						Comic:       comicDoc,
-						UploadToken: &data.Payload.Token,
-					}, nil
-				}
-			}
+		if *input.Background {
+			requestTokensList = append(requestTokensList, "Background")
 		}
 	} else {
 		return &model.UploadComicResponse{
 			Comic:       comicDoc,
 			UploadToken: nil,
 		}, nil
+	}
+	requestId := uuid.New().String()
+	type GenUploadTokenPayload struct {
+		ID        string                                              `json:"id"`
+		SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
+		EmitTo    string                                              `json:"emit_to"`
+		EventName string                                              `json:"event_name"`
+	}
+	payload := []GenUploadTokenPayload{}
+	for _, v := range requestTokensList {
+		payload = append(payload, GenUploadTokenPayload{
+			ID: uuid.NewString(),
+			SaveData: LocalTypes.UploadComicThumbnailAndBackgroundPayload{
+				ComicId: comicDoc.ID,
+			},
+			EmitTo:    "comic",
+			EventName: fmt.Sprintf("SocketChangeComic%s", v),
+		})
+
+	}
+	requestData := LocalTypes.WsRequest{
+		Url:     "upload_token_registry/genToken",
+		Header:  nil,
+		Payload: &payload,
+		From:    "comic/updateComic",
+		Type:    "message",
+		ID:      requestId,
+	}
+	requestDataBytes, err := json.Marshal(requestData)
+	if err != nil {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	for {
+		_, message, err := r.Ws.ReadMessage()
+		if err != nil {
+			return nil, err
+		}
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		err = json.Unmarshal(message, &data)
+		if err != nil {
+			return nil, err
+		}
+		if data.Type == "rep" {
+			if data.Payload.ID == requestId {
+				if data.Error != nil {
+					return nil, &gqlerror.Error{
+						Message: *data.Error,
+					}
+				}
+				return &model.UploadComicResponse{
+					Comic:       comicDoc,
+					UploadToken: data.Payload.Token,
+				}, nil
+
+				// return nil, &gqlerror.Error{
+				// 	Message: "500 server error",
+				// }
+
+			}
+		}
 	}
 }
 
@@ -288,6 +321,7 @@ func (r *mutationResolver) DeleteComic(ctx context.Context, comicID string) (*mo
 		},
 		From: "comic/DeleteComic",
 		Type: "message",
+		ID:   uuid.NewString(),
 	}
 
 	comicObject, err := json.Marshal(comicObjectData)

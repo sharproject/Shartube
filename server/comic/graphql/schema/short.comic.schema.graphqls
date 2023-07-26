@@ -2,12 +2,14 @@ interface CreateShortComic {
   name: String!
   description: String
   thumbnail: String
+  background: String
 }
 
 input CreateShortComicInput {
   name: String!
   description: String
   thumbnail: Boolean
+  background: Boolean
 }
 
 type CreateShortComicInputModel implements CreateShortComic {
@@ -15,6 +17,7 @@ type CreateShortComicInputModel implements CreateShortComic {
   description: String
   CreatedByID: String!
   thumbnail: String
+  background: String
 }
 
 type ShortComic implements CreateShortComic {
@@ -27,28 +30,31 @@ type ShortComic implements CreateShortComic {
   ChapIDs: [String!]
   Chap: [Chap!] @goField(forceResolver: true)
   thumbnail: String
+  background: String
 }
 
 input UpdateShortComicInput {
   name: String
   description: String
   thumbnail: Boolean
+  background: Boolean
 }
 
 type UpdateShortComicInputModel {
   name: String
   description: String
   thumbnail: String
+  background: [String]
 }
 
 type CreateShortComicResponse {
   ShortComic: ShortComic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 type UpdateShortComicResponse {
   ShortComic: ShortComic!
-  UploadToken: String
+  UploadToken: [String!]
 }
 
 extend type Mutation {

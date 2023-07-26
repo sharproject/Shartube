@@ -1,10 +1,17 @@
 fragment userInfo on User {
-  _id
-  email
-  name
-  ShortComicIDs
-  comicIDs
-  updatedAt
-  createdAt
-  password
+	_id
+	email
+	name
+	updatedAt
+	createdAt
+	password
+	profile {
+		_id
+		comics {
+			_id
+		}
+		ShortComics {
+			_id
+		}
+	}
 }

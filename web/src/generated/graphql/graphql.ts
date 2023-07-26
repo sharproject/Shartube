@@ -25,7 +25,6 @@ export type AddUserToTeamInput = {
 
 export type Chap = CreateChap & {
   __typename?: 'Chap';
-  CreatedBy?: Maybe<User>;
   CreatedByID: Scalars['String']['output'];
   Images: Array<ImageResult>;
   Session?: Maybe<ComicSession>;
@@ -41,7 +40,6 @@ export type Chap = CreateChap & {
 
 export type Comic = CreateComic & {
   __typename?: 'Comic';
-  CreatedBy?: Maybe<User>;
   CreatedByID: Scalars['String']['output'];
   _id: Scalars['ID']['output'];
   createdAt: Scalars['Time']['output'];
@@ -58,7 +56,6 @@ export type ComicSession = CreateComicSession & {
   ChapIds?: Maybe<Array<Scalars['String']['output']>>;
   Chaps?: Maybe<Array<Chap>>;
   Comic: Comic;
-  CreatedBy?: Maybe<User>;
   CreatedByID: Scalars['String']['output'];
   _id: Scalars['ID']['output'];
   comicID: Scalars['String']['output'];
@@ -208,10 +205,10 @@ export type LoginUserInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   AddImageToChap?: Maybe<Scalars['String']['output']>;
-  AddUserToTeam: User;
+  AddUserToTeam: Team;
   CreateChap: Chap;
   CreateComicSession: CreateComicSessionResponse;
-  CreateTeam: User;
+  CreateTeam: Team;
   DeleteChap: DeleteResult;
   DeleteChapImage: Chap;
   DeleteComic: DeleteResult;
@@ -219,9 +216,8 @@ export type Mutation = {
   DeleteShortComic: DeleteResult;
   Login: UserLoginOrRegisterResponse;
   Register: UserLoginOrRegisterResponse;
-  RemoveUserInTeam?: Maybe<User>;
+  RemoveUserInTeam: Team;
   UpdateChap: Chap;
-  _empty?: Maybe<Scalars['String']['output']>;
   createComic: CreateComicResponse;
   createShortComic: CreateShortComicResponse;
   like: Scalars['String']['output'];
@@ -335,12 +331,21 @@ export type MutationUpdateShortComicArgs = {
   input: UpdateShortComicInput;
 };
 
+export type Profile = {
+  __typename?: 'Profile';
+  CreateID: Scalars['ID']['output'];
+  ShortComics: Array<Maybe<ShortComic>>;
+  _id: Scalars['ID']['output'];
+  comics: Array<Maybe<Comic>>;
+};
+
 export type Query = {
   __typename?: 'Query';
   ChapBySession?: Maybe<Array<Chap>>;
   Comics: Array<Comic>;
+  FindProfileById: Profile;
   Me: User;
-  PageFromId?: Maybe<User>;
+  PageFromId?: Maybe<UserOrTeam>;
   SessionByComic?: Maybe<Array<ComicSession>>;
   ShortComicByID?: Maybe<ShortComic>;
   ShortComics: Array<ShortComic>;
@@ -350,6 +355,11 @@ export type Query = {
 
 export type QueryChapBySessionArgs = {
   SessionID: Scalars['String']['input'];
+};
+
+
+export type QueryFindProfileByIdArgs = {
+  UserOrTeamId: Scalars['String']['input'];
 };
 
 
@@ -377,13 +387,23 @@ export type ShortComic = CreateShortComic & {
   __typename?: 'ShortComic';
   Chap?: Maybe<Array<Chap>>;
   ChapIDs?: Maybe<Array<Scalars['String']['output']>>;
-  CreatedBy?: Maybe<User>;
   CreatedByID: Scalars['String']['output'];
   _id: Scalars['ID']['output'];
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
+};
+
+export type Team = {
+  __typename?: 'Team';
+  _id: Scalars['ID']['output'];
+  createdAt: Scalars['Time']['output'];
+  member: Array<Maybe<Scalars['String']['output']>>;
+  name: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+  profile?: Maybe<Profile>;
   updatedAt: Scalars['Time']['output'];
 };
 
@@ -451,18 +471,12 @@ export type UploadComicResponse = {
 
 export type User = {
   __typename?: 'User';
-  ShortComicIDs: Array<Maybe<Scalars['String']['output']>>;
-  ShortComics: Array<Maybe<ShortComic>>;
   _id: Scalars['ID']['output'];
-  comicIDs: Array<Maybe<Scalars['String']['output']>>;
-  comics: Array<Maybe<Comic>>;
   createdAt: Scalars['Time']['output'];
   email: Scalars['String']['output'];
-  isTeam?: Maybe<Scalars['Boolean']['output']>;
-  member?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   name: Scalars['String']['output'];
-  owner?: Maybe<Scalars['String']['output']>;
-  password?: Maybe<Scalars['String']['output']>;
+  password: Scalars['String']['output'];
+  profile?: Maybe<Profile>;
   updatedAt: Scalars['Time']['output'];
 };
 
@@ -472,7 +486,9 @@ export type UserLoginOrRegisterResponse = {
   user: User;
 };
 
-export type UserInfoFragment = { __typename?: 'User', _id: string, email: string, name: string, ShortComicIDs: Array<string | null>, comicIDs: Array<string | null>, updatedAt: any, createdAt: any, password?: string | null } & { ' $fragmentName'?: 'UserInfoFragment' };
+export type UserOrTeam = Team | User;
+
+export type UserInfoFragment = { __typename?: 'User', _id: string, email: string, name: string, updatedAt: any, createdAt: any, password: string, profile?: { __typename?: 'Profile', _id: string, comics: Array<{ __typename?: 'Comic', _id: string } | null>, ShortComics: Array<{ __typename?: 'ShortComic', _id: string } | null> } | null } & { ' $fragmentName'?: 'UserInfoFragment' };
 
 export type LoginMutationVariables = Exact<{
   input: LoginUserInput;
@@ -502,7 +518,7 @@ export type MeQuery = { __typename?: 'Query', Me: (
     & { ' $fragmentRefs'?: { 'UserInfoFragment': UserInfoFragment } }
   ) };
 
-export const UserInfoFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"ShortComicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"comicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}}]}}]} as unknown as DocumentNode<UserInfoFragment, unknown>;
-export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"ShortComicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"comicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
-export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Register"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"ShortComicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"comicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
-export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"ShortComicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"comicIDs"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
+export const UserInfoFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}},{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"comics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ShortComics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}}]}}]}}]} as unknown as DocumentNode<UserInfoFragment, unknown>;
+export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}},{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"comics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ShortComics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RegisterUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Register"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}},{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"comics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ShortComics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}}]}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
+export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"userInfo"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"userInfo"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"User"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"password"}},{"kind":"Field","name":{"kind":"Name","value":"profile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}},{"kind":"Field","name":{"kind":"Name","value":"comics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ShortComics"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"_id"}}]}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;

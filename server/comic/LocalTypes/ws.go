@@ -15,6 +15,7 @@ type WsRequest struct {
 	Payload any          `json:"payload"`
 	From    string       `json:"from"`
 	Type    string       `json:"type"`
+	ID      string       `json:"id"`
 }
 
 type BaseReturn struct {
@@ -39,6 +40,10 @@ type GetUploadTokenReturn struct {
 	BaseReturn
 	Token string `json:"token"`
 }
+type GetUploadTokensReturn struct {
+	BaseReturn
+	Token []string `json:"token"`
+}
 
 type BaseUploadedSocketPayload[T any] struct {
 	BaseReturn
@@ -49,10 +54,15 @@ type UploadedChapImagesSocketPayload struct {
 	ChapId string `json:"chapId"`
 }
 
-type UploadedComicThumbnailPayload struct {
+type UploadComicThumbnailAndBackgroundPayload struct {
 	ComicId string `json:"comicId"`
 }
 
 type UploadSessionComicThumbnailPayload struct {
 	ComicSessionId string `json:"comicSessionId"`
+}
+
+type CheckIdRealPayload struct {
+	Id         string `json:"objectId"`
+	ObjectType string `json:"objectType"`
 }

@@ -30,7 +30,7 @@ export const useCheckAuth = () => {
     if (!loading && data?.Me && isInLoginOrRegisterPage) {
       router.replace("/");
     }
-  }, [data, loading, router, error]);
+  }, [data, loading, router, error, pathname]);
   return {
     data,
     loading,

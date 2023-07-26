@@ -1,7 +1,7 @@
 
 import type { CodegenConfig } from '@graphql-codegen/cli';
+import { graphqlUrl } from './src/constant';
 
-export const graphqlUrl = "http://localhost:8080/api/graphql" // "http://172.22.184.129:8081/api/graphql"
 
 const config: CodegenConfig = {
   overwrite: true,

@@ -49,6 +49,7 @@ type Comic struct {
 	SessionID   []string        `json:"sessionId"`
 	Session     []*ComicSession `json:"session"`
 	Thumbnail   *string         `json:"thumbnail"`
+	Background  *string         `json:"background"`
 }
 
 func (Comic) IsCreateComic() {}
@@ -90,6 +91,7 @@ type CreateComicInput struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *bool   `json:"thumbnail"`
+	Background  *bool   `json:"background"`
 }
 
 type CreateComicInputModel struct {
@@ -97,13 +99,14 @@ type CreateComicInputModel struct {
 	Description *string `json:"description"`
 	CreatedByID string  `json:"CreatedByID"`
 	Thumbnail   *string `json:"thumbnail"`
+	Background  *string `json:"background"`
 }
 
 func (CreateComicInputModel) IsCreateComic() {}
 
 type CreateComicResponse struct {
-	Comic       *Comic  `json:"comic"`
-	UploadToken *string `json:"UploadToken"`
+	Comic       *Comic   `json:"comic"`
+	UploadToken []string `json:"UploadToken"`
 }
 
 type CreateComicSessionInput struct {
@@ -132,6 +135,7 @@ type CreateShortComicInput struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *bool   `json:"thumbnail"`
+	Background  *bool   `json:"background"`
 }
 
 type CreateShortComicInputModel struct {
@@ -139,13 +143,14 @@ type CreateShortComicInputModel struct {
 	Description *string `json:"description"`
 	CreatedByID string  `json:"CreatedByID"`
 	Thumbnail   *string `json:"thumbnail"`
+	Background  *string `json:"background"`
 }
 
 func (CreateShortComicInputModel) IsCreateShortComic() {}
 
 type CreateShortComicResponse struct {
 	ShortComic  *ShortComic `json:"ShortComic"`
-	UploadToken *string     `json:"UploadToken"`
+	UploadToken []string    `json:"UploadToken"`
 }
 
 type DeleteResult struct {
@@ -176,6 +181,7 @@ type ShortComic struct {
 	ChapIDs     []string  `json:"ChapIDs"`
 	Chap        []*Chap   `json:"Chap"`
 	Thumbnail   *string   `json:"thumbnail"`
+	Background  *string   `json:"background"`
 }
 
 func (ShortComic) IsCreateShortComic() {}
@@ -188,6 +194,7 @@ type UpdateChapInput struct {
 type UpdateComicInput struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
+	Background  *bool   `json:"background"`
 	Thumbnail   *bool   `json:"thumbnail"`
 }
 
@@ -195,6 +202,7 @@ type UpdateComicInputModel struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *string `json:"thumbnail"`
+	Background  *string `json:"background"`
 }
 
 type UpdateComicSessionInput struct {
@@ -218,20 +226,22 @@ type UpdateShortComicInput struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Thumbnail   *bool   `json:"thumbnail"`
+	Background  *bool   `json:"background"`
 }
 
 type UpdateShortComicInputModel struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Thumbnail   *string `json:"thumbnail"`
+	Name        *string   `json:"name"`
+	Description *string   `json:"description"`
+	Thumbnail   *string   `json:"thumbnail"`
+	Background  []*string `json:"background"`
 }
 
 type UpdateShortComicResponse struct {
 	ShortComic  *ShortComic `json:"ShortComic"`
-	UploadToken *string     `json:"UploadToken"`
+	UploadToken []string    `json:"UploadToken"`
 }
 
 type UploadComicResponse struct {
-	Comic       *Comic  `json:"comic"`
-	UploadToken *string `json:"UploadToken"`
+	Comic       *Comic   `json:"comic"`
+	UploadToken []string `json:"UploadToken"`
 }

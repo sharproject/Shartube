@@ -53,6 +53,7 @@ func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{
 		Payload: &payload,
 		From:    "comic/auth",
 		Type:    "message",
+		ID:      requestId,
 	}
 	requestDataBytes, err := json.Marshal(requestData)
 	if err != nil {

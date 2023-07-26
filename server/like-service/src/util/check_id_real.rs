@@ -1,20 +1,24 @@
-pub fn get_user_session(
-    token: &str,
+use crate::util::auth::SenderData;
+// change type of objectType to enum soon
+pub fn check_id_real(
     socket: actix_web::web::Data<
         std::sync::Mutex<
             tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>,
         >,
     >,
-) -> Option<AuthSessionDataReturn> {
+    id: String,
+    object_type: String,
+) -> bool {
     let message_id = uuid::Uuid::new_v4().to_string();
     let sender_data = SenderData {
-        url: "user/decodeToken".to_string(),
+        url: "all/CheckIDReal".to_string(),
         message_type: "message".to_string(),
-        from: "like/auth".to_string(),
+        from: "like/checkIdReal".to_string(),
         header: serde_json::Value::Null,
         payload: serde_json::json! {{
-            "token":token,
-            "id":message_id.clone()
+            "id":message_id.clone(),
+            "objectId":id,
+            "objectType":object_type
         }},
         error: serde_json::Value::Null,
         id: message_id.clone(),
@@ -44,48 +48,24 @@ pub fn get_user_session(
                 continue;
             }
 
-            if json_data.from != "user/decodeToken" {
+            if !json_data.from.to_lowercase().ends_with("/CheckIdReal") {
                 continue;
             }
             if !json_data.error.is_null() {
-                return None;
+                return false;
             }
-            return serde_json::from_str::<SenderData<AuthPayloadReturn>>(&text)
+            return serde_json::from_str::<SenderData<CheckIdRealPayloadReturn>>(&text)
                 .unwrap()
                 .payload
-                .session_data;
+                .real;
         }
     }
 }
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct AuthSessionDataReturn {
-    pub _id: String,
-    #[serde(rename = "createdAt")]
-    pub created_at: String,
-    #[serde(rename = "updatedAt")]
-    pub updated_at: String,
-    #[serde(rename = "creatorID")]
-    pub creator_id: String,
-    #[serde(rename = "userID")]
-    pub user_id: String,
-}
-
-#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct AuthPayloadReturn {
-    pub id: String,
-    #[serde(rename = "sessionData")]
-    pub session_data: Option<AuthSessionDataReturn>,
-}
-
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
-pub struct SenderData<T = serde_json::Value> {
-    pub url: String,
-    pub header: serde_json::Value,
-    pub payload: T,
-    pub from: String,
-    #[serde(default)]
-    pub error: serde_json::Value,
+pub struct CheckIdRealPayloadReturn {
     #[serde(rename = "type")]
-    pub message_type: String,
-    pub id: String,
+    pub object_type: String,
+    pub real: bool,
+    #[serde(rename = "objectID")]
+    pub object_id: String,
 }
