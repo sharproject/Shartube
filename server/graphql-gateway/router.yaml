@@ -18,3 +18,9 @@ headers:
 
 plugins:
   experimental.expose_query_plan: true
+
+cors:
+  allow_credentials: true
+  origins:
+    - http://localhost:3000
+    - https://studio.apollographql.com
