@@ -136,31 +136,8 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 				msg []byte
 				err error
 			)
-			for {
-				if mt, msg, err = c.ReadMessage(); err != nil {
-					log.Println("read:", err)
-					break
-				}
-				// send message and wait response
-				log.Printf("recv: %s", msg)
-				log.Printf("requestID: %v\n", requestID)
-				payload := WsRequestMessagePayload{}
-				wsRequestID := uuid.NewString()
-				wsRequest := WsRequest[WsRequestMessagePayload]{
-					Payload: payload,
-					Url:     v.SendTo,
-					From:    "api-gateway/wsGateway",
-					Header:  nil,
-					Type:    "message",
-					ID:      wsRequestID,
-				}
-				requestDataBytes, err := json.Marshal(wsRequest)
-				if err != nil {
-					log.Println("write:", err)
-					break
-				}
-				ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-
+			wsRequestIDs := []string{}
+			go func() {
 				for {
 					_, message, err := ws.ReadMessage()
 					if err != nil {
@@ -187,7 +164,7 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 						break
 					}
 					if data.Type == "rep" {
-						if data.ID == wsRequestID {
+						if Contains(wsRequestIDs, data.ID) {
 							if data.Error != nil {
 								d, err := json.Marshal(map[string]interface{}{
 									"Error": data.Error,
@@ -206,7 +183,32 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 						}
 					}
 				}
-
+			}()
+			for {
+				if mt, msg, err = c.ReadMessage(); err != nil {
+					log.Println("read:", err)
+					break
+				}
+				// send message and wait response
+				log.Printf("recv: %s", msg)
+				log.Printf("requestID: %v\n", requestID)
+				payload := WsRequestMessagePayload{}
+				wsRequestID := uuid.NewString()
+				wsRequest := WsRequest[WsRequestMessagePayload]{
+					Payload: payload,
+					Url:     v.SendTo,
+					From:    "api-gateway/wsGateway",
+					Header:  nil,
+					Type:    "message",
+					ID:      wsRequestID,
+				}
+				requestDataBytes, err := json.Marshal(wsRequest)
+				if err != nil {
+					log.Println("write:", err)
+					break
+				}
+				ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+				wsRequestIDs = append(wsRequestIDs, wsRequestID)
 			}
 
 		}))
@@ -240,6 +242,18 @@ func get__dirname() string {
 	}
 	exPath := path.Dir(ex)
 	return exPath
+}
+
+func Index[S ~[]E, E comparable](s S, v E) int {
+	for i := range s {
+		if v == s[i] {
+			return i
+		}
+	}
+	return -1
+}
+func Contains[S ~[]E, E comparable](s S, v E) bool {
+	return Index(s, v) >= 0
 }
 
 type WsRequest[pt any] struct {
