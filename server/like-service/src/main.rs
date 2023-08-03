@@ -40,7 +40,7 @@ async fn graphql_route(
 async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
-    let db_name = option_env!("DB_NAME").unwrap_or("likes");
+    let db_name = env::var("DB_NAME").unwrap_or("likes".to_string());
     let client_options = ClientOptions::parse(get_db_url()).unwrap();
     let server = HttpServer::new(move || {
         let schema = graphql::schema::schema();
