@@ -18,6 +18,7 @@ type CreateComicSessionInputModel implements CreateComicSession {
   CreatedByID: String!
   comicID: String!
   thumbnail: String
+  views: Int!
 }
 
 type ComicSession implements CreateComicSession {
@@ -32,6 +33,7 @@ type ComicSession implements CreateComicSession {
   Chaps: [Chap!] @goField(forceResolver: true)
   ChapIds: [String!]
   thumbnail: String
+  views: Int!
 }
 
 input UpdateComicSessionInput {
@@ -46,20 +48,20 @@ type UpdateComicSessionInputModel {
   thumbnail: String
 }
 
-type CreateComicSessionResponse{
-  ComicSession:ComicSession!
-  UploadToken:String
+type CreateComicSessionResponse {
+  ComicSession: ComicSession!
+  UploadToken: String
 }
 
-type UpdateComicSessionResponse{
-  ComicSession:ComicSession!
-  UploadToken:String
+type UpdateComicSessionResponse {
+  ComicSession: ComicSession!
+  UploadToken: String
 }
 
 extend type Mutation {
-  CreateComicSession(input: CreateComicSessionInput!): CreateComicSessionResponse!
-    @goField(forceResolver: true)
-    @auth
+  CreateComicSession(
+    input: CreateComicSessionInput!
+  ): CreateComicSessionResponse! @goField(forceResolver: true) @auth
   updateComicSession(
     sessionID: String!
     input: UpdateComicSessionInput
@@ -72,4 +74,5 @@ extend type Mutation {
 extend type Query {
   SessionByComic(comicID: String!): [ComicSession!]
     @goField(forceResolver: true)
+  SessionByID(ID: String!): ComicSession @goField(forceResolver: true)
 }

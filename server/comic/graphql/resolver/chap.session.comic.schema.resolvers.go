@@ -107,6 +107,7 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 		CreatedByID:  CreateIDObject.Hex(),
 		SessionID:    input.SessionID,
 		ShortComicID: input.ShortComicID,
+		Views:        0,
 	}).Save()
 	if err != nil {
 		return nil, err
@@ -197,7 +198,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
@@ -346,6 +347,15 @@ func (r *queryResolver) ChapBySession(ctx context.Context, sessionID string) ([]
 		return nil, err
 	}
 	return comicChapModel.Find(bson.M{"SessionID": sessionID})
+}
+
+// ChapByID is the resolver for the ChapByID field.
+func (r *queryResolver) ChapByID(ctx context.Context, id string) (*model.Chap, error) {
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return comicChapModel.FindById(id)
 }
 
 // Chap returns generated.ChapResolver implementation.

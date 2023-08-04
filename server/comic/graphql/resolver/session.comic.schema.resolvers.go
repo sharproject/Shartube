@@ -81,6 +81,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 		CreatedByID: CreateIDObject.Hex(),
 		ComicID:     input.ComicID,
 		Thumbnail:   &ThumbnailUrl,
+		Views:       0,
 	}).Save()
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 			if err != nil {
 				return nil, err
 			}
-			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
 			err = json.Unmarshal(message, &data)
 			if err != nil {
 				return nil, err
@@ -247,7 +248,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			if err != nil {
 				return nil, err
 			}
-			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn]
+			var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
 			err = json.Unmarshal(message, &data)
 			if err != nil {
 				return nil, err
@@ -311,6 +312,15 @@ func (r *queryResolver) SessionByComic(ctx context.Context, comicID string) ([]*
 		return nil, err
 	}
 	return comicSessionModel.Find(bson.M{"ComicID": comicID})
+}
+
+// SessionByID is the resolver for the SessionByID field.
+func (r *queryResolver) SessionByID(ctx context.Context, id string) (*model.ComicSession, error) {
+	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return comicSessionModel.FindById(id)
 }
 
 // ComicSession returns generated.ComicSessionResolver implementation.

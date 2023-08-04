@@ -150,7 +150,7 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 						c.WriteMessage(mt, d)
 						break
 					}
-					var data WsReturnData[WsMessageResponse]
+					var data WsReturnData[WsMessageResponse, *interface{}]
 					err = json.Unmarshal(message, &data)
 					if err != nil {
 						log.Println("write:", err)
@@ -194,13 +194,15 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 				log.Printf("requestID: %v\n", requestID)
 				payload := WsRequestMessagePayload{}
 				wsRequestID := uuid.NewString()
-				wsRequest := WsRequest[WsRequestMessagePayload]{
+				wsRequest := WsRequest[WsRequestMessagePayload, *map[string]string]{
 					Payload: payload,
 					Url:     v.SendTo,
 					From:    "api-gateway/wsGateway",
-					Header:  nil,
-					Type:    "message",
-					ID:      wsRequestID,
+					Header: &map[string]string{
+						"RemoteAddr": c.RemoteAddr().String(),
+					},
+					Type: "message",
+					ID:   wsRequestID,
 				}
 				requestDataBytes, err := json.Marshal(wsRequest)
 				if err != nil {
@@ -256,22 +258,22 @@ func Contains[S ~[]E, E comparable](s S, v E) bool {
 	return Index(s, v) >= 0
 }
 
-type WsRequest[pt any] struct {
-	Url     string       `json:"url"`
-	Header  *interface{} `json:"header"`
-	Payload pt           `json:"payload"`
-	From    string       `json:"from"`
-	Type    string       `json:"type"`
-	ID      string       `json:"id"`
+type WsRequest[pt any, ht any] struct {
+	Url     string `json:"url"`
+	Header  ht     `json:"header"`
+	Payload pt     `json:"payload"`
+	From    string `json:"from"`
+	Type    string `json:"type"`
+	ID      string `json:"id"`
 }
-type WsReturnData[T any] struct {
-	Url     string       `json:"url"`
-	Header  *interface{} `json:"header"`
-	Payload T            `json:"payload"`
-	Type    string       `json:"type"`
-	Error   *string      `json:"error"`
-	From    string       `json:"from"`
-	ID      string       `json:"id"`
+type WsReturnData[T any, ht any] struct {
+	Url     string  `json:"url"`
+	Header  ht      `json:"header"`
+	Payload T       `json:"payload"`
+	Type    string  `json:"type"`
+	Error   *string `json:"error"`
+	From    string  `json:"from"`
+	ID      string  `json:"id"`
 }
 
 type WsRequestMessagePayload struct {

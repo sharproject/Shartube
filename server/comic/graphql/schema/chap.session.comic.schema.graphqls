@@ -16,6 +16,7 @@ type CreateChapInputModel implements CreateChap {
   CreatedByID: String!
   SessionID: String
   ShortComicID: String
+  views: Int!
 }
 type ImageResult {
   ID: String!
@@ -33,6 +34,7 @@ type Chap implements CreateChap @key(fields: "_id") {
   Session: ComicSession @goField(forceResolver: true)
   ShortComic: ShortComic @goField(forceResolver: true)
   Images: [ImageResult!]!
+  views: Int!
 }
 
 input UpdateChapInput {
@@ -53,4 +55,5 @@ extend type Mutation {
 
 extend type Query {
   ChapBySession(SessionID: String!): [Chap!] @goField(forceResolver: true)
+  ChapByID(ID: String!): Chap @goField(forceResolver: true)
 }

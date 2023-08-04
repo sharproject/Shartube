@@ -20,6 +20,7 @@ type CreateComicInputModel implements CreateComic {
   CreatedByID: String!
   thumbnail: String
   background: String
+  views: Int!
 }
 
 type Comic implements CreateComic {
@@ -33,6 +34,7 @@ type Comic implements CreateComic {
   session: [ComicSession!] @goField(forceResolver: true)
   thumbnail: String
   background: String
+  views: Int!
 }
 
 input UpdateComicInput {
@@ -76,4 +78,6 @@ extend type Mutation {
 }
 extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
+  TopView: [Comic]! @goField(forceResolver: true)
+  ComicByID(ID: String!): Comic @goField(forceResolver: true)
 }

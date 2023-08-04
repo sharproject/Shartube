@@ -290,7 +290,7 @@ async fn main() {
                                 "image_url":image_url.clone()
                             }},
                             error: serde_json::Value::Null,
-                            header: serde_json::Value::Null,
+                            header: json_data.header.clone(),
                             message_type: "rep".to_string(),
                         }) {
                             Ok(s) => s,

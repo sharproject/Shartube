@@ -27,13 +27,13 @@ type AuthPayloadReturn struct {
 	SessionData *AuthSessionDataReturn `json:"sessionData"`
 }
 
-type WsReturnData[T any] struct {
-	Url     string       `json:"url"`
-	Header  *interface{} `json:"header"`
-	Payload T            `json:"payload"`
-	Type    string       `json:"type"`
-	Error   *string      `json:"error"`
-	From    string       `json:"from"`
+type WsReturnData[T any, ht any] struct {
+	Url     string  `json:"url"`
+	Header  ht      `json:"header"`
+	Payload T       `json:"payload"`
+	Type    string  `json:"type"`
+	Error   *string `json:"error"`
+	From    string  `json:"from"`
 }
 
 type GetUploadTokenReturn struct {
@@ -65,4 +65,12 @@ type UploadSessionComicThumbnailPayload struct {
 type CheckIdRealPayload struct {
 	Id         string `json:"objectId"`
 	ObjectType string `json:"objectType"`
+}
+
+type ClientGetCdnImagePayload struct {
+	RequestId string            `json:"request_id"`
+	Headers   map[string]string `json:"headers"`
+	ImageID   string            `json:"image_id"`
+	Message   []byte            `json:"message"`
+	ImageUrl  string            `json:"image_url"`
 }

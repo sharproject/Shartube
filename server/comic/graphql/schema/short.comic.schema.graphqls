@@ -18,6 +18,7 @@ type CreateShortComicInputModel implements CreateShortComic {
   CreatedByID: String!
   thumbnail: String
   background: String
+  views: Int!
 }
 
 type ShortComic implements CreateShortComic {
@@ -31,6 +32,7 @@ type ShortComic implements CreateShortComic {
   Chap: [Chap!] @goField(forceResolver: true)
   thumbnail: String
   background: String
+  views: Int!
 }
 
 input UpdateShortComicInput {

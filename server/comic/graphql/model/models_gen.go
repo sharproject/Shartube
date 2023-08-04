@@ -34,6 +34,7 @@ type Chap struct {
 	Session      *ComicSession  `json:"Session"`
 	ShortComic   *ShortComic    `json:"ShortComic"`
 	Images       []*ImageResult `json:"Images"`
+	Views        int            `json:"views"`
 }
 
 func (Chap) IsCreateChap() {}
@@ -50,6 +51,7 @@ type Comic struct {
 	Session     []*ComicSession `json:"session"`
 	Thumbnail   *string         `json:"thumbnail"`
 	Background  *string         `json:"background"`
+	Views       int             `json:"views"`
 }
 
 func (Comic) IsCreateComic() {}
@@ -66,6 +68,7 @@ type ComicSession struct {
 	Chaps       []*Chap   `json:"Chaps"`
 	ChapIds     []string  `json:"ChapIds"`
 	Thumbnail   *string   `json:"thumbnail"`
+	Views       int       `json:"views"`
 }
 
 func (ComicSession) IsCreateComicSession() {}
@@ -83,6 +86,7 @@ type CreateChapInputModel struct {
 	CreatedByID  string  `json:"CreatedByID"`
 	SessionID    *string `json:"SessionID"`
 	ShortComicID *string `json:"ShortComicID"`
+	Views        int     `json:"views"`
 }
 
 func (CreateChapInputModel) IsCreateChap() {}
@@ -100,6 +104,7 @@ type CreateComicInputModel struct {
 	CreatedByID string  `json:"CreatedByID"`
 	Thumbnail   *string `json:"thumbnail"`
 	Background  *string `json:"background"`
+	Views       int     `json:"views"`
 }
 
 func (CreateComicInputModel) IsCreateComic() {}
@@ -122,6 +127,7 @@ type CreateComicSessionInputModel struct {
 	CreatedByID string  `json:"CreatedByID"`
 	ComicID     string  `json:"comicID"`
 	Thumbnail   *string `json:"thumbnail"`
+	Views       int     `json:"views"`
 }
 
 func (CreateComicSessionInputModel) IsCreateComicSession() {}
@@ -144,6 +150,7 @@ type CreateShortComicInputModel struct {
 	CreatedByID string  `json:"CreatedByID"`
 	Thumbnail   *string `json:"thumbnail"`
 	Background  *string `json:"background"`
+	Views       int     `json:"views"`
 }
 
 func (CreateShortComicInputModel) IsCreateShortComic() {}
@@ -182,6 +189,7 @@ type ShortComic struct {
 	Chap        []*Chap   `json:"Chap"`
 	Thumbnail   *string   `json:"thumbnail"`
 	Background  *string   `json:"background"`
+	Views       int       `json:"views"`
 }
 
 func (ShortComic) IsCreateShortComic() {}

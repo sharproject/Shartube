@@ -14,6 +14,13 @@ services:
       - ./.base.env
     restart: always
 
+  redis:
+    image: redis:alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - redis:/data
+
   shartube-ws-server:
     container_name: shartube-ws-server
     image: tritranduc11/shartube-ws-server
@@ -34,6 +41,7 @@ services:
       - shartube-net
     depends_on:
       - shartube-user-server
+      - redis
     environment:
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
@@ -130,3 +138,4 @@ services:
 
 networks:
   shartube-net:
+  redis:

@@ -34,12 +34,15 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		return nil, err
 	}
 	ThumbnailUrl := ""
+	BackgroundUrl := ""
 
 	ShortcomicID, err := ShortComicModel.New(&model.CreateShortComicInputModel{
 		CreatedByID: CreateID,
 		Name:        input.Name,
 		Description: input.Description,
 		Thumbnail:   &ThumbnailUrl,
+		Background:  &BackgroundUrl,
+		Views:       0,
 	}).Save()
 
 	if err != nil {
@@ -120,7 +123,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
@@ -233,7 +236,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
