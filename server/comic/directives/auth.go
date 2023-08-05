@@ -71,7 +71,7 @@ func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.AuthPayloadReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.AuthPayloadReturn,*interface{}]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err

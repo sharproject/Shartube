@@ -1,8 +1,12 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
+	"time"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -12,13 +16,17 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/model"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interface{}, error) {
-	var data LocalTypes.WsReturnData[interface{}]
+const REDIS_KEY_PREFIX = "shartube_comic:"
+
+func HandleWs(message []byte, ws *websocket.Conn, MongoClient *mongo.Client, RedisClient *redis.Client) (*interface{}, error) {
+	ctx := context.Background()
+	var data LocalTypes.WsReturnData[interface{}, *interface{}]
 	err := json.Unmarshal(message, &data)
 	if err != nil {
 		return nil, err
@@ -26,13 +34,13 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 	if data.Type == "message" {
 		if data.From == "upload_token_registry/user_upload_webhook" {
 			if data.Url == "comic/SocketAddImagesToChap" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedChapImagesSocketPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedChapImagesSocketPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
 				fmt.Printf("data.Payload.Data.ChapId: %v\n", data.Payload.Data.ChapId)
-				comicChapModel, err := comic_chap_model.InitChapModel(Client)
+				comicChapModel, err := comic_chap_model.InitChapModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -84,12 +92,12 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				}
 				ws.WriteMessage(websocket.TextMessage, comicObject)
 			} else if data.Url == "comic/SocketChangeComicThumbnail" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
-				comicModel, err := comic_model.InitComicModel(Client)
+				comicModel, err := comic_model.InitComicModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -106,12 +114,12 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					return nil, err
 				}
 			} else if data.Url == "comic/SocketChangeComicBackground" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
-				comicModel, err := comic_model.InitComicModel(Client)
+				comicModel, err := comic_model.InitComicModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -128,12 +136,12 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					return nil, err
 				}
 			} else if data.Url == "comic/SocketChangeComicSessionThumbnail" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadSessionComicThumbnailPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadSessionComicThumbnailPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
-				comicSessionModel, err := comic_session_model.InitComicSessionModel(Client)
+				comicSessionModel, err := comic_session_model.InitComicSessionModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -150,13 +158,13 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 					return nil, err
 				}
 			} else if data.Url == "ShortComic/SocketAddImagesToChap" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedChapImagesSocketPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadedChapImagesSocketPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
 				fmt.Printf("data.Payload.Data.ChapId: %v\n", data.Payload.Data.ChapId)
-				comicChapModel, err := comic_chap_model.InitChapModel(Client)
+				comicChapModel, err := comic_chap_model.InitChapModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -208,12 +216,12 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				}
 				ws.WriteMessage(websocket.TextMessage, comicObject)
 			} else if data.Url == "ShortComic/SocketChangeComicThumbnail" {
-				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]]
+				var data LocalTypes.WsReturnData[LocalTypes.BaseUploadedSocketPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload], *interface{}]
 				err := json.Unmarshal(message, &data)
 				if err != nil {
 					return nil, err
 				}
-				comicModel, err := comic_model.InitComicModel(Client)
+				comicModel, err := comic_model.InitComicModel(MongoClient)
 				if err != nil {
 					return nil, err
 				}
@@ -231,15 +239,120 @@ func HandleWs(message []byte, ws *websocket.Conn, Client *mongo.Client) (*interf
 				}
 			}
 		} else if data.Url == "all/CheckIDReal" {
-			var data LocalTypes.WsReturnData[LocalTypes.CheckIdRealPayload]
+			var data LocalTypes.WsReturnData[LocalTypes.CheckIdRealPayload, *interface{}]
 			err := json.Unmarshal(message, &data)
 			if err != nil {
 				return nil, err
 			}
-			isReal := checkIdReal(Client, data.Payload.ObjectType, data.Payload.Id)
+			isReal := checkIdReal(MongoClient, data.Payload.ObjectType, data.Payload.Id)
 			if isReal {
 				writeCheckIDRealMessage(ws, data.From, data.Payload.ObjectType, true, data.Payload.Id)
 			}
+		} else if data.Url == "all/client_get_cdn_image" {
+			var data LocalTypes.WsReturnData[LocalTypes.ClientGetCdnImagePayload, map[string]string]
+			err := json.Unmarshal(message, &data)
+			if err != nil {
+				return nil, err
+			}
+			chapModel, err := comic_chap_model.InitChapModel(MongoClient)
+			if err != nil {
+				return nil, err
+			}
+			chapDoc, err := chapModel.FindOne(bson.M{"Images": bson.M{
+				"Url": data.Payload.ImageID,
+			}})
+			if err != nil {
+				return nil, err
+			}
+
+			remoteIp := data.Header["RemoteAddr"]
+			redisKey := REDIS_KEY_PREFIX + remoteIp
+			remoteHistory, err := RedisClient.HGetAll(ctx, redisKey).Result()
+			if err != nil {
+				switch {
+				case err == redis.Nil:
+					log.Println("key does not exist key: ", redisKey)
+					remoteHistory = map[string]string{
+						"imagesWatch": "",
+						"chapsWatch":  "",
+					}
+				case err != nil:
+					return nil, err
+				}
+			}
+			imagesWatch := strings.Split(remoteHistory["imagesWatch"], ",")
+			if imagesWatch[len(imagesWatch)-1] == data.Payload.ImageID {
+				return nil, nil
+			}
+			imagesWatch = append(imagesWatch, data.Payload.ImageID)
+
+			chapsWatch := strings.Split(remoteHistory["chapsWatch"], ",")
+
+			if chapsWatch[len(chapsWatch)-1] != chapDoc.ID {
+				chapModel.UpdateOne(bson.M{
+					"_id": chapDoc.ID,
+				}, bson.M{
+					"$inc": bson.M{
+						"views": 1,
+					},
+				})
+				if chapDoc.SessionID != nil {
+					// update session and comic
+					comicSessionModel, err := comic_session_model.InitComicSessionModel(MongoClient)
+					if err != nil {
+						return nil, err
+					}
+					comicSessionDoc, err := comicSessionModel.FindOneAndUpdate(bson.M{
+						"_id": chapDoc.SessionID,
+					}, bson.M{
+						"$inc": bson.M{
+							"views": 1,
+						},
+					})
+					if err != nil {
+						return nil, err
+					}
+					comicModel, err := comic_model.InitComicModel(MongoClient)
+					if err != nil {
+						return nil, err
+					}
+					_, err = comicModel.FindOneAndUpdate(bson.M{
+						"_id": comicSessionDoc.ComicID,
+					}, bson.M{"$inc": bson.M{
+						"views": 1,
+					}})
+					if err != nil {
+						return nil, err
+					}
+				}
+				if chapDoc.ShortComicID != nil {
+					// update short comic
+					ShortComicModel, err := short_comic_model.InitShortComicModel(MongoClient)
+					if err != nil {
+						return nil, err
+					}
+					_, err = ShortComicModel.FindOneAndUpdate(bson.M{
+						"_id": chapDoc.SessionID,
+					}, bson.M{
+						"$inc": bson.M{
+							"views": 1,
+						},
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+				chapsWatch = append(chapsWatch, chapDoc.ID)
+			}
+			RedisClient.HSet(ctx, redisKey, map[string]interface{}{
+				"imagesWatch": strings.Join(imagesWatch, ","),
+				"chapsWatch":  strings.Join(chapsWatch, ","),
+			})
+			_, err = RedisClient.Expire(ctx, remoteIp, 4*time.Hour).Result()
+			if err != nil {
+				return nil, err
+			}
+
 		}
 	}
 
@@ -265,7 +378,7 @@ func writeCheckIDRealMessage(
 		ObjectId:   objectId,
 		IsReal:     real,
 	}
-	requestData := LocalTypes.WsReturnData[any]{
+	requestData := LocalTypes.WsReturnData[any, *any]{
 		Url:     from,
 		Header:  nil,
 		Payload: &payload,

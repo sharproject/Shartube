@@ -20,6 +20,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Session is the resolver for the session field.
@@ -51,12 +52,15 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		return nil, err
 	}
 	ThumbnailUrl := ""
+	BackgroundUrl := ""
 
 	comicID, err := comicModel.New(&model.CreateComicInputModel{
 		CreatedByID: CreateID,
 		Name:        input.Name,
 		Description: input.Description,
 		Thumbnail:   &ThumbnailUrl,
+		Views:       0,
+		Background:  &BackgroundUrl,
 	}).Save()
 
 	if err != nil {
@@ -138,7 +142,7 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
@@ -260,7 +264,7 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn]
+		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
@@ -344,6 +348,30 @@ func (r *queryResolver) Comics(ctx context.Context) ([]*model.Comic, error) {
 	}
 
 	return comicModel.Find(bson.D{})
+}
+
+// TopView is the resolver for the TopView field.
+func (r *queryResolver) TopView(ctx context.Context) ([]*model.Comic, error) {
+	comicModel, err := comic_model.InitComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	limit := int64(20)
+	return comicModel.Find(bson.M{}, &options.FindOptions{
+		Sort: bson.M{
+			"views": 1,
+		},
+		Limit: &limit,
+	})
+}
+
+// ComicByID is the resolver for the ComicByID field.
+func (r *queryResolver) ComicByID(ctx context.Context, id string) (*model.Comic, error) {
+	comicModel, err := comic_model.InitComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return comicModel.FindById(id)
 }
 
 // Comic returns generated.ComicResolver implementation.

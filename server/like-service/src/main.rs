@@ -10,7 +10,7 @@ use actix_web::{
 };
 use graphql::{context::ContextUtil, schema::GraphqlSchema as Schema};
 use juniper_actix::graphql_handler;
-use mongodb::{options::ClientOptions, Client, Database};
+use mongodb::{Client, Database};
 use util::get_db_url::get_db_url;
 mod graphql;
 mod repository;
@@ -40,8 +40,8 @@ async fn graphql_route(
 async fn main() -> std::io::Result<()> {
     env::set_var("RUST_LOG", "info");
     env_logger::init();
-    let db_name = env::var("DB_NAME").unwrap_or("likes".to_string());
-    let client_options = ClientOptions::parse(get_db_url()).unwrap();
+    let db_name = option_env!("DB_NAME").unwrap_or("likes");
+    let client_options = get_db_url().await;
     let server = HttpServer::new(move || {
         let schema = graphql::schema::schema();
         let (socket, _response) = {

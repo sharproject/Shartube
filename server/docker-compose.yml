@@ -16,6 +16,13 @@ services:
       - mongoDB:/data/db
     command: --quiet --logpath /dev/null
 
+  redis:
+    image: redis:alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - redis:/data
+
   shartube-graphql-gateway:
     container_name: shartube-graphql-gateway
     image: tritranduc11/shartube-graphql-gateway
@@ -55,6 +62,7 @@ services:
     depends_on:
       - shartube-mongo-db
       - shartube-user-server
+      - redis
     build: ./comic
     environment:
       - UserHost=shartube-user-server
@@ -164,3 +172,4 @@ networks:
 
 volumes:
   mongoDB:
+  redis:

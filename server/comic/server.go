@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
 )
 
@@ -29,10 +30,19 @@ func main() {
 	 */
 	// create a new router with mux
 	router := mux.NewRouter()
-	client, err := getClient.GetClient()
+	MongoDbClient, err := getClient.GetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	redisOpts := redis.Options{
+		Addr:     os.ExpandEnv("REDIS_HOST") + ":" + os.ExpandEnv("REDIS_PORT"),
+		Password: os.ExpandEnv("REDIS_PASSWORD"), // no password set
+		DB:       0,                              // use default DB
+
+	}
+
+	RedisClient := redis.NewClient(&redisOpts)
 	// middleware
 	router.Use(passRequest.PassMiddleware)
 	port := os.Getenv("PORT")
@@ -66,13 +76,13 @@ func main() {
 			if err != nil {
 				continue
 			}
-			if _, err := ws.HandleWs(message, wsCon, client); err != nil {
+			if _, err := ws.HandleWs(message, wsCon, MongoDbClient, RedisClient); err != nil {
 				continue
 			}
 		}
 	}()
 	c := generated.Config{Resolvers: &resolver.Resolver{
-		Client: client, Ws: wsCon,
+		Client: MongoDbClient, Ws: wsCon,
 	}}
 	c.Directives.Auth = directives.Auth
 

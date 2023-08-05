@@ -2,10 +2,12 @@ extern crate dotenv;
 mod types;
 mod upload_images;
 
+use serde_json::json;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
+use tokio::sync::Mutex as TokioMutex;
 use tungstenite::{connect, Message};
-use types::SenderData;
+use types::{GetImageMessageType, SenderData, WsRequestMessage};
 use url::Url;
 
 use dotenv::dotenv;
@@ -13,14 +15,53 @@ use hyper::StatusCode;
 use salvo::prelude::TcpListener;
 use salvo::writer::Json;
 use salvo::{handler, Depot, Request, Response, Router, Server};
-
 #[derive(Debug)]
 struct TokenStorageTableNode {
     data: serde_json::Value,
     emit_to: String,
     event_name: String,
 }
+// convert to db soon
 type TokenStorageTable = Arc<Mutex<BTreeMap<String, TokenStorageTableNode>>>;
+
+enum WsError {
+    DecodePayloadError,
+}
+struct SendWsErrorMetaInput {
+    pub from: String,
+    pub url: String,
+    pub id: String,
+}
+
+async fn send_ws_error(
+    error: WsError,
+    meta: SendWsErrorMetaInput,
+    socket: Arc<
+        TokioMutex<
+            tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>,
+        >,
+    >,
+) {
+    let sender_data = Some(SenderData {
+        url: meta.from,
+        message_type: "rep".to_string(),
+        from: meta.url,
+        header: serde_json::Value::Null,
+        payload: serde_json::Value::Null,
+        error: serde_json::Value::String(match error {
+            WsError::DecodePayloadError => "decode payload error".to_string(),
+        }),
+        id: meta.id.to_string(),
+    });
+    let mut socket = socket.lock().await;
+    match socket.write_message(Message::Text(serde_json::to_string(&sender_data).unwrap())) {
+        Ok(_) => {}
+        Err(e) => {
+            dbg!(&e);
+            return;
+        }
+    };
+}
 
 #[tokio::main]
 async fn main() {
@@ -29,21 +70,28 @@ async fn main() {
     {
         let token_storage = token_storage.clone();
         tokio::spawn(async move {
-            let (mut socket, _response) = connect(
-                Url::parse(
-                    &format!(
-                        "ws://{}:{}",
-                        std::env::var("WS_HOST").unwrap(),
-                        std::env::var("WS_PORT").unwrap()
+            let (socket, _response) = {
+                let (socket, _response) = connect(
+                    Url::parse(
+                        &format!(
+                            "ws://{}:{}",
+                            std::env::var("WS_HOST").unwrap(),
+                            std::env::var("WS_PORT").unwrap()
+                        )
+                        .to_string(),
                     )
-                    .to_string(),
+                    .unwrap(),
                 )
-                .unwrap(),
-            )
-            .expect("Can't connect");
-
+                .expect("Can't connect");
+                (Arc::new(TokioMutex::new(socket)), _response)
+            };
             loop {
-                let msg = socket.read_message().expect("Error reading message");
+                let msg = socket
+                    .clone()
+                    .lock()
+                    .await
+                    .read_message()
+                    .expect("Error reading message");
                 if let Message::Text(text) = msg {
                     let json_data = match serde_json::from_str::<types::SenderData>(&text) {
                         Err(e) => {
@@ -119,9 +167,154 @@ async fn main() {
                                 id: id.to_string(),
                             });
                         }
-                        match socket.write_message(Message::Text(
+                        match socket.clone().lock().await.write_message(Message::Text(
                             serde_json::to_string(&sender_data).unwrap(),
                         )) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                dbg!(&e);
+                                continue;
+                            }
+                        };
+                    } else if json_data.url.eq("cdn_service/cdn_get_image") {
+                        let payload = match serde_json::from_str::<WsRequestMessage>(
+                            &json_data.payload.to_string(),
+                        ) {
+                            Ok(v) => v,
+                            Err(_) => {
+                                send_ws_error(
+                                    WsError::DecodePayloadError,
+                                    SendWsErrorMetaInput {
+                                        from: json_data.url.clone(),
+                                        url: json_data.from.clone(),
+                                        id: json_data.id.clone(),
+                                    },
+                                    socket.clone(),
+                                )
+                                .await;
+                                continue;
+                            }
+                        };
+                        let message_string =
+                            match std::str::from_utf8(payload.message.clone().as_slice()) {
+                                Ok(s) => s,
+                                _ => {
+                                    send_ws_error(
+                                        WsError::DecodePayloadError,
+                                        SendWsErrorMetaInput {
+                                            from: json_data.url.clone(),
+                                            url: json_data.from.clone(),
+                                            id: json_data.id.clone(),
+                                        },
+                                        socket.clone(),
+                                    )
+                                    .await;
+
+                                    continue;
+                                }
+                            }
+                            .to_string();
+                        // decode message to the json have one field url
+                        let image_id =
+                            match serde_json::from_str::<GetImageMessageType>(&message_string) {
+                                Ok(d) => d,
+                                Err(_) => {
+                                    send_ws_error(
+                                        WsError::DecodePayloadError,
+                                        SendWsErrorMetaInput {
+                                            from: json_data.url.clone(),
+                                            url: json_data.from.clone(),
+                                            id: json_data.id.clone(),
+                                        },
+                                        socket.clone(),
+                                    )
+                                    .await;
+
+                                    continue;
+                                }
+                            }
+                            .id;
+                        let image_url = get_image_url(image_id.clone());
+                        let message_send_client = match serde_json::to_string(&SenderData {
+                            id: json_data.id.clone(),
+                            from: json_data.url.clone(),
+                            url: json_data.from.clone(),
+                            payload: json! {{
+                                "message":json!({
+                                    "image_url": image_url.clone(),
+                                    "image_id" : image_id.clone(),
+                                }).to_string().as_bytes().to_vec()
+                            }},
+                            error: serde_json::Value::Null,
+                            header: serde_json::Value::Null,
+                            message_type: "rep".to_string(),
+                        }) {
+                            Ok(s) => s,
+                            Err(_) => {
+                                send_ws_error(
+                                    WsError::DecodePayloadError,
+                                    SendWsErrorMetaInput {
+                                        from: json_data.url.clone(),
+                                        url: json_data.from.clone(),
+                                        id: json_data.id.clone(),
+                                    },
+                                    socket.clone(),
+                                )
+                                .await;
+
+                                continue;
+                            }
+                        };
+                        match socket
+                            .clone()
+                            .lock()
+                            .await
+                            .write_message(Message::Text(message_send_client))
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                dbg!(&e);
+                                continue;
+                            }
+                        };
+                        // boastcast to all service with url and 2 payload
+                        let message_send_other = match serde_json::to_string(&SenderData {
+                            id: json_data.id.clone(),
+                            from: json_data.url.clone(),
+                            url: "all/client_get_cdn_image".to_string(),
+                            payload: json! {{
+                                "request_id": payload.request_id,
+                                "headers" : payload.headers,
+                                "image_id":image_id.clone(),
+                                "message": payload.message.clone(),
+                                "image_url":image_url.clone()
+                            }},
+                            error: serde_json::Value::Null,
+                            header: json_data.header.clone(),
+                            message_type: "rep".to_string(),
+                        }) {
+                            Ok(s) => s,
+                            Err(_) => {
+                                send_ws_error(
+                                    WsError::DecodePayloadError,
+                                    SendWsErrorMetaInput {
+                                        from: json_data.url.clone(),
+                                        url: json_data.from.clone(),
+                                        id: json_data.id.clone(),
+                                    },
+                                    socket.clone(),
+                                )
+                                .await;
+
+                                continue;
+                            }
+                        };
+                        match socket
+                            .clone()
+                            .lock()
+                            .await
+                            .write_message(Message::Text(message_send_other))
+                        {
                             Ok(_) => {}
                             Err(e) => {
                                 dbg!(&e);
@@ -140,6 +333,10 @@ async fn main() {
 }
 fn gen_token(uuid: String) -> String {
     uuid
+}
+// like result of upload_images::upload_images
+fn get_image_url(id: String) -> String {
+    return id;
 }
 
 fn route(token_storage: TokenStorageTable) -> salvo::Router {
