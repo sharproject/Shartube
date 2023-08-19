@@ -17,9 +17,15 @@ pipeline {
                 sh "touch server/graphql-gateway/.env"
             }
         }
-        stage('Build and Push Docker Image') {
+        stage('Build Docker Image') {
             steps {
-                sh "cd server/ && docker compose build && docker compose push"
+                sh "cd server/ && docker compose build"
+            }
+        }
+        stage("Push Docker Image"){
+            steps {
+                sh "pwd"
+                sh "docker compose push"
             }
         }
     }
