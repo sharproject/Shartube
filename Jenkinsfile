@@ -23,7 +23,7 @@ pipeline {
                 DOCKER_LOGIN_INFO = credentials("ShartubeImageToken")
             }
             steps {
-                sh "echo $DOCKER_LOGIN_INFO_PSW | docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin"
+                sh ('echo $DOCKER_LOGIN_INFO_PSW | docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin')
                 echo 'Login Completed'
             }
             
@@ -45,7 +45,6 @@ pipeline {
     post {
         always { 
             sh "docker logout"
-            sh "docker image prune"
         }
     }
 }
