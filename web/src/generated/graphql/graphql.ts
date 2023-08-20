@@ -36,12 +36,14 @@ export type Chap = CreateChap & {
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   updatedAt: Scalars['Time']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type Comic = CreateComic & {
   __typename?: 'Comic';
   CreatedByID: Scalars['String']['output'];
   _id: Scalars['ID']['output'];
+  background?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
@@ -49,6 +51,7 @@ export type Comic = CreateComic & {
   sessionId?: Maybe<Array<Scalars['String']['output']>>;
   thumbnail?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Time']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type ComicSession = CreateComicSession & {
@@ -64,6 +67,7 @@ export type ComicSession = CreateComicSession & {
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Time']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type CreateChap = {
@@ -87,15 +91,18 @@ export type CreateChapInputModel = CreateChap & {
   ShortComicID?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type CreateComic = {
+  background?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
 };
 
 export type CreateComicInput = {
+  background?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   thumbnail?: InputMaybe<Scalars['Boolean']['input']>;
@@ -104,14 +111,16 @@ export type CreateComicInput = {
 export type CreateComicInputModel = CreateComic & {
   __typename?: 'CreateComicInputModel';
   CreatedByID: Scalars['String']['output'];
+  background?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
+  views: Scalars['Int']['output'];
 };
 
 export type CreateComicResponse = {
   __typename?: 'CreateComicResponse';
-  UploadToken?: Maybe<Scalars['String']['output']>;
+  UploadToken?: Maybe<Array<Scalars['String']['output']>>;
   comic: Comic;
 };
 
@@ -136,6 +145,7 @@ export type CreateComicSessionInputModel = CreateComicSession & {
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
+  views: Scalars['Int']['output'];
 };
 
 export type CreateComicSessionResponse = {
@@ -145,12 +155,14 @@ export type CreateComicSessionResponse = {
 };
 
 export type CreateShortComic = {
+  background?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
 };
 
 export type CreateShortComicInput = {
+  background?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   thumbnail?: InputMaybe<Scalars['Boolean']['input']>;
@@ -159,15 +171,17 @@ export type CreateShortComicInput = {
 export type CreateShortComicInputModel = CreateShortComic & {
   __typename?: 'CreateShortComicInputModel';
   CreatedByID: Scalars['String']['output'];
+  background?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
+  views: Scalars['Int']['output'];
 };
 
 export type CreateShortComicResponse = {
   __typename?: 'CreateShortComicResponse';
   ShortComic: ShortComic;
-  UploadToken?: Maybe<Scalars['String']['output']>;
+  UploadToken?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type CreateTeamInput = {
@@ -186,15 +200,45 @@ export type ImageResult = {
   Url: Scalars['String']['output'];
 };
 
+export type LikeAndDislikeResult = {
+  __typename?: 'LikeAndDislikeResult';
+  likeInfo: LikeInfoResult;
+  likes: LikeResult;
+};
+
+export type LikeInfoResult = {
+  __typename?: 'LikeInfoResult';
+  _id: Scalars['String']['output'];
+  likeNumber: Scalars['Int']['output'];
+  likesId: Scalars['String']['output'];
+  objectId: Scalars['String']['output'];
+  userId: Scalars['String']['output'];
+};
+
 export type LikeMutationInput = {
   objectId: Scalars['String']['input'];
   /** type of object like comic, short_comic, comic_session, comic_chap, short_comic_chap */
   type: Scalars['String']['input'];
 };
 
+export type LikeResult = {
+  __typename?: 'LikeResult';
+  _id: Scalars['String']['output'];
+  likeInfoIds: Array<Scalars['String']['output']>;
+  numberOfLike: Scalars['Int']['output'];
+  objectId: Scalars['String']['output'];
+  objectType: Scalars['String']['output'];
+};
+
 export type LikeServiceQueryReturn = {
   __typename?: 'LikeServiceQueryReturn';
   sdl: Scalars['String']['output'];
+};
+
+export type LikesByObjectIdResult = {
+  __typename?: 'LikesByObjectIdResult';
+  likes: LikeResult;
+  myLikeInfo?: Maybe<LikeInfoResult>;
 };
 
 export type LoginUserInput = {
@@ -220,7 +264,8 @@ export type Mutation = {
   UpdateChap: Chap;
   createComic: CreateComicResponse;
   createShortComic: CreateShortComicResponse;
-  like: Scalars['String']['output'];
+  dislike: LikeAndDislikeResult;
+  like: LikeAndDislikeResult;
   updateComic: UploadComicResponse;
   updateComicSession: UpdateComicSessionResponse;
   updateShortComic: UpdateShortComicResponse;
@@ -309,6 +354,11 @@ export type MutationCreateShortComicArgs = {
 };
 
 
+export type MutationDislikeArgs = {
+  input: LikeMutationInput;
+};
+
+
 export type MutationLikeArgs = {
   input: LikeMutationInput;
 };
@@ -341,15 +391,25 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  ChapByID?: Maybe<Chap>;
   ChapBySession?: Maybe<Array<Chap>>;
+  ComicByID?: Maybe<Comic>;
   Comics: Array<Comic>;
   FindProfileById: Profile;
+  LikesByObjectId: LikesByObjectIdResult;
   Me: User;
   PageFromId?: Maybe<UserOrTeam>;
   SessionByComic?: Maybe<Array<ComicSession>>;
+  SessionByID?: Maybe<ComicSession>;
   ShortComicByID?: Maybe<ShortComic>;
   ShortComics: Array<ShortComic>;
+  TopView: Array<Maybe<Comic>>;
   apiVersion: Scalars['String']['output'];
+};
+
+
+export type QueryChapByIdArgs = {
+  ID: Scalars['String']['input'];
 };
 
 
@@ -358,8 +418,18 @@ export type QueryChapBySessionArgs = {
 };
 
 
+export type QueryComicByIdArgs = {
+  ID: Scalars['String']['input'];
+};
+
+
 export type QueryFindProfileByIdArgs = {
   UserOrTeamId: Scalars['String']['input'];
+};
+
+
+export type QueryLikesByObjectIdArgs = {
+  objectId: Scalars['String']['input'];
 };
 
 
@@ -370,6 +440,11 @@ export type QueryPageFromIdArgs = {
 
 export type QuerySessionByComicArgs = {
   comicID: Scalars['String']['input'];
+};
+
+
+export type QuerySessionByIdArgs = {
+  ID: Scalars['String']['input'];
 };
 
 
@@ -389,11 +464,13 @@ export type ShortComic = CreateShortComic & {
   ChapIDs?: Maybe<Array<Scalars['String']['output']>>;
   CreatedByID: Scalars['String']['output'];
   _id: Scalars['ID']['output'];
+  background?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   description?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   thumbnail?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Time']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type Team = {
@@ -413,6 +490,7 @@ export type UpdateChapInput = {
 };
 
 export type UpdateComicInput = {
+  background?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   thumbnail?: InputMaybe<Scalars['Boolean']['input']>;
@@ -420,6 +498,7 @@ export type UpdateComicInput = {
 
 export type UpdateComicInputModel = {
   __typename?: 'UpdateComicInputModel';
+  background?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   thumbnail?: Maybe<Scalars['String']['output']>;
@@ -445,6 +524,7 @@ export type UpdateComicSessionResponse = {
 };
 
 export type UpdateShortComicInput = {
+  background?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   thumbnail?: InputMaybe<Scalars['Boolean']['input']>;
@@ -452,6 +532,7 @@ export type UpdateShortComicInput = {
 
 export type UpdateShortComicInputModel = {
   __typename?: 'UpdateShortComicInputModel';
+  background?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   description?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   thumbnail?: Maybe<Scalars['String']['output']>;
@@ -460,12 +541,12 @@ export type UpdateShortComicInputModel = {
 export type UpdateShortComicResponse = {
   __typename?: 'UpdateShortComicResponse';
   ShortComic: ShortComic;
-  UploadToken?: Maybe<Scalars['String']['output']>;
+  UploadToken?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type UploadComicResponse = {
   __typename?: 'UploadComicResponse';
-  UploadToken?: Maybe<Scalars['String']['output']>;
+  UploadToken?: Maybe<Array<Scalars['String']['output']>>;
   comic: Comic;
 };
 

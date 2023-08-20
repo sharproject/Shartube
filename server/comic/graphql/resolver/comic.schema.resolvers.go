@@ -350,8 +350,8 @@ func (r *queryResolver) Comics(ctx context.Context) ([]*model.Comic, error) {
 	return comicModel.Find(bson.D{})
 }
 
-// TopView is the resolver for the TopView field.
-func (r *queryResolver) TopView(ctx context.Context) ([]*model.Comic, error) {
+// TopViewComic is the resolver for the TopViewComic field.
+func (r *queryResolver) TopViewComic(ctx context.Context) ([]*model.Comic, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err

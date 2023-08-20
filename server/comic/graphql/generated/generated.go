@@ -198,7 +198,8 @@ type ComplexityRoot struct {
 		SessionByID        func(childComplexity int, id string) int
 		ShortComicByID     func(childComplexity int, id string) int
 		ShortComics        func(childComplexity int) int
-		TopView            func(childComplexity int) int
+		TopViewComic       func(childComplexity int) int
+		TopViewShortComics func(childComplexity int) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
 	}
@@ -296,11 +297,12 @@ type QueryResolver interface {
 	ChapBySession(ctx context.Context, sessionID string) ([]*model.Chap, error)
 	ChapByID(ctx context.Context, id string) (*model.Chap, error)
 	Comics(ctx context.Context) ([]*model.Comic, error)
-	TopView(ctx context.Context) ([]*model.Comic, error)
+	TopViewComic(ctx context.Context) ([]*model.Comic, error)
 	ComicByID(ctx context.Context, id string) (*model.Comic, error)
 	SessionByComic(ctx context.Context, comicID string) ([]*model.ComicSession, error)
 	SessionByID(ctx context.Context, id string) (*model.ComicSession, error)
 	ShortComics(ctx context.Context) ([]*model.ShortComic, error)
+	TopViewShortComics(ctx context.Context) ([]*model.ShortComic, error)
 	ShortComicByID(ctx context.Context, id string) (*model.ShortComic, error)
 }
 type ShortComicResolver interface {
@@ -1104,12 +1106,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ShortComics(childComplexity), true
 
-	case "Query.TopView":
-		if e.complexity.Query.TopView == nil {
+	case "Query.TopViewComic":
+		if e.complexity.Query.TopViewComic == nil {
 			break
 		}
 
-		return e.complexity.Query.TopView(childComplexity), true
+		return e.complexity.Query.TopViewComic(childComplexity), true
+
+	case "Query.TopViewShortComics":
+		if e.complexity.Query.TopViewShortComics == nil {
+			break
+		}
+
+		return e.complexity.Query.TopViewShortComics(childComplexity), true
 
 	case "Query._service":
 		if e.complexity.Query.__resolve__service == nil {
@@ -1549,7 +1558,7 @@ extend type Mutation {
 }
 extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
-  TopView: [Comic]! @goField(forceResolver: true)
+  TopViewComic: [Comic]! @goField(forceResolver: true)
   ComicByID(ID: String!): Comic @goField(forceResolver: true)
 }
 `, BuiltIn: false},
@@ -1729,6 +1738,7 @@ extend type Mutation {
 }
 extend type Query {
   ShortComics: [ShortComic!]! @goField(forceResolver: true)
+  TopViewShortComics: [ShortComic!]! @goField(forceResolver: true)
   ShortComicByID(id: String!): ShortComic @goField(forceResolver: true)
 }
 `, BuiltIn: false},
@@ -7126,8 +7136,8 @@ func (ec *executionContext) fieldContext_Query_Comics(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_TopView(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_TopView(ctx, field)
+func (ec *executionContext) _Query_TopViewComic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_TopViewComic(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7140,7 +7150,7 @@ func (ec *executionContext) _Query_TopView(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TopView(rctx)
+		return ec.resolvers.Query().TopViewComic(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7157,7 +7167,7 @@ func (ec *executionContext) _Query_TopView(ctx context.Context, field graphql.Co
 	return ec.marshalNComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComic(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_TopView(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_TopViewComic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -7458,6 +7468,74 @@ func (ec *executionContext) _Query_ShortComics(ctx context.Context, field graphq
 }
 
 func (ec *executionContext) fieldContext_Query_ShortComics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_ShortComic__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShortComic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_ShortComic_name(ctx, field)
+			case "description":
+				return ec.fieldContext_ShortComic_description(ctx, field)
+			case "ChapIDs":
+				return ec.fieldContext_ShortComic_ChapIDs(ctx, field)
+			case "Chap":
+				return ec.fieldContext_ShortComic_Chap(ctx, field)
+			case "thumbnail":
+				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
+			case "views":
+				return ec.fieldContext_ShortComic_views(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_TopViewShortComics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_TopViewShortComics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TopViewShortComics(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ShortComic)
+	fc.Result = res
+	return ec.marshalNShortComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐShortComicᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_TopViewShortComics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -12501,7 +12579,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "TopView":
+		case "TopViewComic":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -12510,7 +12588,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_TopView(ctx, field)
+				res = ec._Query_TopViewComic(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -12594,6 +12672,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_ShortComics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "TopViewShortComics":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_TopViewShortComics(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

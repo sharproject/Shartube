@@ -20,6 +20,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // CreateShortComic is the resolver for the createShortComic field.
@@ -315,6 +316,21 @@ func (r *queryResolver) ShortComics(ctx context.Context) ([]*model.ShortComic, e
 	}
 
 	return ShortComicModel.Find(bson.D{})
+}
+
+// TopViewShortComics is the resolver for the TopViewShortComics field.
+func (r *queryResolver) TopViewShortComics(ctx context.Context) ([]*model.ShortComic, error) {
+	shortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	limit := int64(20)
+	return shortComicModel.Find(bson.M{}, &options.FindOptions{
+		Sort: bson.M{
+			"views": 1,
+		},
+		Limit: &limit,
+	})
 }
 
 // ShortComicByID is the resolver for the ShortComicByID field.

@@ -78,6 +78,6 @@ extend type Mutation {
 }
 extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
-  TopView: [Comic]! @goField(forceResolver: true)
+  TopViewComic: [Comic]! @goField(forceResolver: true)
   ComicByID(ID: String!): Comic @goField(forceResolver: true)
 }
