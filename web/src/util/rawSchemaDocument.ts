@@ -23,3 +23,8 @@ export const registerMutationDocument= graphql(`mutation Register($input: Regist
     }
   }
 }`)
+export const TopViewComicsQueryDocument = graphql(`query TopViewComics {
+  TopViewComic {
+    ...ComicInfo
+  }
+}`)

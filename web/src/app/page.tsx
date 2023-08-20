@@ -4,6 +4,8 @@ import styles from './page.module.css'
 import { useCheckAuth } from '@/hooks/useCheckAuth'
 import { useEffect, useState } from 'react'
 import { LogoLoading } from '../components/logo'
+import { useQuery } from '@apollo/client'
+import { TopViewComicsQueryDocument } from '../util/rawSchemaDocument'
 
 export const metadata = {
 	title: 'Shartube',
@@ -26,15 +28,24 @@ export default function Home() {
 		}
 	}, [height])
 
+	const { data: comics, loading: comicsLoading } = useQuery(
+		TopViewComicsQueryDocument
+	)
+
 	return (
 		<div className={styles.container}>
-			{loading || (!loading && data?.Me) ? (
+			{loading || (!loading && data?.Me) || comicsLoading ? (
 				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
 					<LogoLoading />
 				</div>
 			) : (
 				<main className={styles.main}>
-					<Navbar height={height} styles={styles} key='shar-secure' userInfo={data}/>
+					<Navbar
+						height={height}
+						styles={styles}
+						key='shar-secure'
+						userInfo={data}
+					/>
 					<div
 						className={styles.mainContainer}
 						style={{

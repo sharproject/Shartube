@@ -1,0 +1,7 @@
+fragment ComicInfo on Comic {
+	_id
+	name
+	description
+	background
+	CreatedByID
+}
