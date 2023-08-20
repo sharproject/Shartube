@@ -15,17 +15,27 @@ pipeline {
                 sh "cp server/comic/.env.example server/comic/.env"
                 sh "cp server/cdn-service/.env.example server/cdn-service/.env"
                 sh "touch server/graphql-gateway/.env"
+                echo 'Setup env success'
             }
         }
-        stage('Build and Push Docker Image') {
+        stage('Login docker'){
+            environment {
+                DOCKER_LOGIN_INFO = credentials("ShartubeImageToken")
+            }
+            sh "echo $DOCKER_LOGIN_INFO_PSW | sudo docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin"
+            echo 'Login Completed'
+        }
+        stage('Build Docker Image') {
             steps {
-                sh "cd server/ && docker compose build && docker compose push"
+                sh "cd server/ && docker compose build"
+                echo 'Docker-compose-build Build Image Completed'
             }
         }
-
-        stage('Verify') {
+        stage("Push Docker Image"){
             steps {
-                sh 'echo $REGISTRY_BUILD_OUTPUT_DIGEST'
+                sh "pwd"
+                sh "docker compose push"
+                echo 'Docker-compose-push Push Image Completed'
             }
         }
     }
