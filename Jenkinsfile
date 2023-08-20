@@ -23,7 +23,7 @@ pipeline {
                 DOCKER_LOGIN_INFO = credentials("ShartubeImageToken")
             }
             steps {
-                sh "echo $DOCKER_LOGIN_INFO_PSW | sudo docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin"
+                sh ('echo $DOCKER_LOGIN_INFO_PSW | docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin')
                 echo 'Login Completed'
             }
             
@@ -36,10 +36,14 @@ pipeline {
         }
         stage("Push Docker Image"){
             steps {
-                sh "pwd"
-                sh "docker compose push"
+                sh "cd server/ && docker compose push"
                 echo 'Docker-compose-push Push Image Completed'
             }
+        }
+    }
+    post {
+        always { 
+            sh "docker logout"
         }
     }
 }
