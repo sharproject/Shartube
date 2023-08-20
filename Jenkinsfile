@@ -22,8 +22,11 @@ pipeline {
             environment {
                 DOCKER_LOGIN_INFO = credentials("ShartubeImageToken")
             }
-            sh "echo $DOCKER_LOGIN_INFO_PSW | sudo docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin"
-            echo 'Login Completed'
+            steps {
+                sh "echo $DOCKER_LOGIN_INFO_PSW | sudo docker login -u $DOCKER_LOGIN_INFO_USR --password-stdin"
+                echo 'Login Completed'
+            }
+            
         }
         stage('Build Docker Image') {
             steps {
