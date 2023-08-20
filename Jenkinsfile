@@ -36,10 +36,16 @@ pipeline {
         }
         stage("Push Docker Image"){
             steps {
-                sh "pwd"
+                sh "cd server/"
                 sh "docker compose push"
                 echo 'Docker-compose-push Push Image Completed'
             }
+        }
+    }
+    post {
+        always { 
+            sh "docker logout"
+            sh "docker image prune"
         }
     }
 }
