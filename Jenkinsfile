@@ -36,8 +36,7 @@ pipeline {
         }
         stage("Push Docker Image"){
             steps {
-                sh "cd server/"
-                sh "docker compose push"
+                sh "cd server/ && docker compose push"
                 echo 'Docker-compose-push Push Image Completed'
             }
         }
