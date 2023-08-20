@@ -139,3 +139,5 @@ services:
 networks:
   shartube-net:
   redis:
+volumes:
+  redis:
