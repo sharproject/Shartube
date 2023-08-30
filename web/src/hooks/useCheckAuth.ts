@@ -9,7 +9,10 @@ import { useQuery } from "@apollo/client";
  * @returns
  */
 
-export const useCheckAuth = () => {
+export const useCheckAuth = (
+  { unAuthRedirectTo, authRedirectTo }:
+    { unAuthRedirectTo?: string, authRedirectTo?: string } = {}
+) => {
   const router = useRouter();
   const pathname = usePathname()
   const { data, loading, error } = useQuery(meQueryDocument);
@@ -20,17 +23,15 @@ export const useCheckAuth = () => {
     //     window.localStorage.removeItem("token");
     //   }
     // }
-    console.log({ error });
-    console.log({ pathname })
-    const isInLoginOrRegisterPage =
-      pathname == "/login" ||
-      pathname == "/register" ||
-      pathname == "/forgot-password" ||
-      pathname == "/change-password";
-    if (!loading && data?.Me && isInLoginOrRegisterPage) {
-      router.replace("/");
+    console.log({ pathname, data, loading, error })
+
+    if (!loading && !data?.Me && unAuthRedirectTo) {
+      router.replace(unAuthRedirectTo)
     }
-  }, [data, loading, router, error, pathname]);
+    if (!loading && data?.Me && authRedirectTo) {
+      router.replace(authRedirectTo);
+    }
+  }, [data, loading, router, error, pathname, unAuthRedirectTo, authRedirectTo]);
   return {
     data,
     loading,

@@ -346,12 +346,18 @@ fn route(token_storage: TokenStorageTable) -> salvo::Router {
     router = router.push(Router::with_path("/save").post(UploadFile {
         token_storage: token_storage.clone(),
     }));
+    router = router.push(Router::with_path("/get_image_data").post(get_image_data));
 
     return router;
 }
 #[handler]
 async fn hello_world() -> &'static str {
     "Hello world"
+}
+
+#[handler]
+async fn get_image_data<'a>(data: types::GetImageUrlRequestInput<'a>, res: &mut Response) {
+    res.render(Json(data))
 }
 
 struct UploadFile {

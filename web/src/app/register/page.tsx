@@ -27,7 +27,7 @@ export default function Register() {
 
 	const router = useRouter()
 
-	const { data: authData, loading: authLoading } = useCheckAuth()
+	const { data: authData, loading: authLoading } = useCheckAuth({authRedirectTo:"/"})
 
 	const [inputContainWidth, setInputContainWidth] = useState(0)
 

@@ -21,7 +21,9 @@ export default function RootLayout({
 	return (
 		<html lang='en'>
 			<body className={`${inter.className} ${roboto.className}`}>
-				<ApolloWrapper>{children}</ApolloWrapper>
+				<ApolloWrapper>
+					{children}
+				</ApolloWrapper>
 			</body>
 		</html>
 	)

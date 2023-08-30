@@ -1,6 +1,6 @@
 import styles from './styles.module.css'
 
-export function ComicCard() {
+export function ComicCardDashboard() {
 	return (
 		<div
 			style={{

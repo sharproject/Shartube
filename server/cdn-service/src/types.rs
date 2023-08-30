@@ -1,3 +1,5 @@
+use salvo::macros::Extractible;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
@@ -25,4 +27,10 @@ pub struct WsRequestMessage {
 #[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
 pub struct GetImageMessageType {
     pub id: String,
+}
+
+#[derive(Serialize, Deserialize, Extractible, Debug)]
+#[extract(default_source(from = "body", format = "json"))]
+pub struct GetImageUrlRequestInput<'a> {
+    pub id: &'a str,
 }

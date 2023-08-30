@@ -1,23 +1,14 @@
 'use client'
-import { Navbar } from '@/components/Navbar/Navbar'
+import React, { useEffect, useState } from 'react'
+import { useCheckAuth } from '../../hooks/useCheckAuth'
+import { Navbar } from '../../components/Navbar/Navbar'
+import { LogoLoading } from '../../components/logo'
 import styles from './page.module.css'
-import { useEffect, useState } from 'react'
-import { LogoLoading } from '../components/logo'
-import { useQuery } from '@apollo/client'
-import {
-	TopViewComicsQueryDocument,
-	meQueryDocument,
-} from '../util/rawSchemaDocument'
-import { ComicCard } from '../components/ComicCard'
-import { DefaultComicCard } from '../components/DefaultComicCard'
-
-export const metadata = {
-	title: 'Shartube',
-	description: 'Online sharing platform',
-}
-
-export default function Home() {
-	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
+import { ComicCardDashboard } from '../../components/ComicCardDashboard'
+export default function MainDashboard() {
+	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
+		unAuthRedirectTo: '/login',
+	})
 	const [height, setHeight] = useState(0)
 	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
@@ -32,20 +23,20 @@ export default function Home() {
 			setHeightContain(window.innerHeight - height)
 		}
 	}, [height])
-
-	const { data: comics, loading: comicsLoading } = useQuery(
-		TopViewComicsQueryDocument
-	)
-	let data = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 	return (
-		<div className={styles.container}>
-			{AuthLoading || comicsLoading ? (
+		<div>
+			{AuthLoading ? (
 				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
 					<LogoLoading />
 				</div>
 			) : (
 				<main className={styles.main}>
-					<Navbar height={height} key='shar-secure' userInfo={AuthData} />
+					<Navbar
+						height={height}
+						key='shar-secure'
+						userInfo={AuthData}
+						search={false}
+					/>
 					<div
 						className={styles.mainContainer}
 						style={{
@@ -56,16 +47,10 @@ export default function Home() {
 							padding: '20px',
 						}}
 					>
-						<div className='flex content-center justify-center'>
-							<DefaultComicCard></DefaultComicCard>
-							<DefaultComicCard></DefaultComicCard>
-							<DefaultComicCard></DefaultComicCard>
-							<DefaultComicCard></DefaultComicCard>
-						</div>
-						<ListComic
-							data={data}
+						<ListComicDashboard
+							data={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
 							comicCardPerLine={comicCardPerLine}
-						></ListComic>
+						></ListComicDashboard>
 					</div>
 				</main>
 			)}
@@ -73,11 +58,14 @@ export default function Home() {
 	)
 }
 
-export function ListComic(props: { data: any[]; comicCardPerLine: number }) {
+export function ListComicDashboard(props: {
+	data: any[]
+	comicCardPerLine: number
+}) {
 	let result = [] as JSX.Element[][]
 	let current: JSX.Element[] = []
 	props.data.map((value, index) => {
-		current.push(<ComicCard></ComicCard>)
+		current.push(<ComicCardDashboard></ComicCardDashboard>)
 		if ((index + 1) % props.comicCardPerLine == 0) {
 			result.push([...current])
 			current = []

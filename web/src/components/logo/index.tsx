@@ -7,14 +7,14 @@ const LogoLoading = (): JSX.Element => {
 
 	useEffect(() => {
 		if (window !== undefined) {
-			setWidth((window.innerWidth * 18) / 100)
-			setHeight((window.innerHeight * 18) / 100)
+			setWidth((window.innerWidth * 16) / 100)
+			setHeight((window.innerHeight * 16) / 100)
 			window.addEventListener('resize', () => {
-				setWidth((window.innerWidth * 18) / 100)
-				setHeight((window.innerHeight * 18) / 100)
+				setWidth((window.innerWidth * 16) / 100)
+				setHeight((window.innerHeight * 16) / 100)
 			})
 		}
-	})
+	}, [])
 	return (
 		<svg
 			width={width}

@@ -9,9 +9,15 @@ fragment userInfo on User {
 		_id
 		comics {
 			_id
+			name
+			description
+			thumbnail
 		}
 		ShortComics {
 			_id
+			name
+			description
+			thumbnail
 		}
 	}
 }

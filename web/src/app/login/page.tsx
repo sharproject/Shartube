@@ -10,7 +10,7 @@ import {
 import { MeQuery } from '@/generated/graphql/graphql'
 import { LogoLoading } from '@/components/logo'
 export default function LoginPage() {
-	const { data: authData, loading: authLoading } = useCheckAuth()
+	const { data: authData, loading: authLoading } = useCheckAuth({authRedirectTo:"/"})
 	let emailOrUsername: HTMLInputElement | null
 	let password: HTMLInputElement | null
 	const router = useRouter()
