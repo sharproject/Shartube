@@ -11,10 +11,19 @@ pipeline {
 
         stage('Setup env'){
             steps {
-                sh "cp server/.base.env.example server/.base.env"
-                sh "cp server/comic/.env.example server/comic/.env"
-                sh "cp server/cdn-service/.env.example server/cdn-service/.env"
-                sh "touch server/graphql-gateway/.env"
+                dir("./server/") {
+                    sh "cp .base.env.example .base.env"
+                    dir("./comic/") {
+                        sh "cp .env.example .env"
+                    }
+                    dir("./cdn-service/") {
+                        sh "cp .env.example .env"
+                    }
+                    dir("graphql-gateway") {
+                        sh "touch .env"
+                    }
+                }
+                
                 echo 'Setup env success'
             }
         }
@@ -30,13 +39,17 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh "cd server/ && docker compose build"
+                dir("./server/") {
+                    sh "docker compose build"
+                }
                 echo 'Docker-compose-build Build Image Completed'
             }
         }
         stage("Push Docker Image"){
             steps {
-                sh "cd server/ && docker compose push"
+                dir("./server/") {
+                    sh "docker compose push"
+                }
                 echo 'Docker-compose-push Push Image Completed'
             }
         }
