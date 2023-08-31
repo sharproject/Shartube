@@ -1,4 +1,4 @@
-import { AiOutlineSearch } from 'react-icons/ai'
+import { AiOutlineSearch, AiOutlineFileAdd } from 'react-icons/ai'
 import { SiReasonstudios } from 'react-icons/si'
 import * as React from 'react'
 import { MeQuery } from '@/generated/graphql/graphql'
@@ -11,6 +11,9 @@ type Props = {
 	height: string | number
 	userInfo: MeQuery | undefined
 	search?: boolean
+	handleCreateComicButton?: (
+		e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => any
 }
 
 declare global {
@@ -23,7 +26,12 @@ declare global {
 		}
 	}
 }
-export const Navbar = ({ height, userInfo, search = true }: Props) => {
+export const Navbar = ({
+	height,
+	userInfo,
+	search = true,
+	handleCreateComicButton,
+}: Props) => {
 	const pathname = usePathname()
 	return (
 		<div
@@ -81,7 +89,7 @@ export const Navbar = ({ height, userInfo, search = true }: Props) => {
 			>
 				{userInfo ? (
 					<div className='flex justify-center content-center h-full'>
-						{pathname != '/dashboard' && (
+						{pathname != '/dashboard' ? (
 							<div className='m-3'>
 								<Link href={'/dashboard'}>
 									<button>
@@ -89,6 +97,18 @@ export const Navbar = ({ height, userInfo, search = true }: Props) => {
 									</button>
 								</Link>
 							</div>
+						) : (
+							<>
+								<button
+									className='text-white hover:bg-slate-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
+									type='button'
+									onClick={(e) =>
+										handleCreateComicButton && handleCreateComicButton(e)
+									}
+								>
+									<AiOutlineFileAdd size={28}></AiOutlineFileAdd>
+								</button>
+							</>
 						)}
 						<div
 							style={{

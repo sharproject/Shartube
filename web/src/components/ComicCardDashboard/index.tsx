@@ -44,7 +44,7 @@ export function ComicCardDashboard() {
 						'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE]'
 					}
 				>
-					Read
+					Mange
 				</button>
 			</div>
 		</div>

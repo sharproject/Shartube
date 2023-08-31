@@ -5,6 +5,7 @@ import { Navbar } from '../../components/Navbar/Navbar'
 import { LogoLoading } from '../../components/logo'
 import styles from './page.module.css'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
+import { CreateComicPopup } from '../../components/CreateComicPopup'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
@@ -12,6 +13,7 @@ export default function MainDashboard() {
 	const [height, setHeight] = useState(0)
 	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
+	const [isPopupOpen, setPopupOpen] = useState(false)
 
 	useEffect(() => {
 		if (window !== undefined) {
@@ -36,6 +38,7 @@ export default function MainDashboard() {
 						key='shar-secure'
 						userInfo={AuthData}
 						search={false}
+						handleCreateComicButton={() => setPopupOpen(true)}
 					/>
 					<div
 						className={styles.mainContainer}
@@ -51,6 +54,10 @@ export default function MainDashboard() {
 							data={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
 							comicCardPerLine={comicCardPerLine}
 						></ListComicDashboard>
+						<CreateComicPopup
+							isOpen={isPopupOpen}
+							setIsOpen={setPopupOpen}
+						></CreateComicPopup>
 					</div>
 				</main>
 			)}
