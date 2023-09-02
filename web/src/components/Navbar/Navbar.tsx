@@ -74,6 +74,7 @@ export const Navbar = ({
 								borderRadius: '0px 8px 8px 0px',
 								borderLeft: '1px solid #3D3D3D',
 								textAlign: 'center',
+								width: '40vw',
 							}}
 							className={styles.inputSearchIconContainer}
 						>
@@ -92,7 +93,7 @@ export const Navbar = ({
 						{pathname != '/dashboard' ? (
 							<div className='m-3'>
 								<Link href={'/dashboard'}>
-									<button>
+									<button className='text-white'>
 										<SiReasonstudios size={28}></SiReasonstudios>
 									</button>
 								</Link>

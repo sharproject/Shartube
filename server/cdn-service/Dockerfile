@@ -2,7 +2,7 @@ FROM rust:alpine as rust-build
 WORKDIR /home/app
 
 RUN apk add git curl &&\
-      apk add pkgconfig openssl-dev gcc musl-dev rustup alpine-sdk &&\
+      apk add pkgconfig openssl-dev gcc musl-dev rustup libc-dev &&\
       rm -rf /var/cache/apk/*
 
 COPY Cargo.toml Cargo.lock ./

@@ -1,8 +1,7 @@
 import './globals.css'
-import { Inter, Roboto } from 'next/font/google'
+import { Roboto } from 'next/font/google'
 import { ApolloWrapper } from '@/libs/apollo-wrapper'
 
-const inter = Inter({ subsets: ['latin', 'vietnamese'] })
 const roboto = Roboto({
 	subsets: ['latin', 'vietnamese'],
 	weight: '100',
@@ -20,10 +19,8 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang='en'>
-			<body className={`${inter.className} ${roboto.className}`}>
-				<ApolloWrapper>
-					{children}
-				</ApolloWrapper>
+			<body className={`${roboto.className}`}>
+				<ApolloWrapper>{children}</ApolloWrapper>
 			</body>
 		</html>
 	)
