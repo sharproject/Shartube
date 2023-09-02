@@ -5,6 +5,7 @@ RUN apk add git curl &&\
       apk add pkgconfig openssl-dev gcc musl-dev rustup libc-dev libgcc &&\
       rm -rf /var/cache/apk/*
 
+RUN ldconfig -v && sleep 100
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 
