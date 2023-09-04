@@ -18,7 +18,7 @@ services:
     image: redis:alpine
     restart: always
     command: redis-server --save 20 1 --loglevel warning
-    volumes: 
+    volumes:
       - redis:/data
 
   shartube-ws-server:
@@ -52,7 +52,6 @@ services:
     expose:
       - 8080
 
-
   shartube-user-server:
     container_name: shartube-user-server
     image: tritranduc11/shartube-user-server
@@ -82,7 +81,7 @@ services:
       - 3000
     environment:
       - CHANNEL_ID=1043368131390885968
-  
+
   shartube-api-gateway:
     container_name: shartube-api-gateway
     image: tritranduc11/shartube-api-gateway
@@ -99,13 +98,13 @@ services:
       - PORT=8080
       - GRAPHQL_SERVER=http://shartube-graphql-gateway:2100
       - MEME_SERVER=http://shartube-meme-server:8080
-      - USER_SERVER=http://shartube-user-server:8080
+      - USER_SERVER=http://shartube-user-server:8080/public
       - CDN_SERVER=http://shartube-upload-server:3000/save
     # ports:
     #   - "8080:8080"
     volumes:
       - ./api-gateway/config.json:/home/container/config.json
-  
+
   shartube-meme-server:
     container_name: shartube-meme-server
     image: tritranduc11/shartube-meme-server
@@ -133,8 +132,7 @@ services:
     expose:
       - 8080
     environment:
-      - PORT=8080  	
-   
+      - PORT=8080
 
 networks:
   shartube-net:

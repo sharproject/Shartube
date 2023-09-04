@@ -58,5 +58,16 @@ pipeline {
         always { 
             sh "docker logout"
         }
+        success {
+            agent {
+                label 'vps4'
+            }
+            dir("/home/toby/code-ga/Shartube/docker-compose") {
+                sh "git pull"
+                sh "export PORT=8081"
+                sh "docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --pull always"
+            }
+            
+        }
     }
 }
