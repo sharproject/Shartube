@@ -65,6 +65,7 @@ pipeline {
             dir("/home/toby/code-ga/Shartube/docker-compose") {
                 sh "git pull"
                 sh "export PORT=8081"
+                sh "sudo -t -u toby"
                 sh "docker compose -f docker-compose.yaml -f docker-compose.prod.yaml up -d --pull always"
             }
             
