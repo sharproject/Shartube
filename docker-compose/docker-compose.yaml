@@ -10,7 +10,6 @@ services:
       - shartube-comic-server
       - shartube-user-server
     env_file:
-      - ./.graphql-gateway.env
       - ./.base.env
     restart: always
 
@@ -46,7 +45,6 @@ services:
       - UserHost=shartube-user-server
       - UploadServer=http://shartube-upload-server:3000/save
     env_file:
-      - ./.comic.env
       - ./.base.env
     restart: always
     expose:
@@ -58,7 +56,6 @@ services:
     networks:
       - shartube-net
     env_file:
-      - ./.user.env
       - ./.base.env
     restart: always
     expose:
