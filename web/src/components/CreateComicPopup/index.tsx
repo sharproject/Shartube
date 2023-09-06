@@ -1,19 +1,51 @@
-import { Dispatch, Fragment, SetStateAction } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
+import {
+	ChangeEvent,
+	Dispatch,
+	FormEvent,
+	Fragment,
+	JSX,
+	SVGProps,
+	SetStateAction,
+	useRef,
+} from 'react'
+import { Dialog, RadioGroup, Transition } from '@headlessui/react'
 import { useState } from 'react'
-import { Listbox } from '@headlessui/react'
-import { AiOutlineCheck } from 'react-icons/ai'
-import { BsChevronExpand } from 'react-icons/bs'
+import { MdOutlineClear } from 'react-icons/md'
 interface CreateComicPopupProps {
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
 }
+const plans = [
+	{
+		name: 'Comic',
+		description: 'the comic have lot of session',
+		id: 'Comic',
+	},
+	{
+		name: 'Short Comic',
+		description: 'comic have one session',
+		id: 'ShortComic',
+	},
+]
 
 export function CreateComicPopup(props: CreateComicPopupProps) {
-	let { isOpen, setIsOpen } = props
+	const { isOpen, setIsOpen } = props
+	const [comicTypeSelect, setComicTypeSelect] = useState(plans[0])
+	const thumbnail = useRef<HTMLInputElement>(null)
+	const background = useRef<HTMLInputElement>(null)
+	const [errors, setErrors] = useState<
+		{
+			name: string
+			msg: string
+		}[]
+	>([])
 
 	function closeModal() {
 		setIsOpen(false)
+	}
+	const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
+		console.log({ background, thumbnail })
 	}
 
 	return (
@@ -52,7 +84,12 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									</Dialog.Title>
 									<div className='flex min-h-full flex-col justify-center px-3 py-6 lg:px-4'>
 										<div className='mt-1 sm:mx-auto sm:w-full sm:max-w-sm'>
-											<form className='space-y-6'>
+											{errors.map((e, i) => (
+												<div className='bg-red-400 text-white' key={i}>
+													{e.name}:{e.msg}
+												</div>
+											))}
+											<form className='space-y-6' onSubmit={onFormSubmit}>
 												<div>
 													<label
 														htmlFor='comic-name'
@@ -86,6 +123,15 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 															name='Thumbnail'
 															type='file'
 															className='block w-full rounded-md border-0 py-1.5 bg-inherit shadow-sm sm:text-sm sm:leading-6'
+															ref={thumbnail}
+														/>
+														<MdOutlineClear
+															className='h-6 w-6 text-white'
+															onClick={() => {
+																thumbnail.current &&
+																	((thumbnail.current.value as string | null) =
+																		null)
+															}}
 														/>
 													</div>
 												</div>
@@ -105,18 +151,27 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 															name='Background'
 															type='file'
 															className='block w-full rounded-md border-0 py-1.5  shadow-sm sm:text-sm sm:leading-6'
+															ref={background}
+														/>
+														<MdOutlineClear
+															className='h-6 w-6 text-white'
+															onClick={() => {
+																background.current &&
+																	((background.current.value as string | null) =
+																		null)
+															}}
 														/>
 													</div>
 												</div>
 
 												<div>
-													<label
-														className='block text-sm font-medium leading-6'
-														htmlFor='comic-short-comic-type'
-													>
+													<label className='block text-sm font-medium leading-6'>
 														Type Of Comic:{' '}
 													</label>
-													<CreateComicPopupChoose id='comic-short-comic-type' />
+													<CreateComicPopupChooseComicType
+														comicTypeSelect={comicTypeSelect}
+														setComicTypeSelect={setComicTypeSelect}
+													/>
 												</div>
 
 												<div>
@@ -140,41 +195,96 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 	)
 }
 
-const people = [
-	{ name: 'Wade Cooper', unavailable: false, id: 1 },
-	{ name: 'Arlene Mccoy', unavailable: false, id: 2 },
-]
-
-export function CreateComicPopupChoose(props: { id: string }) {
-	const [selectedPerson, setSelectedPerson] = useState(people[0])
-
+export function CreateComicPopupChooseComicType(props: {
+	comicTypeSelect: {
+		name: string
+		description: string
+		id: string
+	}
+	setComicTypeSelect: Dispatch<
+		SetStateAction<{
+			name: string
+			description: string
+			id: string
+		}>
+	>
+}) {
 	return (
-		<div className='px-2 text-center'>
-			<Listbox
-				value={selectedPerson}
-				onChange={setSelectedPerson}
-				by={compareChoose}
-			>
-				<Listbox.Button className='mt-3 bg-stone-600 w-full' id={props.id}>
-					{selectedPerson.name}
-				</Listbox.Button>
-				<Listbox.Options id={props.id}>
-					{people.map((person) => (
-						<Listbox.Option
-							key={person.id}
-							value={person}
-							disabled={person.unavailable}
-							className='mt-3 ui-active:bg-blue-500 ui-active:text-white ui-not-active:bg-white ui-not-active:text-black'
-						>
-							<AiOutlineCheck className='hidden ui-selected:block' />
-							{person.name}
-						</Listbox.Option>
-					))}
-				</Listbox.Options>
-			</Listbox>
+		<div className='w-full py-1'>
+			<div className='mx-auto w-full max-w-md'>
+				<RadioGroup
+					value={props.comicTypeSelect}
+					onChange={props.setComicTypeSelect}
+				>
+					<RadioGroup.Label className='sr-only'>Type Of Comic</RadioGroup.Label>
+					<div className='space-y-2'>
+						{plans.map((plan) => (
+							<RadioGroup.Option
+								key={plan.name}
+								value={plan}
+								className={({ active, checked }) =>
+									`${
+										active
+											? 'ring-2 ring-white ring-opacity-60 text-white ring-offset-2 ring-offset-sky-300'
+											: ''
+									}
+                  ${
+										checked
+											? 'bg-sky-900 bg-opacity-75 text-white'
+											: 'bg-[#111]'
+									}
+                    relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none`
+								}
+							>
+								{({ active, checked }) => (
+									<>
+										<div className='flex w-full items-center justify-between'>
+											<div className='flex items-center'>
+												<div className='text-sm'>
+													<RadioGroup.Label
+														as='p'
+														className={`font-medium text-white`}
+													>
+														{plan.name}
+													</RadioGroup.Label>
+													<RadioGroup.Description
+														as='span'
+														className={`inline ${
+															checked ? 'text-sky-100' : 'text-gray-400'
+														}`}
+													>
+														<span>{plan.description}</span>{' '}
+													</RadioGroup.Description>
+												</div>
+											</div>
+											{checked && (
+												<div className='shrink-0 text-white'>
+													<CheckIcon className='h-6 w-6' />
+												</div>
+											)}
+										</div>
+									</>
+								)}
+							</RadioGroup.Option>
+						))}
+					</div>
+				</RadioGroup>
+			</div>
 		</div>
 	)
 }
-function compareChoose(a: any, b: any) {
-	return a.name.toLowerCase() === b.name.toLowerCase()
+
+function CheckIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
+	return (
+		<svg viewBox='0 0 24 24' fill='none' {...props}>
+			<circle cx={12} cy={12} r={12} fill='#fff' opacity='0.2' />
+			<path
+				d='M7 13l3 3 7-7'
+				stroke='#fff'
+				strokeWidth={1.5}
+				strokeLinecap='round'
+				strokeLinejoin='round'
+			/>
+		</svg>
+	)
 }

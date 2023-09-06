@@ -1,5 +1,5 @@
 'use client';
-import { ApolloLink, HttpLink } from '@apollo/client'
+import { ApolloLink, HttpLink, SuspenseCache } from '@apollo/client'
 import {
 	ApolloNextAppProvider,
 	NextSSRApolloClient,
@@ -12,6 +12,13 @@ function makeClient() {
 	const httpLink = new HttpLink({
 		// https://studio.apollographql.com/public/spacex-l4uc6p/
 		uri: graphqlUrl,
+		headers: {
+			...(localStorage?.getItem('token')
+				? {
+						Authorization: localStorage.getItem('token')!,
+				  }
+				: {}),
+		},
 	})
 
 	return new NextSSRApolloClient({
@@ -28,9 +35,15 @@ function makeClient() {
 	})
 }
 
+function makeSuspenseCache() {
+	return new SuspenseCache()
+}
+
 export function ApolloWrapper({ children }: React.PropsWithChildren) {
 	return (
-		<ApolloNextAppProvider makeClient={makeClient}>
+		<ApolloNextAppProvider
+			makeClient={makeClient}
+		>
 			{children}
 		</ApolloNextAppProvider>
 	)

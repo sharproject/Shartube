@@ -6,6 +6,7 @@ import {
 import { registerApolloClient } from "@apollo/experimental-nextjs-app-support/rsc";
 import { graphqlUrl } from "@/constant";
 
+// use like getClient().query
 export const { getClient } = registerApolloClient(() => {
     return new NextSSRApolloClient({
         cache: new NextSSRInMemoryCache(),
