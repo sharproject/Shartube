@@ -62,8 +62,8 @@ pipeline {
                     sh "git pull"
                     sh "make deploy-without-db"
                 }
+                echo "Deploy to vps success"
             }
-            echo "Deploy to vps success"
         }
     }
     post {
