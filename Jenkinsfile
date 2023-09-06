@@ -53,20 +53,22 @@ pipeline {
                 echo 'Docker-compose-push Push Image Completed'
             }
         }
+        stage("Deploy to vps"){
+            agent {
+                label 'vps4'
+            }
+            steps{
+                dir("/home/toby/code-ga/Shartube/docker-compose") {
+                    sh "git pull"
+                    sh "make deploy-without-db"
+                }
+            }
+            echo "Deploy to vps success"
+        }
     }
     post {
         always { 
             sh "docker logout"
-        }
-        success {
-            agent {
-                label 'vps4'
-            }
-            dir("/home/toby/code-ga/Shartube/docker-compose") {
-                sh "git pull"
-                sh "export PORT=8081"
-            }
-            
         }
     }
 }
