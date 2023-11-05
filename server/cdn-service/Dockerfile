@@ -2,7 +2,7 @@ FROM rust:slim as rust-build
 WORKDIR /home/app
 
 RUN apt-get update && apt-get install -y git curl && \
-      apt-get install -y pkg-config libssl-dev gcc libc6-dev libgcc1 musl-tools && \
+      apt-get install -y pkg-config libssl-dev gcc ca-certificates libc6-dev libgcc1 musl-tools && \
       apt-get clean
 
 
@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 FROM debian:stable-slim
 WORKDIR /home/app
-
+RUN apt-get update && apt-get install -y libssl-dev && apt-get clean
 
 COPY --from=rust-build /home/app/target/release/upload_service .
 CMD ["./upload_service"]

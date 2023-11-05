@@ -61,7 +61,7 @@ async fn main() -> std::io::Result<()> {
             ((Mutex::new(tmp.0)), tmp.1)
         };
         let client = Client::with_options(client_options.clone()).unwrap();
-        let db = client.database(&db_name.clone());
+        let db = client.database(&db_name);
 
         App::new()
             .app_data(Data::new(schema))

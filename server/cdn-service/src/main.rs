@@ -326,6 +326,7 @@ async fn main() {
             }
         });
     }
+    println!("Server started on port 3000 🚀");
     let acceptor = TcpListener::bind("0.0.0.0:3000");
     Server::new(acceptor)
         .serve(route(token_storage.clone()))
