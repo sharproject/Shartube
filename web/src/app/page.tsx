@@ -10,11 +10,8 @@ import {
 } from '../util/rawSchemaDocument'
 import { ComicCard } from '../components/ComicCard'
 import { DefaultComicCard } from '../components/DefaultComicCard'
-
-export const metadata = {
-	title: 'Shartube',
-	description: 'Online sharing platform',
-}
+import { TopViewComicsQuery } from '../generated/graphql/graphql'
+import { TopComicDataInput } from '../types'
 
 export default function Home() {
 	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
@@ -36,7 +33,10 @@ export default function Home() {
 	const { data: comics, loading: comicsLoading } = useQuery(
 		TopViewComicsQueryDocument
 	)
-	let data = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+	const comicData = comics
+		? [...comics.TopViewComic, ...comics.TopViewShortComics]
+		: []
+
 	return (
 		<div className={styles.container}>
 			{AuthLoading || comicsLoading ? (
@@ -56,14 +56,14 @@ export default function Home() {
 							padding: '20px',
 						}}
 					>
-						<div className='flex content-center justify-center'>
+						{/* <div className='flex content-center justify-center'>
 							<DefaultComicCard></DefaultComicCard>
 							<DefaultComicCard></DefaultComicCard>
 							<DefaultComicCard></DefaultComicCard>
 							<DefaultComicCard></DefaultComicCard>
-						</div>
+						</div> */}
 						<ListComic
-							data={data}
+							data={comicData}
 							comicCardPerLine={comicCardPerLine}
 						></ListComic>
 					</div>
@@ -73,11 +73,15 @@ export default function Home() {
 	)
 }
 
-export function ListComic(props: { data: any[]; comicCardPerLine: number }) {
+export function ListComic(props: {
+	data: (TopComicDataInput | null)[]
+	comicCardPerLine: number
+}) {
 	let result = [] as JSX.Element[][]
 	let current: JSX.Element[] = []
 	props.data.map((value, index) => {
-		current.push(<ComicCard></ComicCard>)
+		if (!value) return
+		current.push(<ComicCard comic={value} key={index}></ComicCard>)
 		if ((index + 1) % props.comicCardPerLine == 0) {
 			result.push([...current])
 			current = []

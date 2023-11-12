@@ -38,7 +38,8 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 			name: string
 			msg: string
 		}[]
-	>([])
+		>([])
+	const [clientError,setClientError] = useState({})
 
 	function closeModal() {
 		setIsOpen(false)
@@ -46,6 +47,9 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 	const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		console.log({ background, thumbnail })
+	}
+	const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+		console.log(e.target.name)
 	}
 
 	return (
@@ -65,7 +69,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 					</Transition.Child>
 
 					<div className='fixed inset-0 overflow-y-auto text-white'>
-						<div className='flex min-h-full items-center justify-center p-4 text-center '>
+						<div className='flex items-center justify-center min-h-full p-4 text-center '>
 							<Transition.Child
 								as={Fragment}
 								enter='ease-out duration-300'
@@ -82,28 +86,29 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									>
 										Create Comic/Short Comic
 									</Dialog.Title>
-									<div className='flex min-h-full flex-col justify-center px-3 py-6 lg:px-4'>
+									<div className='flex flex-col justify-center min-h-full px-3 py-6 lg:px-4'>
 										<div className='mt-1 sm:mx-auto sm:w-full sm:max-w-sm'>
 											{errors.map((e, i) => (
-												<div className='bg-red-400 text-white' key={i}>
+												<div className='text-white bg-red-400' key={i}>
 													{e.name}:{e.msg}
 												</div>
 											))}
 											<form className='space-y-6' onSubmit={onFormSubmit}>
 												<div>
 													<label
-														htmlFor='comic-name'
+														htmlFor='comicName'
 														className='block text-sm font-medium leading-6 '
 													>
 														Comic name
 													</label>
 													<div className='mt-2'>
 														<input
-															id='comic-name'
-															name='comic-name'
+															id='comicName'
+															name='comicName'
 															type='text'
 															required
 															className='block w-full rounded-md border-0 py-1.5 px-1 bg-[#000000] ring-blue-950 ring-2 text-white  focus:outline-none focus:ring focus:border-blue-500 shadow-sm sm:text-sm sm:leading-6'
+															onChange={onInputChange}
 														/>
 													</div>
 												</div>
@@ -126,7 +131,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 															ref={thumbnail}
 														/>
 														<MdOutlineClear
-															className='h-6 w-6 text-white'
+															className='w-6 h-6 text-white'
 															onClick={() => {
 																thumbnail.current &&
 																	((thumbnail.current.value as string | null) =
@@ -154,7 +159,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 															ref={background}
 														/>
 														<MdOutlineClear
-															className='h-6 w-6 text-white'
+															className='w-6 h-6 text-white'
 															onClick={() => {
 																background.current &&
 																	((background.current.value as string | null) =
@@ -211,7 +216,7 @@ export function CreateComicPopupChooseComicType(props: {
 }) {
 	return (
 		<div className='w-full py-1'>
-			<div className='mx-auto w-full max-w-md'>
+			<div className='w-full max-w-md mx-auto'>
 				<RadioGroup
 					value={props.comicTypeSelect}
 					onChange={props.setComicTypeSelect}
@@ -238,7 +243,7 @@ export function CreateComicPopupChooseComicType(props: {
 							>
 								{({ active, checked }) => (
 									<>
-										<div className='flex w-full items-center justify-between'>
+										<div className='flex items-center justify-between w-full'>
 											<div className='flex items-center'>
 												<div className='text-sm'>
 													<RadioGroup.Label
@@ -258,8 +263,8 @@ export function CreateComicPopupChooseComicType(props: {
 												</div>
 											</div>
 											{checked && (
-												<div className='shrink-0 text-white'>
-													<CheckIcon className='h-6 w-6' />
+												<div className='text-white shrink-0'>
+													<CheckIcon className='w-6 h-6' />
 												</div>
 											)}
 										</div>

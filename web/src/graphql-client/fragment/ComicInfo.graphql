@@ -4,4 +4,9 @@ fragment ComicInfo on Comic {
 	description
 	background
 	CreatedByID
+	createdAt
+	sessionId
+	thumbnail
+	updatedAt
+	views
 }

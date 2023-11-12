@@ -6,6 +6,7 @@ import { LogoLoading } from '../../components/logo'
 import styles from './page.module.css'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
 import { CreateComicPopup } from '../../components/CreateComicPopup'
+import { TopComicDataInput } from '../../types'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
@@ -25,6 +26,9 @@ export default function MainDashboard() {
 			setHeightContain(window.innerHeight - height)
 		}
 	}, [height])
+	const comicData = AuthData?.Me.profile
+		? [...AuthData?.Me.profile.ShortComics, ...AuthData?.Me.profile.comics]
+		: []
 	return (
 		<div>
 			{AuthLoading ? (
@@ -51,7 +55,7 @@ export default function MainDashboard() {
 						}}
 					>
 						<ListComicDashboard
-							data={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}
+							data={comicData}
 							comicCardPerLine={comicCardPerLine}
 						></ListComicDashboard>
 						<CreateComicPopup
@@ -66,13 +70,14 @@ export default function MainDashboard() {
 }
 
 export function ListComicDashboard(props: {
-	data: any[]
+	data: (TopComicDataInput | null)[]
 	comicCardPerLine: number
 }) {
 	let result = [] as JSX.Element[][]
 	let current: JSX.Element[] = []
 	props.data.map((value, index) => {
-		current.push(<ComicCardDashboard></ComicCardDashboard>)
+		if (!value) return
+		current.push(<ComicCardDashboard comic={value} key={index}></ComicCardDashboard>)
 		if ((index + 1) % props.comicCardPerLine == 0) {
 			result.push([...current])
 			current = []

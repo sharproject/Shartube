@@ -28,23 +28,13 @@ const secret = (async () => {
 })()
 
 export async function GenToken(userID: string) {
+    await SessionModel.deleteMany({
+    	userID: new mongoose.Types.ObjectId(userID),
+    })
+    
     const session = await new SessionModel({
         userID: new mongoose.Types.ObjectId(userID),
     }).save()
-    // await SessionModel.deleteMany({
-    // 	userID: new mongoose.Types.ObjectId(userID),
-    // 	_id: {
-    // 		$ne: session._id,
-    // 	},
-    // })
-    for (const DSession of await SessionModel.find({
-        userID: new mongoose.Types.ObjectId(userID),
-    })) {
-        console.log(DSession._id.toHexString(), session._id.toHexString())
-        if (DSession._id.toHexString() != session._id.toHexString()) {
-            await DSession.deleteOne()
-        }
-    }
 
     const alg = 'HS512'
 

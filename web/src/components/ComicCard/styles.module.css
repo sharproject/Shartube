@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background:url(/R.jpeg) repeat, no-repeat 0, 0;
+  /* background:url(/R.jpeg) repeat, no-repeat 0, 0; */
   border: 1px solid #303036fc;
 }
 .comicCard h2 {

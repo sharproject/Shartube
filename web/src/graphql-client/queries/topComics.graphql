@@ -2,4 +2,7 @@ query TopViewComics {
 	TopViewComic {
 		...ComicInfo
 	}
+	TopViewShortComics {
+		...ShortComicInfo
+	}
 }

@@ -1,6 +1,8 @@
+import { TopComicDataInput } from '../../types'
 import styles from './styles.module.css'
 
-export function ComicCardDashboard() {
+export function ComicCardDashboard(props: { comic: TopComicDataInput }) {
+	console.log({ comic: props.comic })
 	return (
 		<div
 			style={{
@@ -12,16 +14,17 @@ export function ComicCardDashboard() {
 				marginBottom: '19px',
 				color: '#fff',
 				margin: '0.25rem',
+				background: `url(${props.comic.background}) repeat, no-repeat 0, 0`,
 			}}
 			className={styles.comicCard}
 		>
-			<h2>Doraemon</h2>
+			<h2>{props.comic.name}</h2>
 			<span
 				style={{
 					color: '#A7ACC0',
 				}}
 			>
-				This is a description
+				{props.comic.description || 'No description'}
 			</span>
 			<div
 				style={{

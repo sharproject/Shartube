@@ -46,9 +46,11 @@ export const Navbar = ({
 				minHeight: '50px',
 			}}
 		>
-			<p className='flex ml-2' style={{ alignItems: 'center' }}>
-				<Logo height={75} width={75}></Logo>
-			</p>
+			<Link href={'/'} className='flex ml-2'>
+				<p style={{ alignItems: 'center' }}>
+					<Logo height={75} width={75}></Logo>
+				</p>
+			</Link>
 			<div
 				style={{
 					padding: '8.5px 8px',
@@ -89,7 +91,7 @@ export const Navbar = ({
 				}}
 			>
 				{userInfo ? (
-					<div className='flex justify-center content-center h-full'>
+					<div className='flex content-center justify-center h-full'>
 						{pathname != '/dashboard' ? (
 							<div className='m-3'>
 								<Link href={'/dashboard'}>

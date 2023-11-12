@@ -1,0 +1,12 @@
+fragment ShortComicInfo on ShortComic {
+	_id
+	ChapIDs
+	CreatedByID
+	background
+	createdAt
+	description
+	name
+	thumbnail
+	updatedAt
+	views
+}

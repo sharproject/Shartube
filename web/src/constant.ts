@@ -1,1 +1,2 @@
-export const graphqlUrl = `${/* process.env.BE_URL  || "http://localhost:8080" */ "https://cas-southern-assigned-constant.trycloudflare.com"}/api/graphql` // "http://172.22.184.129:8081/api/graphql"
+export const mainUrl = /* process.env.BE_URL  || "http://localhost:8080" */ "https://cohen-packaging-mid-smoking.trycloudflare.com"
+export const graphqlUrl = `${mainUrl}/api/graphql`

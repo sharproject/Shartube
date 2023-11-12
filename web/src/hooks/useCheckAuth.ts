@@ -1,7 +1,7 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { meQueryDocument } from "@/util/rawSchemaDocument"
+import {  meQueryDocument } from "@/util/rawSchemaDocument"
 import { useQuery } from "@apollo/client";
 
 /**
@@ -17,13 +17,14 @@ export const useCheckAuth = (
   const pathname = usePathname()
   const { data, loading, error } = useQuery(meQueryDocument);
 
+
   useEffect(() => {
     //if (error!= null || error!= undefined){
     //   if (window){
     //     window.localStorage.removeItem("token");
     //   }
     // }
-    console.log({ pathname, data, loading, error })
+    // console.log({ pathname, data, loading, error })
 
     if (!loading && !data?.Me && unAuthRedirectTo) {
       router.replace(unAuthRedirectTo)
@@ -36,5 +37,6 @@ export const useCheckAuth = (
     data,
     loading,
     error,
+    
   };
 };

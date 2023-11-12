@@ -1,4 +1,4 @@
-fragment userInfo on User {
+fragment UserInfo on User {
 	_id
 	email
 	name
@@ -8,16 +8,10 @@ fragment userInfo on User {
 	profile {
 		_id
 		comics {
-			_id
-			name
-			description
-			thumbnail
+			...ComicInfo
 		}
 		ShortComics {
-			_id
-			name
-			description
-			thumbnail
+			...ShortComicInfo
 		}
 	}
 }

@@ -1,8 +1,8 @@
 mutation Register($input: RegisterUserInput!) {
-  Register(input: $input) {
-    accessToken
-    user {
-      ...userInfo
-    }
-  }
+	Register(input: $input) {
+		accessToken
+		user {
+			...UserInfo
+		}
+	}
 }

@@ -10,7 +10,10 @@ const config: CodegenConfig = {
   generates: {
     "src/generated/graphql/": {
       preset: "client",
-      plugins: []
+      plugins: [],
+      presetConfig: {
+        fragmentMasking: false,
+      }
     }
   }
 };
