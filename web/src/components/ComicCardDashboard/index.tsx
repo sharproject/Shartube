@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { TopComicDataInput } from '../../types'
 import styles from './styles.module.css'
 
@@ -36,19 +37,25 @@ export function ComicCardDashboard(props: { comic: TopComicDataInput }) {
 						width: '100%',
 					}}
 				></div>
-				<button
-					style={{
-						background: '#292B33',
-						color: '#BBC1D6',
-						padding: '5px 15px',
-						borderRadius: '8px',
-					}}
-					className={
-						'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE]'
-					}
+				<Link
+					href={`/edit/${props.comic.__typename}/${
+						props.comic._id
+					}`}
 				>
-					Mange
-				</button>
+					<button
+						style={{
+							background: '#292B33',
+							color: '#BBC1D6',
+							padding: '5px 15px',
+							borderRadius: '8px',
+						}}
+						className={
+							'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE]'
+						}
+					>
+						Mange
+					</button>
+				</Link>
 			</div>
 		</div>
 	)

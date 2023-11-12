@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { useCheckAuth } from '../../hooks/useCheckAuth'
 import { TopComicDataInput } from '../../types'
 import styles from './styles.module.css'
@@ -52,19 +53,21 @@ export function ComicCard(props: { comic: TopComicDataInput }) {
 					Read
 				</button>
 				{AuthData && AuthData.Me._id == props.comic.CreatedByID && (
-					<button
-						style={{
-							background: '#292B33',
-							color: '#BBC1D6',
-							padding: '5px 15px',
-							borderRadius: '8px',
-						}}
-						className={
-							'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE] ml-2'
-						}
-					>
-						Mange
-					</button>
+					<Link href={`/edit/${props.comic.__typename}/${props.comic._id}`}>
+						<button
+							style={{
+								background: '#292B33',
+								color: '#BBC1D6',
+								padding: '5px 15px',
+								borderRadius: '8px',
+							}}
+							className={
+								'border-[#434754] border-solid border-[1px] hover:border-[#2F4DEE] ml-2'
+							}
+						>
+							Mange
+						</button>
+					</Link>
 				)}
 			</div>
 		</div>

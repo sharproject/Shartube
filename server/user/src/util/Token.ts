@@ -28,9 +28,9 @@ const secret = (async () => {
 })()
 
 export async function GenToken(userID: string) {
-    await SessionModel.deleteMany({
-    	userID: new mongoose.Types.ObjectId(userID),
-    })
+    // await SessionModel.deleteMany({
+    // 	userID: new mongoose.Types.ObjectId(userID),
+    // })
     
     const session = await new SessionModel({
         userID: new mongoose.Types.ObjectId(userID),
