@@ -1,5 +1,6 @@
+import { useMutation } from '@apollo/client'
+import { Dialog, RadioGroup, Transition } from '@headlessui/react'
 import {
-	ChangeEvent,
 	Dispatch,
 	FormEvent,
 	Fragment,
@@ -7,10 +8,15 @@ import {
 	SVGProps,
 	SetStateAction,
 	useRef,
+	useState,
 } from 'react'
-import { Dialog, RadioGroup, Transition } from '@headlessui/react'
-import { useState } from 'react'
 import { MdOutlineClear } from 'react-icons/md'
+import {
+	CreateComicMutationDocument,
+	CreateShortComicMutationDocument,
+	meQueryDocument,
+} from '../../util/rawSchemaDocument'
+import { MeQuery } from '../../generated/graphql/graphql'
 interface CreateComicPopupProps {
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
@@ -26,30 +32,77 @@ const plans = [
 		description: 'comic have one session',
 		id: 'ShortComic',
 	},
-]
+] as {
+	name: string
+	description: string
+	id: 'Comic' | 'ShortComic'
+}[]
 
 export function CreateComicPopup(props: CreateComicPopupProps) {
 	const { isOpen, setIsOpen } = props
 	const [comicTypeSelect, setComicTypeSelect] = useState(plans[0])
 	const thumbnail = useRef<HTMLInputElement>(null)
 	const background = useRef<HTMLInputElement>(null)
+	const comicName = useRef<HTMLInputElement>(null)
+	const comicDescription = useRef<HTMLInputElement>(null)
 	const [errors, setErrors] = useState<
 		{
 			name: string
 			msg: string
 		}[]
-		>([])
-	const [clientError,setClientError] = useState({})
+	>([])
 
 	function closeModal() {
 		setIsOpen(false)
 	}
-	const onFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+
+	const [createComic] = useMutation(CreateComicMutationDocument)
+	const [createShortComic] = useMutation(CreateShortComicMutationDocument)
+
+	const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		console.log({ background, thumbnail })
-	}
-	const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-		console.log(e.target.name)
+		console.log({ background, thumbnail, comicName, comicTypeSelect })
+		const response =
+			comicTypeSelect.id == 'Comic'
+				? await createComic({
+						variables: {
+							input: {
+								name: comicName.current?.value || '',
+								description: comicDescription.current?.value,
+								background: background.current?.files?.length
+									? background.current?.files?.length > 0
+									: false,
+								thumbnail: thumbnail.current?.files
+									? thumbnail.current?.files?.length > 0
+									: false,
+							},
+						},
+				  })
+				: await createShortComic({
+						variables: {
+							input: {
+								name: comicName.current?.value || '',
+								description: comicDescription.current?.value,
+								background: background.current?.files?.length
+									? background.current?.files?.length > 0
+									: false,
+								thumbnail: thumbnail.current?.files
+									? thumbnail.current?.files?.length > 0
+									: false,
+							},
+						},
+				  })
+		if (response.errors) {
+			// làm gì đó cho user bik
+		}
+		if (response.data) {
+			if ('createComic' in response.data) {
+				console.log(response.data.createComic.UploadToken)
+			} else {
+				console.log(response.data.createShortComic.UploadToken)
+			}
+			closeModal()
+		}
 	}
 
 	return (
@@ -108,7 +161,25 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 															type='text'
 															required
 															className='block w-full rounded-md border-0 py-1.5 px-1 bg-[#000000] ring-blue-950 ring-2 text-white  focus:outline-none focus:ring focus:border-blue-500 shadow-sm sm:text-sm sm:leading-6'
-															onChange={onInputChange}
+															ref={comicName}
+														/>
+													</div>
+												</div>
+
+												<div>
+													<label
+														htmlFor='comicDescription'
+														className='block text-sm font-medium leading-6 '
+													>
+														Comic description
+													</label>
+													<div className='mt-2'>
+														<input
+															id='comicDescription'
+															name='comicDescription'
+															type='text'
+															className='block w-full rounded-md border-0 py-1.5 px-1 bg-[#000000] ring-blue-950 ring-2 text-white  focus:outline-none focus:ring focus:border-blue-500 shadow-sm sm:text-sm sm:leading-6'
+															ref={comicDescription}
 														/>
 													</div>
 												</div>
@@ -200,19 +271,9 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 	)
 }
 
-export function CreateComicPopupChooseComicType(props: {
-	comicTypeSelect: {
-		name: string
-		description: string
-		id: string
-	}
-	setComicTypeSelect: Dispatch<
-		SetStateAction<{
-			name: string
-			description: string
-			id: string
-		}>
-	>
+export function CreateComicPopupChooseComicType<T>(props: {
+	comicTypeSelect: T
+	setComicTypeSelect: Dispatch<SetStateAction<T>>
 }) {
 	return (
 		<div className='w-full py-1'>

@@ -3,7 +3,6 @@ import { TopComicDataInput } from '../../types'
 import styles from './styles.module.css'
 
 export function ComicCardDashboard(props: { comic: TopComicDataInput }) {
-	console.log({ comic: props.comic })
 	return (
 		<div
 			style={{
@@ -38,9 +37,7 @@ export function ComicCardDashboard(props: { comic: TopComicDataInput }) {
 					}}
 				></div>
 				<Link
-					href={`/edit/${props.comic.__typename}/${
-						props.comic._id
-					}`}
+					href={`/edit/${props.comic.__typename}/${props.comic._id}`}
 				>
 					<button
 						style={{

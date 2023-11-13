@@ -5,7 +5,6 @@ import styles from './styles.module.css'
 
 export function ComicCard(props: { comic: TopComicDataInput }) {
 	const { data: AuthData } = useCheckAuth()
-	console.log({ comic: props.comic })
 	return (
 		<div
 			style={{

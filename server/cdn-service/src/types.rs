@@ -1,6 +1,9 @@
 use salvo::macros::Extractible;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::{Arc, Mutex},
+};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
 pub struct SenderData {
@@ -33,4 +36,21 @@ pub struct GetImageMessageType {
 #[extract(default_source(from = "body", format = "json"))]
 pub struct GetImageUrlRequestInput<'a> {
     pub id: &'a str,
+}
+
+#[derive(Debug)]
+pub struct TokenStorageTableNode {
+    pub data: serde_json::Value,
+    pub emit_to: String,
+    pub event_name: String,
+}
+// convert to db soon
+pub type TokenStorageTable = Arc<Mutex<BTreeMap<String, TokenStorageTableNode>>>;
+pub enum WsError {
+    DecodePayloadError,
+}
+pub struct SendWsErrorMetaInput {
+    pub from: String,
+    pub url: String,
+    pub id: String,
 }
