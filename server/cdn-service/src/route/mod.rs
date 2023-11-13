@@ -70,6 +70,7 @@ impl salvo::Handler for UploadFile {
         }
         match req.headers_mut().get("upload_token") {
             Some(d) => {
+                let upload_token = d.to_str().unwrap().to_string();
                 println!("have header upload token ");
                 let (mut socket, _response) = connect(
                     Url::parse(
@@ -84,16 +85,25 @@ impl salvo::Handler for UploadFile {
                 )
                 .expect("Can't connect");
                 send_uploaded_message(
-                    d.to_str().unwrap().to_string(),
+                    upload_token.clone(),
                     msgs.clone(),
                     &self.token_storage,
                     &mut socket,
                 );
+                if let Some(data) = req.headers_mut().get("remove_token") {
+                    if data == "true" {
+                        self.token_storage
+                            .lock()
+                            .unwrap()
+                            .remove(upload_token.as_str());
+                    }
+                }
             }
             None => {
                 dbg!(&req.headers_mut());
             }
         }
+
         res.render(Json(serde_json::json! {{
             "success":true,
             "message":"success",
