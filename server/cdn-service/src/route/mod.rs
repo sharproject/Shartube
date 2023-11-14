@@ -8,7 +8,7 @@ use salvo::{handler, Depot, Request, Response, Router};
 use tungstenite::connect;
 use url::Url;
 pub fn route(token_storage: TokenStorageTable) -> salvo::Router {
-    let mut router = salvo::Router::new().hoop(Logger::new());
+    let mut router = salvo::Router::new().hoop(Logger);
 
     router = router.get(hello_world);
     router = router.push(Router::with_path("/save").post(UploadFile {
