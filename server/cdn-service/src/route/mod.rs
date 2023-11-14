@@ -1,4 +1,5 @@
 use crate::types::{self, TokenStorageTable};
+use salvo::logging::Logger;
 use crate::upload_images;
 use crate::util::send_uploaded_message;
 use hyper::StatusCode;
@@ -7,13 +8,13 @@ use salvo::{handler, Depot, Request, Response, Router};
 use tungstenite::connect;
 use url::Url;
 pub fn route(token_storage: TokenStorageTable) -> salvo::Router {
-    let mut router = salvo::Router::new();
+    let mut router = salvo::Router::new().hoop(Logger::new());
 
     router = router.get(hello_world);
     router = router.push(Router::with_path("/save").post(UploadFile {
         token_storage: token_storage.clone(),
     }));
-    router = router.push(Router::with_path("/get_image_data").post(get_image_data));
+    router = router.push(Router::with_path("/get_image").post(get_image_data));
 
     return router;
 }
