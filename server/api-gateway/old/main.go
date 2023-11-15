@@ -191,8 +191,12 @@ func setupWsProxy(app *fiber.App, ws *websocket.Conn, wsServiceList []WsServiceI
 				// send message and wait response
 				log.Printf("recv: %s", msg)
 				log.Printf("requestID: %v\n", requestID)
-				payload := WsRequestMessagePayload{}
 				wsRequestID := uuid.NewString()
+				payload := WsRequestMessagePayload{
+					Headers:   headers,
+					RequestID: wsRequestID,
+					Message:   msg,
+				}
 				wsRequest := WsRequest[WsRequestMessagePayload, *map[string]string]{
 					Payload: payload,
 					Url:     v.SendTo,

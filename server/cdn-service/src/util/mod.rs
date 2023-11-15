@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use tokio::sync::Mutex as TokioMutex;
-use tungstenite::Message;
-
 use crate::types::{SendWsErrorMetaInput, SenderData, TokenStorageTable, WsError};
+use serde_json::json;
+use tokio::sync::Mutex as TokioMutex;
+use tungstenite::{connect, Message};
+use url::Url;
 
 pub fn send_uploaded_message(
     token: String,
@@ -73,4 +74,52 @@ pub fn gen_token(uuid: String) -> String {
 // like result of upload_images::upload_images
 pub fn get_image_url(id: String) -> String {
     return id;
+}
+
+pub async fn broadcast_get_image(image_id: String, authorization_header: String) -> String {
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let image_url = get_image_url(image_id.clone());
+    let header = json!({
+        "Authorization":authorization_header
+    });
+    let message_send_other = match serde_json::to_string(&SenderData {
+        id: request_id.clone(),
+        from: "cdn_service/cdn_get_image".to_string(),
+        url: "all/client_get_cdn_image".to_string(),
+        payload: json! {{
+            "request_id": request_id.clone(),
+            "headers" : header.clone(),
+            "image_id":image_id.clone(),
+            "message": "",
+            "image_url": image_url
+        }},
+        error: serde_json::Value::Null,
+        header: header.clone(),
+        message_type: "rep".to_string(),
+    }) {
+        Ok(a) => a,
+        Err(e) => {
+            dbg!(&e);
+            return image_url;
+        }
+    };
+    let (mut socket, _response) = connect(
+        Url::parse(
+            &format!(
+                "ws://{}:{}",
+                std::env::var("WS_HOST").unwrap(),
+                std::env::var("WS_PORT").unwrap()
+            )
+            .to_string(),
+        )
+        .unwrap(),
+    )
+    .expect("Can't connect");
+    match socket.write_message(Message::Text(message_send_other)) {
+        Ok(_) => {}
+        Err(e) => {
+            dbg!(&e);
+        }
+    };
+    return image_url;
 }

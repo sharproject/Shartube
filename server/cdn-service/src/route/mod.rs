@@ -1,10 +1,11 @@
-use crate::types::{self, TokenStorageTable};
-use salvo::logging::Logger;
+use crate::types::TokenStorageTable;
 use crate::upload_images;
-use crate::util::send_uploaded_message;
+use crate::util::{broadcast_get_image, send_uploaded_message};
 use hyper::StatusCode;
+use salvo::logging::Logger;
 use salvo::writer::Json;
 use salvo::{handler, Depot, Request, Response, Router};
+use serde_json::json;
 use tungstenite::connect;
 use url::Url;
 pub fn route(token_storage: TokenStorageTable) -> salvo::Router {
@@ -14,7 +15,7 @@ pub fn route(token_storage: TokenStorageTable) -> salvo::Router {
     router = router.push(Router::with_path("/save").post(UploadFile {
         token_storage: token_storage.clone(),
     }));
-    router = router.push(Router::with_path("/get_image").post(get_image_data));
+    router = router.push(Router::with_path("/get_image/<id>").get(get_image_data));
 
     return router;
 }
@@ -24,8 +25,21 @@ async fn hello_world() -> &'static str {
 }
 
 #[handler]
-async fn get_image_data<'a>(data: types::GetImageUrlRequestInput<'a>, res: &mut Response) {
-    res.render(Json(data))
+async fn get_image_data<'a>(req: &mut Request, res: &mut Response) {
+    // First mutable borrow scoped
+    let image_id = req.param::<String>("id").unwrap();
+
+    // Second mutable borrow
+    let auth_header = match req.headers_mut().get("Authorization") {
+        Some(v) => v.to_str().unwrap_or("").to_string(),
+        None => "".to_string(),
+    };
+
+    let image_url = broadcast_get_image(image_id.to_string(), auth_header).await;
+
+    res.render(Json(json!({
+        "image_url":image_url.clone()
+    })))
 }
 
 struct UploadFile {

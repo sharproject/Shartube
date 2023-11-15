@@ -1,5 +1,3 @@
-use salvo::macros::Extractible;
-use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
     sync::{Arc, Mutex},
@@ -32,11 +30,7 @@ pub struct GetImageMessageType {
     pub id: String,
 }
 
-#[derive(Serialize, Deserialize, Extractible, Debug)]
-#[extract(default_source(from = "body", format = "json"))]
-pub struct GetImageUrlRequestInput<'a> {
-    pub id: &'a str,
-}
+
 
 #[derive(Debug)]
 pub struct TokenStorageTableNode {

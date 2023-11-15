@@ -7,21 +7,25 @@ server {
 
 
     location /api/graphql/ {
-        proxy_pass          http://shartube-graphql-gateway:2100/graphql;
+        # GRAPHQL_SERVER is http://shartube-graphql-gateway:2100
+        proxy_pass          http://shartube-graphql-gateway:2100/graphql; 
     }
 
     location /api/user {
+        # USER_SERVER is http://shartube-user-server:8080/public
         proxy_pass          http://shartube-user-server:8080/public;
     }
 
     location /api/meme/ {
+        # MEME_SERVER is http://shartube-meme-server:8080 
         proxy_pass http://shartube-meme-server:8080/;
     }
 
     location /save {
+        # CDN_SERVER ( save path ) is http://shartube-upload-server:3000/save 
         proxy_pass http://shartube-upload-server:3000/save;
     }
     location /cdn/image/ {
-        proxy_pass http://shartube-upload-server:3000/get_image;
+        proxy_pass http://shartube-upload-server:3000/get_image/;
     }
 }
