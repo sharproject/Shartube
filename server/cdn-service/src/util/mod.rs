@@ -72,13 +72,17 @@ pub fn gen_token(uuid: String) -> String {
     uuid
 }
 // like result of upload_images::upload_images
-pub fn get_image_url(id: String) -> String {
-    return id;
+pub fn get_image_url(id: String) -> Option<String> {
+    return Some(id);
 }
 
-pub async fn broadcast_get_image(image_id: String, authorization_header: String) -> String {
-    let request_id = uuid::Uuid::new_v4().to_string();
+pub async fn broadcast_get_image(image_id: String, authorization_header: String) -> Option<String> {
     let image_url = get_image_url(image_id.clone());
+    if image_url.is_none() {
+        return image_url;
+    }
+    let request_id = uuid::Uuid::new_v4().to_string();
+
     let header = json!({
         "Authorization":authorization_header
     });
