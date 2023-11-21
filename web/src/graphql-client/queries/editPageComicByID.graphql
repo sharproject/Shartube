@@ -1,0 +1,37 @@
+query EditPageComicByID($id: String!) {
+	ComicByID(ID: $id) {
+		CreatedByID
+		_id
+		background
+		createdAt
+		description
+		name
+		sessionId
+		thumbnail
+		updatedAt
+		views
+		session {
+			comicID
+			CreatedByID
+			Chaps {
+				_id
+				name
+				description
+				createdAt
+				updatedAt
+				views
+				CreatedByID
+				SessionID
+				ShortComicID
+			}
+			ChapIds
+			_id
+			createdAt
+			description
+			name
+			thumbnail
+			updatedAt
+			views
+		}
+	}
+}

@@ -10,8 +10,8 @@ import {
 } from '../util/rawSchemaDocument'
 import { ComicCard } from '../components/ComicCard'
 import { DefaultComicCard } from '../components/DefaultComicCard'
-import { TopViewComicsQuery } from '../generated/graphql/graphql'
 import { TopComicDataInput } from '../types'
+import MainWrapper from '../components/Wrapper'
 
 export default function Home() {
 	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
@@ -44,10 +44,14 @@ export default function Home() {
 					<LogoLoading />
 				</div>
 			) : (
-				<main className={styles.main}>
-					<Navbar height={height} key='shar-secure' userInfo={AuthData} />
+				<MainWrapper>
+					<Navbar
+						height={height}
+						key='shar-secure'
+						userInfo={AuthData}
+						search={false}
+					/>
 					<div
-						className={styles.mainContainer}
 						style={{
 							width: '100%',
 							height: `calc(100vh - ${height}px)`,
@@ -67,7 +71,7 @@ export default function Home() {
 							comicCardPerLine={comicCardPerLine}
 						></ListComic>
 					</div>
-				</main>
+				</MainWrapper>
 			)}
 		</div>
 	)

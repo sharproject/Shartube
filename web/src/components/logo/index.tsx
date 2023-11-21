@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect, useState } from 'react'
 import styles from './Logo.module.css'
 
@@ -140,22 +141,9 @@ const Logo = ({
 	width,
 	height,
 }: {
-	width: number
-	height: number
+	width?: number
+	height?: number
 }): JSX.Element => {
-	// const [width, setWidth] = useState(0)
-	// const [height, setHeight] = useState(0)
-
-	// useEffect(() => {
-	// 	if (window !== undefined) {
-	// 		setWidth((window.innerWidth * 18) / 100)
-	// 		setHeight((window.innerHeight * 18) / 100)
-	// 		window.addEventListener('resize', () => {
-	// 			setWidth((window.innerWidth * 18) / 100)
-	// 			setHeight((window.innerHeight * 18) / 100)
-	// 		})
-	// 	}
-	// })
 	return (
 		<svg
 			width={width}

@@ -20,6 +20,7 @@ const documents = {
     "mutation CreateShortComic($input: CreateShortComicInput!) {\n  createShortComic(input: $input) {\n    ShortComic {\n      ...ShortComicInfo\n    }\n    UploadToken\n  }\n}": types.CreateShortComicDocument,
     "mutation Login($input: LoginUserInput!) {\n  Login(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}": types.LoginDocument,
     "mutation Register($input: RegisterUserInput!) {\n  Register(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}": types.RegisterDocument,
+    "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}": types.EditPageComicByIdDocument,
     "query Me {\n  Me {\n    ...UserInfo\n  }\n}": types.MeDocument,
     "query TopViewComics {\n  TopViewComic {\n    ...ComicInfo\n  }\n  TopViewShortComics {\n    ...ShortComicInfo\n  }\n}": types.TopViewComicsDocument,
 };
@@ -66,6 +67,10 @@ export function graphql(source: "mutation Login($input: LoginUserInput!) {\n  Lo
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation Register($input: RegisterUserInput!) {\n  Register(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}"): (typeof documents)["mutation Register($input: RegisterUserInput!) {\n  Register(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}"): (typeof documents)["query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

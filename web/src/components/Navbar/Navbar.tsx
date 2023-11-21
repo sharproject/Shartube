@@ -46,10 +46,11 @@ export const Navbar = ({
 				minHeight: '50px',
 			}}
 		>
-			<Link href={'/'} className='flex ml-2'>
-				<p style={{ alignItems: 'center' }}>
-					<Logo height={75} width={75}></Logo>
-				</p>
+			<Link
+				href={'/'}
+				className='flex content-center justify-center h-full py-2 ml-2 '
+			>
+				<Logo></Logo>
 			</Link>
 			<div
 				style={{

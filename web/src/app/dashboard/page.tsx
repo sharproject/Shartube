@@ -27,7 +27,7 @@ export default function MainDashboard() {
 		}
 	}, [height])
 	const comicData = AuthData?.Me.profile
-		? [...AuthData?.Me.profile.ShortComics, ...AuthData?.Me.profile.comics]
+		? [...AuthData?.Me.profile.comics, ...AuthData?.Me.profile.ShortComics]
 		: []
 	return (
 		<div>
@@ -77,7 +77,9 @@ export function ListComicDashboard(props: {
 	let current: JSX.Element[] = []
 	props.data.map((value, index) => {
 		if (!value) return
-		current.push(<ComicCardDashboard comic={value} key={index}></ComicCardDashboard>)
+		current.push(
+			<ComicCardDashboard comic={value} key={index}></ComicCardDashboard>
+		)
 		if ((index + 1) % props.comicCardPerLine == 0) {
 			result.push([...current])
 			current = []
