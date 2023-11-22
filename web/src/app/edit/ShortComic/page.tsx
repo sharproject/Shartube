@@ -36,7 +36,7 @@ export default function ShortComic() {
 	)
 }
 
-export function ListComicDashboard(props: {
+function ListComicDashboard(props: {
 	data: (TopComicDataInput | null)[]
 	comicCardPerLine: number
 }) {

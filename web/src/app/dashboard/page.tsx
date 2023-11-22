@@ -69,7 +69,7 @@ export default function MainDashboard() {
 	)
 }
 
-export function ListComicDashboard(props: {
+function ListComicDashboard(props: {
 	data: (TopComicDataInput | null)[]
 	comicCardPerLine: number
 }) {
