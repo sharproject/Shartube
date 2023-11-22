@@ -2,7 +2,6 @@ extern crate dotenv;
 mod types;
 mod upload_images;
 
-use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Mutex as TokioMutex;
 use tungstenite::connect;
@@ -14,16 +13,25 @@ use dotenv::dotenv;
 use salvo::prelude::TcpListener;
 use salvo::Server;
 
-use crate::types::TokenStorageTable;
 use crate::ws::handle_socket_message;
 mod route;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let token_storage: TokenStorageTable = Arc::new(Mutex::new(BTreeMap::new()));
+    let redis_client = Arc::new(Mutex::new(
+        redis::Client::open(format!(
+            "redis://{}:{}",
+            std::env::var("REDIS_HOST").unwrap(),
+            std::env::var("REDIS_PORT").unwrap()
+        ))
+        .unwrap()
+        .get_async_connection()
+        .await
+        .unwrap(),
+    ));
     {
-        let token_storage = token_storage.clone();
+        let redis_client = redis_client.clone();
         tokio::spawn(async move {
             let (socket, _response) = {
                 let (socket, _response) = connect(
@@ -40,12 +48,13 @@ async fn main() {
                 .expect("Can't connect");
                 (Arc::new(TokioMutex::new(socket)), _response)
             };
-            handle_socket_message(socket, token_storage).await;
+            handle_socket_message(socket, redis_client).await;
         });
     }
+
     println!("Server started on port 3000 🚀");
     let acceptor = TcpListener::bind("0.0.0.0:3000");
     Server::new(acceptor)
-        .serve(route::route(token_storage.clone()))
+        .serve(route::route(redis_client.clone()))
         .await;
 }

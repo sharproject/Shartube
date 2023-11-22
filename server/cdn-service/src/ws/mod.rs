@@ -1,18 +1,19 @@
 use std::sync::Arc;
 
+use redis::JsonAsyncCommands;
 use serde_json::json;
 use tokio::sync::Mutex;
 use tungstenite::{stream::MaybeTlsStream, Message, WebSocket};
 
 use crate::{
     types::{
-        self, GetImageMessageType, SendWsErrorMetaInput, SenderData, TokenStorageTable,
+        self, GetImageMessageType, RedisClient, SendWsErrorMetaInput, SenderData,
         TokenStorageTableNode, WsError, WsRequestMessage,
     },
-    util::{gen_token, get_image_url, send_ws_error},
+    util::{gen_token, get_image_url, get_redis_key, send_ws_error},
 };
 type WsSocketType = Arc<Mutex<WebSocket<MaybeTlsStream<std::net::TcpStream>>>>;
-pub async fn handle_socket_message(socket: WsSocketType, token_storage: TokenStorageTable) {
+pub async fn handle_socket_message(socket: WsSocketType, redis: RedisClient) {
     loop {
         let msg = socket
             .clone()
@@ -32,19 +33,15 @@ pub async fn handle_socket_message(socket: WsSocketType, token_storage: TokenSto
                 continue;
             }
             if json_data.url.eq("upload_token_registry/genToken") {
-                handle_gen_token(json_data, token_storage.clone(), socket.clone()).await;
+                handle_gen_token(json_data, socket.clone(), redis.clone()).await;
             } else if json_data.url.eq("cdn_service/cdn_get_image") {
-                handle_cdn_get_image(json_data, token_storage.clone(), socket.clone()).await;
+                handle_cdn_get_image(json_data, socket.clone()).await;
             }
         }
     }
 }
 
-async fn handle_gen_token(
-    json_data: SenderData,
-    token_storage: TokenStorageTable,
-    socket: WsSocketType,
-) {
+async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: RedisClient) {
     let mut sender_data = None;
     if let serde_json::Value::Array(a) = json_data.payload {
         let mut tokens = vec![];
@@ -57,14 +54,26 @@ async fn handle_gen_token(
             );
             let token = gen_token(id.to_string());
 
-            token_storage.lock().unwrap().insert(
-                token.to_string(),
-                TokenStorageTableNode {
-                    data: data.clone(),
-                    emit_to: emit_to.to_string(),
-                    event_name: event_name.to_string(),
-                },
-            );
+            // token_storage.lock().unwrap().insert(
+            //     token.to_string(),
+            //     TokenStorageTableNode {
+            //         data: data.clone(),
+            //         emit_to: emit_to.to_string(),
+            //         event_name: event_name.to_string(),
+            //     },
+            // );
+            redis
+                .lock()
+                .unwrap()
+                .json_set::<String, String, TokenStorageTableNode, bool>(
+                    get_redis_key(token.to_string()),
+                    "$".to_string(),
+                    &TokenStorageTableNode {
+                        data: data.clone(),
+                        emit_to: emit_to.to_string(),
+                        event_name: event_name.to_string(),
+                    },
+                );
             tokens.push(token.clone());
         }
         sender_data = Some(SenderData {
@@ -87,14 +96,26 @@ async fn handle_gen_token(
             o.get("event_name").unwrap().as_str().unwrap(),
         );
         let token = gen_token(id.to_string());
-        token_storage.lock().unwrap().insert(
-            token.to_string(),
-            TokenStorageTableNode {
-                data: data.clone(),
-                emit_to: emit_to.to_string(),
-                event_name: event_name.to_string(),
-            },
-        );
+        // token_storage.lock().unwrap().insert(
+        //     token.to_string(),
+        //     TokenStorageTableNode {
+        //         data: data.clone(),
+        //         emit_to: emit_to.to_string(),
+        //         event_name: event_name.to_string(),
+        //     },
+        // );
+        redis
+            .lock()
+            .unwrap()
+            .json_set::<String, String, TokenStorageTableNode, bool>(
+                get_redis_key(token.to_string()),
+                "$".to_string(),
+                &TokenStorageTableNode {
+                    data: data.clone(),
+                    emit_to: emit_to.to_string(),
+                    event_name: event_name.to_string(),
+                },
+            );
         sender_data = Some(SenderData {
             url: json_data.from,
             message_type: "rep".to_string(),
@@ -122,11 +143,7 @@ async fn handle_gen_token(
     };
 }
 
-async fn handle_cdn_get_image(
-    json_data: SenderData,
-    _token_storage: TokenStorageTable,
-    socket: WsSocketType,
-) {
+async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
     let payload = match serde_json::from_str::<WsRequestMessage>(&json_data.payload.to_string()) {
         Ok(v) => v,
         Err(_) => {

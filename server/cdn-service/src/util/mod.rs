@@ -1,18 +1,32 @@
 use std::sync::Arc;
 
-use crate::types::{SendWsErrorMetaInput, SenderData, TokenStorageTable, WsError};
+use crate::types::{RedisClient, SendWsErrorMetaInput, SenderData, TokenStorageTableNode, WsError};
+use redis::JsonAsyncCommands;
 use serde_json::json;
 use tokio::sync::Mutex as TokioMutex;
 use tungstenite::{connect, Message};
 use url::Url;
 
-pub fn send_uploaded_message(
+pub fn get_redis_key(key: String) -> String {
+    return format!("CDN_SERVICE_{}", key.to_string()).to_string();
+}
+
+pub async fn send_uploaded_message(
     token: String,
     images_url: Vec<String>,
-    token_storage: &TokenStorageTable,
+    redis: &RedisClient,
     socket: &mut tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>,
 ) {
-    if let Some(doc) = token_storage.lock().unwrap().get(&token) {
+    // token_storage.lock().unwrap().get(&token)
+    if let Ok(doc) = redis
+        .lock()
+        .unwrap()
+        .json_get::<String, String, TokenStorageTableNode>(
+            get_redis_key(token.to_string()),
+            "$".to_string(),
+        )
+        .await
+    {
         let socket_url = format!("{}/{}", doc.emit_to, doc.event_name);
         let id = uuid::Uuid::new_v4().to_string();
         let data = doc.data.clone();

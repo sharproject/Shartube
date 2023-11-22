@@ -1,19 +1,20 @@
-use crate::types::TokenStorageTable;
+use crate::types::RedisClient;
 use crate::upload_images;
 use crate::util::{broadcast_get_image, send_uploaded_message};
 use hyper::StatusCode;
+use redis::JsonAsyncCommands;
 use salvo::logging::Logger;
 use salvo::writer::Json;
 use salvo::{handler, Depot, Request, Response, Router};
 use serde_json::json;
 use tungstenite::connect;
 use url::Url;
-pub fn route(token_storage: TokenStorageTable) -> salvo::Router {
+pub fn route(redis: RedisClient) -> salvo::Router {
     let mut router = salvo::Router::new().hoop(Logger);
 
     router = router.get(hello_world);
     router = router.push(Router::with_path("/save").post(UploadFile {
-        token_storage: token_storage.clone(),
+        redis: redis.clone(),
     }));
     router = router.push(Router::with_path("/get_image/<id>").get(get_image_data));
 
@@ -43,11 +44,12 @@ async fn get_image_data<'a>(req: &mut Request, res: &mut Response) {
 }
 
 struct UploadFile {
-    pub token_storage: TokenStorageTable,
+    pub redis: RedisClient,
 }
 
 #[salvo::async_trait]
 impl salvo::Handler for UploadFile {
+    #[allow(unused_must_use)]
     async fn handle(
         &self,
         req: &mut Request,
@@ -99,18 +101,23 @@ impl salvo::Handler for UploadFile {
                     .unwrap(),
                 )
                 .expect("Can't connect");
+
                 send_uploaded_message(
                     upload_token.clone(),
                     msgs.clone(),
-                    &self.token_storage,
+                    &self.redis.clone(),
                     &mut socket,
                 );
                 if let Some(data) = req.headers_mut().get("remove_token") {
                     if data == "true" {
-                        self.token_storage
-                            .lock()
-                            .unwrap()
-                            .remove(upload_token.as_str());
+                        // self.token_storage
+                        //     .lock()
+                        //     .unwrap()
+                        //     .remove(upload_token.as_str());
+                        self.redis.lock().unwrap().json_del::<String, String, bool>(
+                            upload_token.to_string(),
+                            "$".to_string(),
+                        );
                     }
                 }
             }
