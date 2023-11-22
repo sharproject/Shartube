@@ -77,7 +77,7 @@ export default function Home() {
 	)
 }
 
-export function ListComic(props: {
+function ListComic(props: {
 	data: (TopComicDataInput | null)[]
 	comicCardPerLine: number
 }) {
