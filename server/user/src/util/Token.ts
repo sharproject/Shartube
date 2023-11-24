@@ -31,7 +31,7 @@ export async function GenToken(userID: string) {
     // await SessionModel.deleteMany({
     // 	userID: new mongoose.Types.ObjectId(userID),
     // })
-    
+
     const session = await new SessionModel({
         userID: new mongoose.Types.ObjectId(userID),
     }).save()
@@ -41,17 +41,17 @@ export async function GenToken(userID: string) {
     const jwt = await new jose.SignJWT({ 'urn:example:claim': true, sessionID: session._id })
         .setProtectedHeader({ alg })
         .setIssuedAt()
-        .setIssuer('urn:example:issuer')
-        .setAudience('urn:example:audience')
-        .setExpirationTime('180h') // i think we should use the timeByMinus
+        .setIssuer('shartube-user-server-token-gen')
+        .setAudience('shartube-user-server')
+        // .setExpirationTime('180h') // i think we should use the timeByMinus
         .sign(await secret)
     return jwt
 }
 
 async function VerifyToken(token: string) {
     return await jose.jwtVerify(token, await secret, {
-        issuer: 'urn:example:issuer',
-        audience: 'urn:example:audience',
+        issuer: 'shartube-user-server-token-gen',
+        audience: 'shartube-user-server',
     })
 }
 
