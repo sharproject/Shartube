@@ -16,11 +16,11 @@ pub async fn send_uploaded_message(
     images_url: Vec<String>,
     redis: &RedisClient,
     socket: &mut tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>,
-) {
+) -> bool {
     // token_storage.lock().unwrap().get(&token)
     if let Ok(doc) = redis
         .lock()
-        .unwrap()
+        .await
         .json_get::<String, String, TokenStorageTableNode>(
             get_redis_key(token.to_string()),
             "$".to_string(),
@@ -44,12 +44,16 @@ pub async fn send_uploaded_message(
             id: id.clone(),
         };
         match socket.write_message(Message::Text(serde_json::to_string(&sender_data).unwrap())) {
-            Ok(_) => {}
+            Ok(_) => {
+                return true;
+            }
             Err(e) => {
                 dbg!(&e);
+                return false;
             }
         };
     }
+    return false;
 }
 
 pub async fn send_ws_error(

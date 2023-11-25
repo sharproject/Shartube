@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
 
 use redis::{from_redis_value, ErrorKind, FromRedisValue, RedisResult, Value};
 use serde::{Deserialize, Serialize};
@@ -84,5 +81,7 @@ pub struct SendWsErrorMetaInput {
 }
 
 pub type RedisClient = Arc<
-    Mutex<redis::aio::Connection<std::pin::Pin<Box<dyn redis::aio::AsyncStream + Send + Sync>>>>,
+    tokio::sync::Mutex<
+        redis::aio::Connection<std::pin::Pin<Box<dyn redis::aio::AsyncStream + Send + Sync>>>,
+    >,
 >;

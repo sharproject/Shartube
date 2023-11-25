@@ -38,7 +38,7 @@ export async function GenToken(userID: string) {
 
     const alg = 'HS512'
 
-    const jwt = await new jose.SignJWT({ 'urn:example:claim': true, sessionID: session._id })
+    const jwt = await new jose.SignJWT({ sessionID: session._id })
         .setProtectedHeader({ alg })
         .setIssuedAt()
         .setIssuer('shartube-user-server-token-gen')

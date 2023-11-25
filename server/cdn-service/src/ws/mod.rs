@@ -64,7 +64,7 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
             // );
             redis
                 .lock()
-                .unwrap()
+                .await
                 .json_set::<String, String, TokenStorageTableNode, bool>(
                     get_redis_key(token.to_string()),
                     "$".to_string(),
@@ -106,7 +106,7 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
         // );
         redis
             .lock()
-            .unwrap()
+            .await
             .json_set::<String, String, TokenStorageTableNode, bool>(
                 get_redis_key(token.to_string()),
                 "$".to_string(),

@@ -49,7 +49,6 @@ struct UploadFile {
 
 #[salvo::async_trait]
 impl salvo::Handler for UploadFile {
-    #[allow(unused_must_use)]
     async fn handle(
         &self,
         req: &mut Request,
@@ -107,14 +106,15 @@ impl salvo::Handler for UploadFile {
                     msgs.clone(),
                     &self.redis.clone(),
                     &mut socket,
-                );
+                )
+                .await;
                 if let Some(data) = req.headers_mut().get("remove_token") {
                     if data == "true" {
                         // self.token_storage
                         //     .lock()
                         //     .unwrap()
                         //     .remove(upload_token.as_str());
-                        self.redis.lock().unwrap().json_del::<String, String, bool>(
+                        self.redis.lock().await.json_del::<String, String, bool>(
                             upload_token.to_string(),
                             "$".to_string(),
                         );

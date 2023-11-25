@@ -21,6 +21,8 @@ services:
     container_name: shartube-redis
     restart: always
     command: redis-server --save 20 1 --loglevel warning
+    networks:
+      - shartube-net
     volumes: 
       - redis:/data
 

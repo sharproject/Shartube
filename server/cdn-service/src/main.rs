@@ -2,7 +2,7 @@ extern crate dotenv;
 mod types;
 mod upload_images;
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::Mutex as TokioMutex;
 use tungstenite::connect;
 use url::Url;
@@ -19,7 +19,7 @@ mod route;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let redis_client = Arc::new(Mutex::new(
+    let redis_client = Arc::new(TokioMutex::new(
         redis::Client::open(format!(
             "redis://{}:{}",
             std::env::var("REDIS_HOST").unwrap(),
