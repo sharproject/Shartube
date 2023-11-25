@@ -90,12 +90,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     sessionData,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: null,
                 from: 'user/decodeToken',
-                id: data.payload.id
+                id: data.id
             }
         } catch (error: any) {
             return {
@@ -103,12 +103,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     sessionData: null,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: error.message,
                 from: 'user/decodeToken',
-                id: data.payload.id
+                id: data.id
             }
         }
     }
@@ -133,12 +133,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: returnData,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: null,
                 from: 'user/updateUserComic',
-                id: data.payload.id
+                id: data.id
             }
         } catch (error: any) {
             return {
@@ -146,12 +146,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: null,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: error.message,
                 from: 'user/updateUserComic',
-                id: data.payload.id
+                id: data.id
             }
         }
     }
@@ -176,12 +176,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: returnData,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: null,
                 from: 'user/UpdateUserShortComic',
-                id: data.payload.id
+                id: data.id
             }
         } catch (error: any) {
             return {
@@ -189,12 +189,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: null,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: error.message,
                 from: 'user/UpdateUserShortComic',
-                id: data.payload.id
+                id: data.id
             }
         }
     }
@@ -216,12 +216,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: returnData,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: null,
                 from: 'user/DeleteUserComic',
-                id: data.payload.id
+                id: data.id
             }
         } catch (error: any) {
             return {
@@ -229,12 +229,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: null,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: error.message,
                 from: 'user/DeleteUserComic',
-                id: data.payload.id
+                id: data.id
             }
         }
     }
@@ -258,12 +258,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: returnData,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: null,
                 from: 'user/DeleteUserShortComic',
-                id: data.payload.id
+                id: data.id
             }
         } catch (error: any) {
             return {
@@ -271,12 +271,12 @@ export class WsListen {
                 header: null,
                 payload: {
                     user: null,
-                    id: data.payload.id,
+                    id: data.id,
                 },
                 type: 'rep',
                 error: error.message,
                 from: 'user/DeleteUserShortComic',
-                id: data.payload.id
+                id: data.id
             }
         }
     }
