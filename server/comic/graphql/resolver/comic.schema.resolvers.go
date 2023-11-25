@@ -142,18 +142,24 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
-		err = json.Unmarshal(message, &data)
+		var tmp_data LocalTypes.WsReturnData[LocalTypes.BaseReturn, *any]
+		err = json.Unmarshal(message, &tmp_data)
 		if err != nil {
 			return nil, err
 		}
-		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+		if tmp_data.Type == "rep" {
+			if tmp_data.Payload.ID == requestId && tmp_data.From == requestData.Url {
+				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
+				err = json.Unmarshal(message, &data)
+				if err != nil {
+					return nil, err
+				}
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: *data.Error,
 					}
 				}
+				fmt.Printf("data.Payload.Token: %v\n", data.Payload.Token)
 				return &model.CreateComicResponse{
 					Comic:       comicDoc,
 					UploadToken: data.Payload.Token,
@@ -264,18 +270,25 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
-		err = json.Unmarshal(message, &data)
+		var tmp_data LocalTypes.WsReturnData[LocalTypes.BaseReturn, *any]
+		err = json.Unmarshal(message, &tmp_data)
 		if err != nil {
 			return nil, err
 		}
-		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+		if tmp_data.Type == "rep" {
+			if tmp_data.Payload.ID == requestId && tmp_data.From == requestData.Url {
+				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *any]
+				err = json.Unmarshal(message, &data)
+				if err != nil {
+					return nil, err
+				}
+
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: *data.Error,
 					}
 				}
+				fmt.Printf("data.Payload.Token: %v\n", data.Payload.Token)
 				return &model.UploadComicResponse{
 					Comic:       comicDoc,
 					UploadToken: data.Payload.Token,

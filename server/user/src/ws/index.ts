@@ -51,6 +51,7 @@ export class WsListen {
                     result = await this.DeleteShortComic(data)
                 }
                 if (result) {
+                    console.log({ result })
                     send(result)
                 }
             }
@@ -122,6 +123,9 @@ export class WsListen {
                         $push: {
                             comicIDs: { $each: [data.payload._id] },
                         },
+                    },
+                    {
+                        new: true
                     }
                 ))
             return {
@@ -162,6 +166,9 @@ export class WsListen {
                         $push: {
                             ShortComicIDs: { $each: [data.payload._id] },
                         },
+                    },
+                    {
+                        new: true
                     }
                 ))
             return {
