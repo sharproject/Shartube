@@ -204,7 +204,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 			return nil, err
 		}
 		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+			if data.ID == requestId {
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: *data.Error,

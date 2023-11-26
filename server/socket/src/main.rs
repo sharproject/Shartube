@@ -1,6 +1,7 @@
 extern crate ws;
 
 mod handler;
+mod types;
 
 use std::thread;
 use ws::listen;

@@ -71,13 +71,13 @@ func Auth(ctx context.Context, _ interface{}, next graphql.Resolver) (interface{
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.AuthPayloadReturn,*interface{}]
+		var data LocalTypes.WsReturnData[LocalTypes.AuthPayloadReturn, *interface{}]
 		err = json.Unmarshal(message, &data)
 		if err != nil {
 			return nil, err
 		}
 		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+			if data.ID == requestId {
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: "Access Denied",

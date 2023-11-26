@@ -1,6 +1,10 @@
 FROM rust:alpine as rust-build
 WORKDIR /home/app
 
+RUN apk add git curl &&\
+    apk add pkgconfig openssl-dev gcc musl-dev rustup &&\
+    rm -rf /var/cache/apk/*
+
 COPY Cargo.toml Cargo.lock ./
 
 RUN mkdir -p src && echo 'fn main() {}' > src/main.rs

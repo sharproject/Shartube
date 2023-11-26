@@ -74,6 +74,7 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
                         event_name: event_name.to_string(),
                     },
                 );
+            tokens.push(event_name.to_string());
             tokens.push(token.clone());
         }
         sender_data = Some(SenderData {

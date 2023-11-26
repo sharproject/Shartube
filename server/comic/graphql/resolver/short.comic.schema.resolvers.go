@@ -124,13 +124,18 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
-		err = json.Unmarshal(message, &data)
+		var tmp_data LocalTypes.WsReturnData[any, *any]
+		err = json.Unmarshal(message, &tmp_data)
 		if err != nil {
 			return nil, err
 		}
-		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+		if tmp_data.Type == "rep" {
+			if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
+				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
+				err = json.Unmarshal(message, &data)
+				if err != nil {
+					return nil, err
+				}
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: *data.Error,
@@ -237,13 +242,18 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 		if err != nil {
 			return nil, err
 		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
-		err = json.Unmarshal(message, &data)
+		var tmp_data LocalTypes.WsReturnData[any, *any]
+		err = json.Unmarshal(message, &tmp_data)
 		if err != nil {
 			return nil, err
 		}
-		if data.Type == "rep" {
-			if data.Payload.ID == requestId {
+		if tmp_data.Type == "rep" {
+			if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
+				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
+				err = json.Unmarshal(message, &data)
+				if err != nil {
+					return nil, err
+				}
 				if data.Error != nil {
 					return nil, &gqlerror.Error{
 						Message: *data.Error,

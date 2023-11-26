@@ -51,7 +51,6 @@ export class WsListen {
                     result = await this.DeleteShortComic(data)
                 }
                 if (result) {
-                    console.log({ result })
                     send(result)
                 }
             }

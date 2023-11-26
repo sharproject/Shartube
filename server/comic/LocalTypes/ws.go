@@ -19,7 +19,7 @@ type WsRequest struct {
 }
 
 type BaseReturn struct {
-	ID string `json:"id"`
+	// ID string `json:"id,omitempty"` //because server don't validate this field
 }
 
 type AuthPayloadReturn struct {
@@ -34,6 +34,7 @@ type WsReturnData[T any, ht any] struct {
 	Type    string  `json:"type"`
 	Error   *string `json:"error"`
 	From    string  `json:"from"`
+	ID      string  `json:"id"`
 }
 
 type GetUploadTokenReturn struct {

@@ -1,5 +1,6 @@
 use ws::{CloseCode, Handler, Handshake, Message, Result, Sender};
 
+use crate::types;
 // This is the handler for the websocket connection.
 
 pub(crate) struct Server {
@@ -14,14 +15,22 @@ pub(crate) fn handler() {
             Ok(())
         }
         fn on_message(&mut self, msg: Message) -> Result<()> {
-            // println!("Got message '{}'", msg);
-            self.ws.broadcast(msg.clone())?;
-            match msg {
+            match msg.clone() {
                 ws::Message::Text(t) => {
-                    let json_data = serde_json::from_str::<serde_json::Value>(&t.clone());
-                    println!("got the message {:#?}", json_data);
+                    let json_data = serde_json::from_str::<types::SenderData>(&t.clone());
+                    match json_data {
+                        Err(e) => {
+                            dbg!(&e);
+                        }
+                        Ok(json_data) => {
+                            self.ws.broadcast(msg.clone())?;
+                            println!("Got message {:#?}", json_data);
+                        }
+                    }
                 }
-                _ => {}
+                _ => {
+                    self.ws.broadcast(msg.clone())?;
+                }
             }
             Ok(())
         }
