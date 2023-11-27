@@ -33,9 +33,9 @@ export default function Home() {
 	const { data: comics, loading: comicsLoading } = useQuery(
 		TopViewComicsQueryDocument
 	)
-	const comicData = comics
-		? [...comics.TopViewComic, ...comics.TopViewShortComics]
-		: []
+	const comicData = (
+		comics ? [...comics.TopViewComic, ...comics.TopViewShortComics] : []
+	).sort((a, b) => a?.createdAt - b?.createdAt)
 
 	return (
 		<div className={styles.container}>

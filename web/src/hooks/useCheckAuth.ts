@@ -15,7 +15,9 @@ export const useCheckAuth = ({
 }: { unAuthRedirectTo?: string; authRedirectTo?: string } = {}) => {
 	const router = useRouter()
 	const pathname = usePathname()
-	const { data, loading, error } = useQuery(meQueryDocument)
+	const { data, loading, error } = useQuery(meQueryDocument, {
+		partialRefetch: true
+	})
 
 	useEffect(() => {
 		if (error != null || error != undefined) {

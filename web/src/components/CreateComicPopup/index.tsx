@@ -61,7 +61,6 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 
 	const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		console.log({ background, thumbnail, comicName, comicTypeSelect })
 		const response =
 			comicTypeSelect.id == 'Comic'
 				? await createComic({
@@ -77,6 +76,20 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									: false,
 							},
 						},
+						update(cache, result, option) {
+							if (!result.data?.createComic.comic) return
+							const meData = cache.readQuery({
+								query: meQueryDocument,
+							})
+							if (!meData) return
+							meData.Me.profile?.comics.push(result.data?.createComic.comic)
+							cache.writeQuery({
+								query: meQueryDocument,
+								data: {
+									Me: meData.Me,
+								},
+							})
+						},
 				  })
 				: await createShortComic({
 						variables: {
@@ -91,16 +104,45 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									: false,
 							},
 						},
+						update(cache, result, option) {
+							if (!result.data?.createShortComic.ShortComic) return
+							const meData = cache.readQuery({
+								query: meQueryDocument,
+							})
+							if (!meData) return
+							meData.Me.profile?.ShortComics.push(
+								result.data.createShortComic.ShortComic
+							)
+							cache.writeQuery({
+								query: meQueryDocument,
+								data: {
+									Me: meData.Me,
+								},
+							})
+						},
 				  })
 		if (response.errors) {
-			// làm gì đó cho user bik
+			console.log(response.errors)
 		}
 		if (response.data) {
-			if ('createComic' in response.data) {
-				console.log(response.data.createComic.UploadToken)
-			} else {
-				console.log(response.data.createShortComic.UploadToken)
+			const UploadToken = {
+				thumbnail: '',
+				background: '',
 			}
+			if ('createComic' in response.data) {
+				const UploadTokens = response.data.createComic.UploadToken
+				if (UploadTokens) {
+					UploadToken.thumbnail = UploadTokens[1] || ''
+					UploadToken.background = UploadTokens[3] || ''
+				}
+			} else {
+				const UploadTokens = response.data.createShortComic.UploadToken
+				if (UploadTokens) {
+					UploadToken.thumbnail = UploadTokens[1] || ''
+					UploadToken.background = UploadTokens[3] || ''
+				}
+			}
+			console.log(UploadToken)
 			closeModal()
 		}
 	}

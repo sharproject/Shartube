@@ -10,6 +10,7 @@ import { TopComicDataInput } from '../../types'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
+		authRedirectTo: '/dashboard',
 	})
 	const [height, setHeight] = useState(0)
 	const [heightContain, setHeightContain] = useState(0)
@@ -26,9 +27,11 @@ export default function MainDashboard() {
 			setHeightContain(window.innerHeight - height)
 		}
 	}, [height])
-	const comicData = AuthData?.Me.profile
-		? [...AuthData?.Me.profile.comics, ...AuthData?.Me.profile.ShortComics]
-		: []
+	const comicData = (
+		AuthData?.Me.profile
+			? [...AuthData?.Me.profile.comics, ...AuthData?.Me.profile.ShortComics]
+			: []
+	).sort((a, b) => a?.createdAt - b?.createdAt)
 	return (
 		<div>
 			{AuthLoading ? (
