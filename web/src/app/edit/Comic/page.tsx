@@ -1,7 +1,7 @@
 'use client'
 import { ComicCardDashboard } from '@/components/ComicCardDashboard'
 import { useCheckAuth } from '@/hooks/useCheckAuth'
-import { TopComicDataInput } from '@/types'
+import { ComicCardDataInput } from '@/types'
 import { useEffect, useState } from 'react'
 export default function ShortComic() {
 	const { data: AuthData } = useCheckAuth({
@@ -35,7 +35,7 @@ export default function ShortComic() {
 }
 
 function ListComicDashboard(props: {
-	data: (TopComicDataInput | null)[]
+	data: (ComicCardDataInput | null)[]
 	comicCardPerLine: number
 }) {
 	let result = [] as JSX.Element[][]

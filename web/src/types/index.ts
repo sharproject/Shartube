@@ -1,8 +1,10 @@
 import {
 	ComicInfoFragment,
+	EditPageComicInfoFragment,
 	ShortComicInfoFragment,
 } from '../generated/graphql/graphql'
 
-export type TopComicDataInput =
+export type ComicCardDataInput =
 	| ComicInfoFragment
 	| ShortComicInfoFragment
+	| EditPageComicInfoFragment

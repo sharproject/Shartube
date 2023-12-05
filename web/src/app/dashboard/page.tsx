@@ -6,7 +6,7 @@ import { LogoLoading } from '../../components/logo'
 import styles from './page.module.css'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
 import { CreateComicPopup } from '../../components/CreateComicPopup'
-import { TopComicDataInput } from '../../types'
+import { ComicCardDataInput } from '../../types'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
@@ -48,14 +48,7 @@ export default function MainDashboard() {
 						handleCreateComicButton={() => setPopupOpen(true)}
 					/>
 					<div
-						className={styles.mainContainer}
-						style={{
-							width: '100%',
-							height: `calc(100vh - ${height}px)`,
-							maxHeight: `${heightContain}px`,
-							overflowY: 'auto',
-							padding: '20px',
-						}}
+						className={`w-full h-[calc(100vh - ${height}px) max-h-${heightContain}px overflow-y-auto p-20`}
 					>
 						<ListComicDashboard
 							data={comicData}
@@ -73,7 +66,7 @@ export default function MainDashboard() {
 }
 
 function ListComicDashboard(props: {
-	data: (TopComicDataInput | null)[]
+	data: (ComicCardDataInput | null)[]
 	comicCardPerLine: number
 }) {
 	let result = [] as JSX.Element[][]

@@ -2,8 +2,9 @@
 import { useQuery } from '@apollo/client'
 import { EditPageComicByIDQueryDocument } from '../../../../util/rawSchemaDocument'
 import { LogoLoading } from '../../../../components/logo'
-import { useRouter } from 'next/navigation'
+import { notFound, useRouter } from 'next/navigation'
 import { useCheckAuth } from '../../../../hooks/useCheckAuth'
+import { ComicCardDashboard } from '../../../../components/ComicCardDashboard'
 
 // list session vs chap
 export default function ShortComicEditPage({
@@ -12,7 +13,7 @@ export default function ShortComicEditPage({
 	params: { id: string }
 }) {
 	const {
-		data: Comic,
+		data: ComicQueryResult,
 		loading: ComicLoading,
 		error,
 	} = useQuery(EditPageComicByIDQueryDocument, {
@@ -22,13 +23,20 @@ export default function ShortComicEditPage({
 	})
 	const { data: AuthUser } = useCheckAuth()
 	const router = useRouter()
-	if (!ComicLoading && (!Comic?.ComicByID || !Comic)) {
+	if (error) {
+		return <div>Error: {error.message}</div>
+	}
+	if (!ComicLoading && (!ComicQueryResult?.ComicByID || !ComicQueryResult)) {
 		return router.back()
 	}
-	if (!ComicLoading && Comic?.ComicByID?.CreatedByID != AuthUser?.Me._id) {
+	if (
+		!ComicLoading &&
+		ComicQueryResult?.ComicByID?.CreatedByID != AuthUser?.Me._id
+	) {
 		return router.back()
 	}
-	console.log({ Comic, AuthUser })
+	const comic = ComicQueryResult?.ComicByID!
+	console.log({ Comic: ComicQueryResult, AuthUser })
 	return (
 		<div>
 			{ComicLoading ? (
@@ -36,8 +44,13 @@ export default function ShortComicEditPage({
 					<LogoLoading />
 				</div>
 			) : (
-				<div>
-					<h1>{Comic?.ComicByID?.name}</h1>
+				<div className='grid grid-cols-6 gap-1 pt-5'>
+					<div className='col-span-3 p-4 rounded-lg'>
+						{/* <ShowPlaylistField playlist={playlist}></ShowPlaylistField> */}
+					</div>
+					<div className='flex items-center justify-center col-span-2 p-4 text-center rounded-lg'>
+						<h1>Comic Card</h1>
+					</div>
 				</div>
 			)}
 		</div>

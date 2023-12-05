@@ -11,6 +11,5 @@ export const TopViewComicsQueryDocument = graphql(`query TopViewComics {\n  TopV
 export const CreateComicMutationDocument = graphql(`mutation CreateComic($input: CreateComicInput!) {\n  createComic(input: $input) {\n    UploadToken\n    comic {\n      ...ComicInfo\n    }\n  }\n}`)
 
 export const CreateShortComicMutationDocument = graphql(`mutation CreateShortComic($input: CreateShortComicInput!) {\n  createShortComic(input: $input) {\n    ShortComic {\n      ...ShortComicInfo\n    }\n    UploadToken\n  }\n}`)
-export const EditPageComicByIDQueryDocument = graphql(
-	'query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}'
+export const EditPageComicByIDQueryDocument = graphql(`query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    ...EditPageComicInfo\n  }\n}`
 )

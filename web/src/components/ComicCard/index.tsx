@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { useCheckAuth } from '../../hooks/useCheckAuth'
-import { TopComicDataInput } from '../../types'
+import { ComicCardDataInput } from '../../types'
 import styles from './styles.module.css'
 
-export function ComicCard(props: { comic: TopComicDataInput }) {
+export function ComicCard(props: { comic: ComicCardDataInput }) {
 	const { data: AuthData } = useCheckAuth()
 	return (
 		<div

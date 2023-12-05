@@ -13,14 +13,14 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}": types.ComicInfoFragmentDoc,
+    "fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}\n\nfragment EditPageComicInfo on Comic {\n  ...ComicInfo\n  session {\n    comicID\n    CreatedByID\n    Chaps {\n      _id\n      name\n      description\n      createdAt\n      updatedAt\n      views\n      CreatedByID\n      SessionID\n      ShortComicID\n    }\n    ChapIds\n    _id\n    createdAt\n    description\n    name\n    thumbnail\n    updatedAt\n    views\n  }\n}": types.ComicInfoFragmentDoc,
     "fragment ShortComicInfo on ShortComic {\n  _id\n  ChapIDs\n  CreatedByID\n  background\n  createdAt\n  description\n  name\n  thumbnail\n  updatedAt\n  views\n}": types.ShortComicInfoFragmentDoc,
     "fragment UserInfo on User {\n  _id\n  email\n  name\n  updatedAt\n  createdAt\n  password\n  profile {\n    _id\n    comics {\n      ...ComicInfo\n    }\n    ShortComics {\n      ...ShortComicInfo\n    }\n  }\n}": types.UserInfoFragmentDoc,
     "mutation CreateComic($input: CreateComicInput!) {\n  createComic(input: $input) {\n    UploadToken\n    comic {\n      ...ComicInfo\n    }\n  }\n}": types.CreateComicDocument,
     "mutation CreateShortComic($input: CreateShortComicInput!) {\n  createShortComic(input: $input) {\n    ShortComic {\n      ...ShortComicInfo\n    }\n    UploadToken\n  }\n}": types.CreateShortComicDocument,
     "mutation Login($input: LoginUserInput!) {\n  Login(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}": types.LoginDocument,
     "mutation Register($input: RegisterUserInput!) {\n  Register(input: $input) {\n    accessToken\n    user {\n      ...UserInfo\n    }\n  }\n}": types.RegisterDocument,
-    "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}": types.EditPageComicByIdDocument,
+    "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    ...EditPageComicInfo\n  }\n}": types.EditPageComicByIdDocument,
     "query Me {\n  Me {\n    ...UserInfo\n  }\n}": types.MeDocument,
     "query TopViewComics {\n  TopViewComic {\n    ...ComicInfo\n  }\n  TopViewShortComics {\n    ...ShortComicInfo\n  }\n}": types.TopViewComicsDocument,
 };
@@ -42,7 +42,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}"): (typeof documents)["fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}"];
+export function graphql(source: "fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}\n\nfragment EditPageComicInfo on Comic {\n  ...ComicInfo\n  session {\n    comicID\n    CreatedByID\n    Chaps {\n      _id\n      name\n      description\n      createdAt\n      updatedAt\n      views\n      CreatedByID\n      SessionID\n      ShortComicID\n    }\n    ChapIds\n    _id\n    createdAt\n    description\n    name\n    thumbnail\n    updatedAt\n    views\n  }\n}"): (typeof documents)["fragment ComicInfo on Comic {\n  _id\n  name\n  description\n  background\n  CreatedByID\n  createdAt\n  sessionId\n  thumbnail\n  updatedAt\n  views\n}\n\nfragment EditPageComicInfo on Comic {\n  ...ComicInfo\n  session {\n    comicID\n    CreatedByID\n    Chaps {\n      _id\n      name\n      description\n      createdAt\n      updatedAt\n      views\n      CreatedByID\n      SessionID\n      ShortComicID\n    }\n    ChapIds\n    _id\n    createdAt\n    description\n    name\n    thumbnail\n    updatedAt\n    views\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -70,7 +70,7 @@ export function graphql(source: "mutation Register($input: RegisterUserInput!) {
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}"): (typeof documents)["query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    CreatedByID\n    _id\n    background\n    createdAt\n    description\n    name\n    sessionId\n    thumbnail\n    updatedAt\n    views\n    session {\n      comicID\n      CreatedByID\n      Chaps {\n        _id\n        name\n        description\n        createdAt\n        updatedAt\n        views\n        CreatedByID\n        SessionID\n        ShortComicID\n      }\n      ChapIds\n      _id\n      createdAt\n      description\n      name\n      thumbnail\n      updatedAt\n      views\n    }\n  }\n}"];
+export function graphql(source: "query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    ...EditPageComicInfo\n  }\n}"): (typeof documents)["query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    ...EditPageComicInfo\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

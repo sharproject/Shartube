@@ -10,3 +10,30 @@ fragment ComicInfo on Comic {
 	updatedAt
 	views
 }
+
+fragment EditPageComicInfo on Comic {
+	...ComicInfo
+	session {
+		comicID
+		CreatedByID
+		Chaps {
+			_id
+			name
+			description
+			createdAt
+			updatedAt
+			views
+			CreatedByID
+			SessionID
+			ShortComicID
+		}
+		ChapIds
+		_id
+		createdAt
+		description
+		name
+		thumbnail
+		updatedAt
+		views
+	}
+}

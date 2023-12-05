@@ -10,7 +10,7 @@ import {
 } from '../util/rawSchemaDocument'
 import { ComicCard } from '../components/ComicCard'
 import { DefaultComicCard } from '../components/DefaultComicCard'
-import { TopComicDataInput } from '../types'
+import { ComicCardDataInput } from '../types'
 import MainWrapper from '../components/Wrapper'
 
 export default function Home() {
@@ -78,7 +78,7 @@ export default function Home() {
 }
 
 function ListComic(props: {
-	data: (TopComicDataInput | null)[]
+	data: (ComicCardDataInput | null)[]
 	comicCardPerLine: number
 }) {
 	let result = [] as JSX.Element[][]
