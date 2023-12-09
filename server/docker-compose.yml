@@ -52,8 +52,6 @@ services:
     restart: always
     expose:
       - 3012
-    # environment:
-    #   - HOST=shartube-ws-server
     env_file:
       - ./.base.env
 
@@ -67,9 +65,6 @@ services:
       - shartube-user-server
       - redis
     build: ./comic
-    environment:
-      - UserHost=shartube-user-server
-      - UploadServer=http://shartube-upload-server:3000/save
     env_file:
       - ./comic/.env
       - ./.base.env

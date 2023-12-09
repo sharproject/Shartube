@@ -1,7 +1,7 @@
 import path from "path";
 import { ApolloServer } from "@apollo/server";
 import { resolvers } from "./resolvers";
-import { WsListen } from "./ws";
+import { RedisListen } from "./ws";
 import mongoose from "mongoose";
 import {
     getDbUrl,
@@ -16,6 +16,7 @@ import cors from "cors";
 import { buildSubgraphSchema } from "@apollo/subgraph";
 import { parse as GraphqlParse } from "graphql"
 import { readFileSync } from "fs";
+import { createClient } from "redis";
 
 const typeDefs = readFileSync(path.join(__dirname, "./schema/output.graphql"), {
     encoding: "utf-8",
@@ -25,10 +26,14 @@ export type GraphQLContext = ParseGraphqlContextResult;
 
 const connect = async () => {
     try {
-        const ws = new WsListen(
-            `ws://${process.env["WS_HOST"]}:${process.env["WS_PORT"]}`,
+        const RedisClient = await createClient({
+            url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+        })
+            .on('error', err => console.log('Redis Client Error', err))
+            .connect();
+        const ws = new RedisListen(
+            RedisClient
         );
-        ws.onopen = () => console.log("Connect to Ws server success");
         const url = getDbUrl();
         await mongoose.connect(url, {});
         console.log("Connect to mongodb server success");
