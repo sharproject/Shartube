@@ -1,7 +1,7 @@
 import { ProfileModel } from "../model/Profile";
 import { TeamModel } from '../model/team'
 import { DecodeToken } from '../util/Token'
-import { client as WebSocketClient, connection, Message } from "websocket"
+import { RedisClientType, RedisFunctions, RedisDefaultModules, RedisModules, RedisScripts } from "redis"
 
 interface SenderData {
     url: string
@@ -16,44 +16,48 @@ interface SenderData {
     id: string
 }
 
-export class WsListen {
-    socketClient: WebSocketClient
-    onopen?: (this: WsListen, connection: connection) => any
-    onmessage: (this: WsListen, message: Message, connection: connection) => any
-    constructor(url: string) {
-        this.socketClient = new WebSocketClient()
-        this.socketClient.connect(url)
 
+export class RedisListen<RedisModule extends RedisModules, RedisFunction extends RedisFunctions, RedisScript extends RedisScripts> {
+
+    onmessage: (this: typeof this.redisClient, message: string, channel: string, subscriber: typeof this.redisClient) => any
+    eventHandle: string[];
+    subscriber: typeof this.redisClient;
+    constructor(public redisClient: RedisClientType<RedisDefaultModules & RedisModule, RedisFunction, RedisScript>) {
+        this.eventHandle = ["user/decodeToken", "user/updateUserComic", "user/DeleteComic", "user/UpdateUserShortComic", "user/UpdateUserStatus", "user/UpdateUserTeam"]
+        this.subscriber = this.redisClient.duplicate();
+        this.subscriber.on('error', err => console.error(err));
+
+        this.connect()
         this.handlers()
     }
-    handlers() {
-        const _this = this
-        this.socketClient.on('connect', function (connection) {
-            if (_this.onopen) _this.onopen.bind(_this, connection)()
-            connection.on('message', function (message) {
-                _this.onmessage.bind(_this, message, connection)()
-            });
-        })
-        this.onmessage = async (message, connection) => {
-            if (message.type == "utf8") {
-                const data: SenderData = JSON.parse(message.utf8Data)
-                const send = (result: SenderData) => connection.sendUTF(JSON.stringify(result))
-                let result: SenderData | null = null
-                if (data.url == 'user/decodeToken') {
-                    result = await this.decodeToken(data)
-                } else if (data.url == 'user/updateUserComic') {
-                    result = await this.updateUserComic(data)
-                } else if (data.url == 'user/DeleteComic') {
-                    result = await this.DeleteComic(data)
-                } else if (data.url == "user/UpdateUserShortComic") {
-                    result = await this.updateUserShortComic(data)
-                } else if (data.url == "user/DeleteShortComic") {
-                    result = await this.DeleteShortComic(data)
-                }
-                if (result) {
-                    send(result)
-                }
+    async connect() {
+        await this.subscriber.connect();
+    }
+    async handlers() {
+
+        this.subscriber.subscribe(this.eventHandle, this.handlers.bind(this))
+
+        this.onmessage = async (message, channel, subscriber) => {
+            const data: SenderData = JSON.parse(message.toString())
+            const send = (result: SenderData) =>
+                subscriber.publish(channel, JSON.stringify(result))
+
+            let result: SenderData | null = null
+            if (data.url == 'user/decodeToken') {
+                result = await this.decodeToken(data)
+            } else if (data.url == 'user/updateUserComic') {
+                result = await this.updateUserComic(data)
+            } else if (data.url == 'user/DeleteComic') {
+                result = await this.DeleteComic(data)
+            } else if (data.url == "user/UpdateUserShortComic") {
+                result = await this.updateUserShortComic(data)
+            } else if (data.url == "user/DeleteShortComic") {
+                result = await this.DeleteShortComic(data)
             }
+            if (result) {
+                send(result)
+            }
+
         }
     }
 

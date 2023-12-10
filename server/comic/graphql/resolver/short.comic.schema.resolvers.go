@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
@@ -14,9 +13,9 @@ import (
 	"github.com/Folody-Team/Shartube/directives"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
+	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -49,7 +48,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	if err != nil {
 		return nil, err
 	}
-	ShortComicObjectData := LocalTypes.WsRequest{
+	ShortComicObjectData := LocalTypes.ServiceRequest{
 		Url:    "user/UpdateUserShortShortComic",
 		Header: nil,
 		Payload: bson.M{
@@ -61,11 +60,13 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		ID:   uuid.NewString(),
 	}
 
-	ShortComicObject, err := json.Marshal(ShortComicObjectData)
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, []byte(ShortComicObject))
+	util.ServiceSender[any, any](r.Redis, ShortComicObjectData, false)
+
+	// ShortComicObject, err := json.Marshal(ShortComicObjectData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r.Ws.WriteMessage(websocket.TextMessage, []byte(ShortComicObject))
 	// get data from Shortcomic model
 	ShortComicDoc, err := ShortComicModel.FindById(ShortcomicID.Hex())
 	if err != nil {
@@ -103,7 +104,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 			EventName: fmt.Sprintf("SocketChangeComic%s", v),
 		})
 	}
-	requestData := LocalTypes.WsRequest{
+	requestData := LocalTypes.ServiceRequest{
 		Url:     "upload_token_registry/genToken",
 		Header:  nil,
 		Payload: &payload,
@@ -111,43 +112,53 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		Type:    "message",
 		ID:      requestId,
 	}
-	requestDataBytes, err := json.Marshal(requestData)
+	data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *interface{}](r.Redis, requestData, true)
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-	for {
-		_, message, err := r.Ws.ReadMessage()
-		if err != nil {
-			return nil, err
-		}
-		var tmp_data LocalTypes.WsReturnData[any, *any]
-		err = json.Unmarshal(message, &tmp_data)
-		if err != nil {
-			return nil, err
-		}
-		if tmp_data.Type == "rep" {
-			if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
-				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
-				err = json.Unmarshal(message, &data)
-				if err != nil {
-					return nil, err
-				}
-				if data.Error != nil {
-					return nil, &gqlerror.Error{
-						Message: *data.Error,
-					}
-				}
-				return &model.CreateShortComicResponse{
-					ShortComic:  ShortComicDoc,
-					UploadToken: data.Payload.Token,
-				}, nil
-			}
+	if data.Error != nil {
+		return nil, &gqlerror.Error{
+			Message: *data.Error,
 		}
 	}
+	return &model.CreateShortComicResponse{
+		ShortComic:  ShortComicDoc,
+		UploadToken: data.Payload.Token,
+	}, nil
+	// requestDataBytes, err := json.Marshal(requestData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	// for {
+	// 	_, message, err := r.Ws.ReadMessage()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	var tmp_data LocalTypes.ServiceReturnData[any, *any]
+	// 	err = json.Unmarshal(message, &tmp_data)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if tmp_data.Type == "rep" {
+	// 		if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
+	// 			var data LocalTypes.ServiceReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
+	// 			err = json.Unmarshal(message, &data)
+	// 			if err != nil {
+	// 				return nil, err
+	// 			}
+	// 			if data.Error != nil {
+	// 				return nil, &gqlerror.Error{
+	// 					Message: *data.Error,
+	// 				}
+	// 			}
+	// 			return &model.CreateShortComicResponse{
+	// 				ShortComic:  ShortComicDoc,
+	// 				UploadToken: data.Payload.Token,
+	// 			}, nil
+	// 		}
+	// 	}
+	// }
 }
 
 // UpdateShortComic is the resolver for the updateShortComic field.
@@ -221,7 +232,7 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 			EventName: fmt.Sprintf("SocketChangeComic%s", v),
 		})
 	}
-	requestData := LocalTypes.WsRequest{
+	requestData := LocalTypes.ServiceRequest{
 		Url:     "upload_token_registry/genToken",
 		Header:  nil,
 		Payload: &payload,
@@ -229,43 +240,53 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 		Type:    "message",
 		ID:      requestId,
 	}
-	requestDataBytes, err := json.Marshal(requestData)
+	data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *interface{}](r.Redis, requestData, true)
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-	for {
-		_, message, err := r.Ws.ReadMessage()
-		if err != nil {
-			return nil, err
-		}
-		var tmp_data LocalTypes.WsReturnData[any, *any]
-		err = json.Unmarshal(message, &tmp_data)
-		if err != nil {
-			return nil, err
-		}
-		if tmp_data.Type == "rep" {
-			if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
-				var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
-				err = json.Unmarshal(message, &data)
-				if err != nil {
-					return nil, err
-				}
-				if data.Error != nil {
-					return nil, &gqlerror.Error{
-						Message: *data.Error,
-					}
-				}
-				return &model.UpdateShortComicResponse{
-					ShortComic:  ShortComicDoc,
-					UploadToken: data.Payload.Token,
-				}, nil
-			}
+	if data.Error != nil {
+		return nil, &gqlerror.Error{
+			Message: *data.Error,
 		}
 	}
+	return &model.UpdateShortComicResponse{
+		ShortComic:  ShortComicDoc,
+		UploadToken: data.Payload.Token,
+	}, nil
+	// requestDataBytes, err := json.Marshal(requestData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	// for {
+	// 	_, message, err := r.Ws.ReadMessage()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	var tmp_data LocalTypes.ServiceReturnData[any, *any]
+	// 	err = json.Unmarshal(message, &tmp_data)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if tmp_data.Type == "rep" {
+	// 		if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
+	// 			var data LocalTypes.ServiceReturnData[LocalTypes.GetUploadTokensReturn, *interface{}]
+	// 			err = json.Unmarshal(message, &data)
+	// 			if err != nil {
+	// 				return nil, err
+	// 			}
+	// 			if data.Error != nil {
+	// 				return nil, &gqlerror.Error{
+	// 					Message: *data.Error,
+	// 				}
+	// 			}
+	// 			return &model.UpdateShortComicResponse{
+	// 				ShortComic:  ShortComicDoc,
+	// 				UploadToken: data.Payload.Token,
+	// 			}, nil
+	// 		}
+	// 	}
+	// }
 }
 
 // DeleteShortComic is the resolver for the DeleteShortComic field.
@@ -294,7 +315,7 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 		return nil, err
 	}
 
-	comicObjectData := LocalTypes.WsRequest{
+	comicObjectData := LocalTypes.ServiceRequest{
 		Url:    "user/DeleteShortComic",
 		Header: nil,
 		Payload: bson.M{
@@ -306,11 +327,12 @@ func (r *mutationResolver) DeleteShortComic(ctx context.Context, shortComicID st
 		ID:   uuid.NewString(),
 	}
 
-	comicObject, err := json.Marshal(comicObjectData)
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, comicObject)
+	// comicObject, err := json.Marshal(comicObjectData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r.Ws.WriteMessage(websocket.TextMessage, comicObject)
+	util.ServiceSender[any, any](r.Redis, comicObjectData, false)
 
 	return &model.DeleteResult{
 		Success: success,

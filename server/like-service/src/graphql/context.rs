@@ -1,14 +1,12 @@
-use std::sync::Mutex;
-
 use actix_web::{
     http::header::{self, HeaderMap},
     web,
 };
 use mongodb::{Collection, Database};
 
-use crate::util::{
-    auth::{get_user_session, AuthSessionDataReturn},
-    check_id_real::check_id_real,
+use crate::{
+    types::{AuthSessionDataReturn, RedisClient},
+    util::{auth::get_user_session, check_id_real::check_id_real},
 };
 
 use crate::graphql::types::{LikeInfo, Likes};
@@ -19,9 +17,7 @@ const LIKE_INFO_COLLECTION_NAME: &'static str = "like_info";
 #[derive(Clone)]
 pub struct ContextUtil {
     headers: HeaderMap,
-    socket: web::Data<
-        Mutex<tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>>,
-    >,
+    redis_client: web::Data<RedisClient>,
     pub sdl: String,
     pub db: web::Data<Database>,
     pub likes_collection: Collection<Likes>,
@@ -33,9 +29,7 @@ impl juniper::Context for ContextUtil {}
 impl ContextUtil {
     pub fn new(
         headers: &HeaderMap,
-        socket: web::Data<
-            Mutex<tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<std::net::TcpStream>>>,
-        >,
+        redis_client: web::Data<RedisClient>,
         sdl: String,
         db: web::Data<Database>,
     ) -> ContextUtil {
@@ -43,14 +37,14 @@ impl ContextUtil {
         let like_info_collection = db.collection::<LikeInfo>(LIKE_INFO_COLLECTION_NAME);
         return Self {
             headers: headers.clone(),
-            socket: socket.clone(),
+            redis_client: redis_client.clone(),
             sdl,
             db,
             likes_collection,
             like_info_collection,
         };
     }
-    pub fn is_authentication(&self) -> Option<AuthSessionDataReturn> {
+    pub async fn is_authentication(&self) -> Option<AuthSessionDataReturn> {
         if !self.headers.contains_key(header::AUTHORIZATION) {
             return None;
         }
@@ -59,9 +53,9 @@ impl ContextUtil {
         } else {
             return None;
         };
-        return get_user_session(token, self.socket.clone());
+        return get_user_session(token, self.redis_client.clone()).await;
     }
-    pub fn is_id_real(&self, id: String, object_type: String) -> bool {
-        return check_id_real(self.socket.clone(), id, object_type);
+    pub async fn is_id_real(&self, id: String, object_type: String) -> bool {
+        return check_id_real(self.redis_client.clone(), id, object_type).await;
     }
 }

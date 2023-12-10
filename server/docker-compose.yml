@@ -9,8 +9,6 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
-    depends_on:
-      - shartube-ws-server
     restart: always
     volumes:
       - mongoDB:/data/db
@@ -43,20 +41,6 @@ services:
       - ./graphql-gateway/router.yaml:/app/dev/router.yaml
       - ./graphql-gateway/supergraph.yaml:/app/dev/supergraph.yaml
 
-  shartube-ws-server:
-    container_name: shartube-ws-server
-    image: tritranduc11/shartube-ws-server
-    networks:
-      - shartube-net
-    build: ./socket
-    restart: always
-    expose:
-      - 3012
-    # environment:
-    #   - HOST=shartube-ws-server
-    env_file:
-      - ./.base.env
-
   shartube-comic-server:
     container_name: shartube-comic-server
     image: tritranduc11/shartube-comic-server
@@ -67,9 +51,6 @@ services:
       - shartube-user-server
       - redis
     build: ./comic
-    environment:
-      - UserHost=shartube-user-server
-      - UploadServer=http://shartube-upload-server:3000/save
     env_file:
       - ./comic/.env
       - ./.base.env
@@ -100,8 +81,6 @@ services:
     image: tritranduc11/shartube-upload-server
     networks:
       - shartube-net
-    depends_on:
-      - shartube-ws-server
     build: ./cdn-service
     env_file:
       - ./cdn-service/.env
@@ -137,7 +116,7 @@ services:
       - shartube-net
     depends_on:
       - shartube-mongo-db
-      - shartube-ws-server
+      
     build: ./meme
     env_file:
       - ./.base.env
@@ -153,7 +132,7 @@ services:
       - shartube-net
     depends_on:
       - shartube-mongo-db
-      - shartube-ws-server
+      
     build: ./like-service
     env_file:
       - ./.base.env

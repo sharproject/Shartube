@@ -5,7 +5,6 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -17,7 +16,6 @@ import (
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -177,7 +175,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		EmitTo:    "comic",
 		EventName: "SocketAddImagesToChap",
 	}
-	requestData := LocalTypes.WsRequest{
+	requestData := LocalTypes.ServiceRequest{
 		Url:     "upload_token_registry/genToken",
 		Header:  nil,
 		Payload: &payload,
@@ -185,40 +183,44 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		Type:    "message",
 		ID:      requestId,
 	}
-	requestDataBytes, err := json.Marshal(requestData)
+	// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+	data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-	for {
-		_, message, err := r.Ws.ReadMessage()
-		if err != nil {
-			return nil, err
-		}
-		var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
-		err = json.Unmarshal(message, &data)
-		if err != nil {
-			return nil, err
-		}
-		if data.Type == "rep" {
-			if data.ID == requestId {
-				if data.Error != nil {
-					return nil, &gqlerror.Error{
-						Message: *data.Error,
-					}
-				}
-				return &data.Payload.Token, nil
-
-				// return nil, &gqlerror.Error{
-				// 	Message: "500 server error",
-				// }
-
-			}
+	if data.Error != nil {
+		return nil, &gqlerror.Error{
+			Message: *data.Error,
 		}
 	}
+	return &data.Payload.Token, nil
+
+	// for {
+	// 	_, message, err := r.Ws.ReadMessage()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
+	// 	err = json.Unmarshal(message, &data)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if data.Type == "rep" {
+	// 		if data.ID == requestId {
+	// 			if data.Error != nil {
+	// 				return nil, &gqlerror.Error{
+	// 					Message: *data.Error,
+	// 				}
+	// 			}
+	// 			return &data.Payload.Token, nil
+
+	// 			// return nil, &gqlerror.Error{
+	// 			// 	Message: "500 server error",
+	// 			// }
+
+	// 		}
+	// 	}
+	// }
 }
 
 // UpdateChap is the resolver for the UpdateChap field.
@@ -303,7 +305,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 	}
 	// get data from comic model
 
-	chapObjectData := LocalTypes.WsRequest{
+	chapObjectData := LocalTypes.ServiceRequest{
 		Url:     "subtitle/DeleteSubtitle",
 		Header:  nil,
 		Payload: imageID,
@@ -312,11 +314,12 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 		ID:      uuid.New().String(),
 	}
 
-	chapObject, err := json.Marshal(chapObjectData)
-	if err != nil {
-		return nil, err
-	}
-	r.Ws.WriteMessage(websocket.TextMessage, chapObject)
+	// chapObject, err := json.Marshal(chapObjectData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// r.Ws.WriteMessage(websocket.TextMessage, chapObject)
+	util.ServiceSender[any,any](r.Redis, chapObjectData, false)
 
 	for _, v := range imageID {
 		imageIndex := slices.IndexFunc(comicChapDoc.Images, func(ir *model.ImageResult) bool {

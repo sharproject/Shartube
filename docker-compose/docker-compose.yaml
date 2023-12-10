@@ -23,18 +23,6 @@ services:
     volumes:
       - redis:/data
 
-  shartube-ws-server:
-    container_name: shartube-ws-server
-    image: tritranduc11/shartube-ws-server
-    networks:
-      - shartube-net
-    restart: always
-    expose:
-      - 3012
-    # environment:
-    #   - HOST=shartube-ws-server
-    env_file:
-      - ./.base.env
 
   shartube-comic-server:
     container_name: shartube-comic-server
@@ -71,8 +59,6 @@ services:
     image: tritranduc11/shartube-upload-server
     networks:
       - shartube-net
-    depends_on:
-      - shartube-ws-server
     env_file:
       - ./.cdn-service.env
       - ./.base.env
@@ -104,8 +90,6 @@ services:
     image: tritranduc11/shartube-meme-server
     networks:
       - shartube-net
-    depends_on:
-      - shartube-ws-server
     env_file:
       - ./.base.env
     restart: always
@@ -118,8 +102,6 @@ services:
     image: tritranduc11/shartube-like-server
     networks:
       - shartube-net
-    depends_on:
-      - shartube-ws-server
     env_file:
       - ./.base.env
     restart: always

@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"github.com/gorilla/websocket"
+	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -12,5 +12,5 @@ import (
 
 type Resolver struct {
 	Client *mongo.Client
-	Ws     *websocket.Conn
+	Redis  *redis.Client
 }

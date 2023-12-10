@@ -1,47 +1,68 @@
-use std::sync::Arc;
-
 use redis::JsonAsyncCommands;
 use serde_json::json;
-use tokio::sync::Mutex;
-use tungstenite::{stream::MaybeTlsStream, Message, WebSocket};
+use tokio_stream::StreamExt;
 
 use crate::{
     types::{
         self, GetImageMessageType, RedisClient, SendWsErrorMetaInput, SenderData,
         TokenStorageTableNode, WsError, WsRequestMessage,
     },
-    util::{gen_token, get_image_url, get_redis_key, send_ws_error},
+    util::{gen_token, get_image_url, get_redis_key, send_service_message, send_ws_error},
 };
-type WsSocketType = Arc<Mutex<WebSocket<MaybeTlsStream<std::net::TcpStream>>>>;
-pub async fn handle_socket_message(socket: WsSocketType, redis: RedisClient) {
+pub async fn handle_socket_message(redis: RedisClient) {
+    let redis_conn = redis.get_async_connection().await.unwrap();
+    let mut pubsub = redis_conn.into_pubsub();
+    pubsub
+        .subscribe("upload_token_registry/genToken")
+        .await
+        .unwrap();
+    pubsub.subscribe("cdn_service/cdn_get_image").await.unwrap();
     loop {
-        let msg = socket
-            .clone()
-            .lock()
-            .await
-            .read_message()
-            .expect("Error reading message");
-        if let Message::Text(text) = msg {
-            let json_data = match serde_json::from_str::<types::SenderData>(&text) {
-                Err(e) => {
-                    dbg!(&e);
-                    continue;
-                }
-                Ok(d) => d,
-            };
-            if !json_data.message_type.eq("message") {
+        // let msg = socket
+        //     .clone()
+        //     .lock()
+        //     .await
+        //     .read()
+        //     .expect("Error reading message");
+        // if let Message::Text(text) = msg {
+        //     let json_data = match serde_json::from_str::<types::SenderData>(&text) {
+        //         Err(e) => {
+        //             dbg!(&e);
+        //             continue;
+        //         }
+        //         Ok(d) => d,
+        //     };
+        //     if !json_data.message_type.eq("message") {
+        //         continue;
+        //     }
+        //     if json_data.url.eq("upload_token_registry/genToken") {
+        //         handle_gen_token(json_data, redis.clone()).await;
+        //     } else if json_data.url.eq("cdn_service/cdn_get_image") {
+        //         handle_cdn_get_image(json_data, socket.clone()).await;
+        //     }
+        // }
+        let msg = pubsub.on_message().next().await.unwrap();
+        let json_data = match serde_json::from_str::<types::SenderData>(
+            &msg.get_payload::<String>().unwrap().as_str(),
+        ) {
+            Err(e) => {
+                dbg!(&e);
                 continue;
             }
-            if json_data.url.eq("upload_token_registry/genToken") {
-                handle_gen_token(json_data, socket.clone(), redis.clone()).await;
-            } else if json_data.url.eq("cdn_service/cdn_get_image") {
-                handle_cdn_get_image(json_data, socket.clone()).await;
-            }
+            Ok(d) => d,
+        };
+        if !json_data.message_type.eq("message") {
+            continue;
+        }
+        if json_data.url.eq("upload_token_registry/genToken") {
+            handle_gen_token(json_data, redis.clone()).await;
+        } else if json_data.url.eq("cdn_service/cdn_get_image") {
+            handle_cdn_get_image(json_data, redis.clone()).await;
         }
     }
 }
 
-async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: RedisClient) {
+async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
     let mut sender_data = None;
     if let serde_json::Value::Array(a) = json_data.payload {
         let mut tokens = vec![];
@@ -63,8 +84,9 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
             //     },
             // );
             redis
-                .lock()
+                .get_async_connection()
                 .await
+                .unwrap()
                 .json_set::<String, String, TokenStorageTableNode, bool>(
                     get_redis_key(token.to_string()),
                     "$".to_string(),
@@ -106,8 +128,9 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
         //     },
         // );
         redis
-            .lock()
+            .get_async_connection()
             .await
+            .unwrap()
             .json_set::<String, String, TokenStorageTableNode, bool>(
                 get_redis_key(token.to_string()),
                 "$".to_string(),
@@ -130,12 +153,24 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
             id: id.to_string(),
         });
     }
-    match socket
-        .clone()
-        .lock()
-        .await
-        .write_message(Message::Text(serde_json::to_string(&sender_data).unwrap()))
-    {
+    // match socket
+    //     .clone()
+    //     .lock()
+    //     .await
+    //     .write_message(Message::Text(serde_json::to_string(&sender_data).unwrap()))
+    // {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         dbg!(&e);
+    //         return;
+    //     }
+    // };
+
+    if sender_data.is_none() {
+        return;
+    }
+    let sender_data = sender_data.unwrap();
+    match send_service_message(&redis, &sender_data, false).await {
         Ok(_) => {}
         Err(e) => {
             dbg!(&e);
@@ -144,7 +179,7 @@ async fn handle_gen_token(json_data: SenderData, socket: WsSocketType, redis: Re
     };
 }
 
-async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
+async fn handle_cdn_get_image(json_data: SenderData, redis: RedisClient) {
     let payload = match serde_json::from_str::<WsRequestMessage>(&json_data.payload.to_string()) {
         Ok(v) => v,
         Err(_) => {
@@ -155,7 +190,7 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
                     url: json_data.from.clone(),
                     id: json_data.id.clone(),
                 },
-                socket.clone(),
+                &redis,
             )
             .await;
             return;
@@ -171,7 +206,7 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
                     url: json_data.from.clone(),
                     id: json_data.id.clone(),
                 },
-                socket.clone(),
+                &redis,
             )
             .await;
 
@@ -190,7 +225,7 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
                     url: json_data.from.clone(),
                     id: json_data.id.clone(),
                 },
-                socket.clone(),
+                &redis,
             )
             .await;
 
@@ -199,7 +234,7 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
     }
     .id;
     let image_url = get_image_url(image_id.clone());
-    let message_send_client = match serde_json::to_string(&SenderData {
+    let message_send_client = &SenderData {
         id: json_data.id.clone(),
         from: json_data.url.clone(),
         url: json_data.from.clone(),
@@ -212,9 +247,24 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
         error: serde_json::Value::Null,
         header: serde_json::Value::Null,
         message_type: "rep".to_string(),
-    }) {
-        Ok(s) => s,
-        Err(_) => {
+    };
+    // match socket
+    //     .clone()
+    //     .lock()
+    //     .await
+    //     .write_message(Message::Text(message_send_client))
+    // {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         dbg!(&e);
+    //         return;
+    //     }
+    // };
+
+    match send_service_message(&redis, &message_send_client, false).await {
+        Ok(_) => {}
+        Err(e) => {
+            dbg!(&e);
             send_ws_error(
                 WsError::DecodePayloadError,
                 SendWsErrorMetaInput {
@@ -222,27 +272,14 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
                     url: json_data.from.clone(),
                     id: json_data.id.clone(),
                 },
-                socket.clone(),
+                &redis,
             )
-            .await;
+            .await
+        }
+    };
 
-            return;
-        }
-    };
-    match socket
-        .clone()
-        .lock()
-        .await
-        .write_message(Message::Text(message_send_client))
-    {
-        Ok(_) => {}
-        Err(e) => {
-            dbg!(&e);
-            return;
-        }
-    };
     // boastcast to all service with url and 2 payload
-    let message_send_other = match serde_json::to_string(&SenderData {
+    let message_send_other = &SenderData {
         id: json_data.id.clone(),
         from: json_data.url.clone(),
         url: "all/client_get_cdn_image".to_string(),
@@ -256,9 +293,12 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
         error: serde_json::Value::Null,
         header: json_data.header.clone(),
         message_type: "rep".to_string(),
-    }) {
-        Ok(s) => s,
-        Err(_) => {
+    };
+
+    match send_service_message(&redis, &message_send_other, false).await {
+        Ok(_) => {}
+        Err(e) => {
+            dbg!(&e);
             send_ws_error(
                 WsError::DecodePayloadError,
                 SendWsErrorMetaInput {
@@ -266,23 +306,9 @@ async fn handle_cdn_get_image(json_data: SenderData, socket: WsSocketType) {
                     url: json_data.from.clone(),
                     id: json_data.id.clone(),
                 },
-                socket.clone(),
+                &redis,
             )
             .await;
-
-            return;
-        }
-    };
-    match socket
-        .clone()
-        .lock()
-        .await
-        .write_message(Message::Text(message_send_other))
-    {
-        Ok(_) => {}
-        Err(e) => {
-            dbg!(&e);
-            return;
         }
     };
 }

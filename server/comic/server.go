@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -12,11 +11,10 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/resolver"
 	GraphqlLog "github.com/Folody-Team/Shartube/middleware/log"
 	"github.com/Folody-Team/Shartube/middleware/passRequest"
+	"github.com/Folody-Team/Shartube/service_event"
 	"github.com/Folody-Team/Shartube/util/getClient"
-	"github.com/Folody-Team/Shartube/ws"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
@@ -35,12 +33,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("MongoDbClient connected")
+
 	redisOpts := redis.Options{
-		Addr:     os.ExpandEnv("REDIS_HOST") + ":" + os.ExpandEnv("REDIS_PORT"),
-		Password: os.ExpandEnv("REDIS_PASSWORD"), // no password set
-		DB:       0,                              // use default DB
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"), // no password set
+		DB:       0,                           // use default DB
 
 	}
+
+	log.Println("RedisClient connected at ", redisOpts.Addr)
 
 	RedisClient := redis.NewClient(&redisOpts)
 	// middleware
@@ -57,34 +59,14 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	u := url.URL{
-		Scheme: "ws",
-		Host:   os.Getenv("WS_HOST") + ":" + os.Getenv("WS_PORT"),
-		Path:   "/",
-	}
-	wsCon, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
 	go func() {
-		wsCon, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		for {
-			_, message, err := wsCon.ReadMessage()
-			if err != nil {
-				continue
-			}
-			if _, err := ws.HandleWs(message, wsCon, MongoDbClient, RedisClient); err != nil {
-				continue
-			}
-		}
+		service_event.HandleServiceEvent(RedisClient, MongoDbClient)
+
 	}()
 	c := generated.Config{Resolvers: &resolver.Resolver{
-		Client: MongoDbClient, Ws: wsCon,
+		Client: MongoDbClient, Redis: RedisClient,
 	}}
-	c.Directives.Auth = directives.Auth
+	c.Directives.Auth = directives.AuthDirective(RedisClient)
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
 

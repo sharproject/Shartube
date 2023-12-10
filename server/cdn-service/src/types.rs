@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 use redis::{from_redis_value, ErrorKind, FromRedisValue, RedisResult, Value};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, Default, Clone)]
 pub struct SenderData {
     pub url: String,
     pub header: serde_json::Value,
@@ -80,8 +80,4 @@ pub struct SendWsErrorMetaInput {
     pub id: String,
 }
 
-pub type RedisClient = Arc<
-    tokio::sync::Mutex<
-        redis::aio::Connection<std::pin::Pin<Box<dyn redis::aio::AsyncStream + Send + Sync>>>,
-    >,
->;
+pub type RedisClient = Arc<redis::Client>;

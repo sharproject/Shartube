@@ -9,13 +9,13 @@ type AuthSessionDataReturn struct {
 	CreatorID string    `json:"creatorID"`
 	UserID    string    `json:"userID"`
 }
-type WsRequest struct {
-	Url     string       `json:"url"`
-	Header  *interface{} `json:"header"`
-	Payload any          `json:"payload"`
-	From    string       `json:"from"`
-	Type    string       `json:"type"`
-	ID      string       `json:"id"`
+type ServiceRequest struct {
+	Url     string       `json:"url"`     // to service
+	Header  *interface{} `json:"header"`  // header
+	Payload any          `json:"payload"` // payload
+	From    string       `json:"from"`    // from service ( alway is comic or shortComic )
+	Type    string       `json:"type"`    // type of message ( req, message )
+	ID      string       `json:"id"`      // request id
 }
 
 type BaseReturn struct {
@@ -27,7 +27,7 @@ type AuthPayloadReturn struct {
 	SessionData *AuthSessionDataReturn `json:"sessionData"`
 }
 
-type WsReturnData[T any, ht any] struct {
+type ServiceReturnData[T any, ht any] struct {
 	Url     string  `json:"url"`
 	Header  ht      `json:"header"`
 	Payload T       `json:"payload"`
