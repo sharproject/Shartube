@@ -45,7 +45,7 @@ impl QueryRoot {
             return Err(CustomError::NotFound);
         }
         let mut my_like_info = None;
-        if let Some(session) = user_session {
+        if let Some(session) = user_session.await {
             if let Some(like_info) = context
                 .like_info_collection
                 .find_one(
@@ -81,12 +81,14 @@ impl MutationRoot {
         context: &ContextUtil,
         input: LikeMutationInput,
     ) -> Result<LikeAndDislikeResult, CustomError> {
-        let user_session = if let Some(s) = context.is_authentication() {
+        let user_session = if let Some(s) = context.is_authentication().await {
             s
         } else {
             return Err(CustomError::Unauthorized);
         };
-        let id_real = context.is_id_real(input.object_id.clone(), input.type_obj.clone());
+        let id_real = context
+            .is_id_real(input.object_id.clone(), input.type_obj.clone())
+            .await;
         if !id_real {
             return Err(CustomError::InvalidId);
         }
@@ -208,12 +210,14 @@ impl MutationRoot {
         context: &ContextUtil,
         input: LikeMutationInput,
     ) -> Result<LikeAndDislikeResult, CustomError> {
-        let user_session = if let Some(s) = context.is_authentication() {
+        let user_session = if let Some(s) = context.is_authentication().await {
             s
         } else {
             return Err(CustomError::Unauthorized);
         };
-        let id_real = context.is_id_real(input.object_id.clone(), input.type_obj.clone());
+        let id_real = context
+            .is_id_real(input.object_id.clone(), input.type_obj.clone())
+            .await;
         if !id_real {
             return Err(CustomError::InvalidId);
         }
