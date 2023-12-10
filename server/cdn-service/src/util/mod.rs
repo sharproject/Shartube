@@ -127,7 +127,7 @@ pub async fn send_service_message(
     redis: &RedisClient,
     message: &SenderData,
     listen_response: bool,
-) -> Result<Option<SenderData>, Box<dyn std::error::Error>> {
+) -> Result<Option<SenderData>, Box<dyn std::error::Error + Send + Sync>> {
     let channel = message.url.to_string();
     let message_str = serde_json::to_string(&message)?;
     let _ = redis

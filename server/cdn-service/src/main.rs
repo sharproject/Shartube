@@ -27,8 +27,10 @@ async fn main() {
 
     {
         let redis_client = redis_client.clone();
-        tokio::task::spawn_local(async move {
-            handle_socket_message(redis_client.clone()).await;
+        tokio::spawn(async move {
+            loop {
+                handle_socket_message(redis_client.clone()).await;
+            }
         })
         .await
         .unwrap();
