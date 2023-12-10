@@ -36,9 +36,9 @@ func main() {
 	log.Println("MongoDbClient connected")
 
 	redisOpts := redis.Options{
-		Addr:     os.ExpandEnv("REDIS_HOST") + ":" + os.ExpandEnv("REDIS_PORT"),
-		Password: os.ExpandEnv("REDIS_PASSWORD"), // no password set
-		DB:       0,                              // use default DB
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"), // no password set
+		DB:       0,                           // use default DB
 
 	}
 

@@ -45,24 +45,24 @@ func HandleServiceEvent(RedisClient *redis.Client, MongoClient *mongo.Client) *i
 	defer sub.Close()
 
 	for {
-		message, err := sub.Receive(ctx)
+		data, err := sub.ReceiveMessage(ctx)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		var result LocalTypes.ServiceReturnData[interface{}, *interface{}]
-		err = json.Unmarshal(message.([]byte), &result)
+		var result LocalTypes.ServiceReturnData[any, any]
+		err = json.Unmarshal([]byte(data.Payload), &result)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		if result.Type == "message" {
 			if result.From == "upload_token_registry/user_upload_webhook" {
-				UserUploadWebhookHandle(result, MongoClient, RedisClient, message.([]byte))
+				UserUploadWebhookHandle(result, MongoClient, RedisClient, []byte(data.Payload))
 			} else if result.Url == "all/CheckIDReal" {
-				CheckIDRealHandle(MongoClient, RedisClient, message.([]byte))
+				CheckIDRealHandle(MongoClient, RedisClient, []byte(data.Payload))
 			} else if result.Url == "all/client_get_cdn_image" {
-				ClientGetCdnImageHandle(ctx, MongoClient, RedisClient, message.([]byte))
+				ClientGetCdnImageHandle(ctx, MongoClient, RedisClient, []byte(data.Payload))
 			}
 		}
 	}
@@ -162,7 +162,7 @@ func checkIdReal(client *mongo.Client, objectType string, id string) bool {
 }
 
 func UserUploadWebhookHandle(
-	data LocalTypes.ServiceReturnData[interface{}, *interface{}],
+	data LocalTypes.ServiceReturnData[any, any],
 	MongoClient *mongo.Client,
 	RedisClient *redis.Client,
 	message []byte,

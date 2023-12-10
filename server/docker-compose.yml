@@ -9,8 +9,6 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
-    depends_on:
-      
     restart: always
     volumes:
       - mongoDB:/data/db
