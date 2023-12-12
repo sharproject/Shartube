@@ -10,56 +10,61 @@ use crate::{
     util::{gen_token, get_image_url, get_redis_key, send_service_message, send_ws_error},
 };
 pub async fn handle_socket_message(redis: RedisClient) {
-    let redis_conn = redis.get_async_connection().await.unwrap();
+    let redis_conn = redis.get_tokio_connection().await.unwrap();
+    println!("Connected to Redis");
     let mut pubsub = redis_conn.into_pubsub();
     pubsub
         .subscribe("upload_token_registry/genToken")
         .await
         .unwrap();
     pubsub.subscribe("cdn_service/cdn_get_image").await.unwrap();
-    loop {
-        // let msg = socket
-        //     .clone()
-        //     .lock()
-        //     .await
-        //     .read()
-        //     .expect("Error reading message");
-        // if let Message::Text(text) = msg {
-        //     let json_data = match serde_json::from_str::<types::SenderData>(&text) {
-        //         Err(e) => {
-        //             dbg!(&e);
-        //             continue;
-        //         }
-        //         Ok(d) => d,
-        //     };
-        //     if !json_data.message_type.eq("message") {
-        //         continue;
-        //     }
-        //     if json_data.url.eq("upload_token_registry/genToken") {
-        //         handle_gen_token(json_data, redis.clone()).await;
-        //     } else if json_data.url.eq("cdn_service/cdn_get_image") {
-        //         handle_cdn_get_image(json_data, socket.clone()).await;
-        //     }
-        // }
-        let msg = pubsub.on_message().next().await.unwrap();
-        let json_data = match serde_json::from_str::<types::SenderData>(
-            &msg.get_payload::<String>().unwrap().as_str(),
-        ) {
-            Err(e) => {
-                dbg!(&e);
+    let _ = tokio::spawn(async move {
+        loop {
+            // let msg = socket
+            //     .clone()
+            //     .lock()
+            //     .await
+            //     .read()
+            //     .expect("Error reading message");
+            // if let Message::Text(text) = msg {
+            //     let json_data = match serde_json::from_str::<types::SenderData>(&text) {
+            //         Err(e) => {
+            //             dbg!(&e);
+            //             continue;
+            //         }
+            //         Ok(d) => d,
+            //     };
+            //     if !json_data.message_type.eq("message") {
+            //         continue;
+            //     }
+            //     if json_data.url.eq("upload_token_registry/genToken") {
+            //         handle_gen_token(json_data, redis.clone()).await;
+            //     } else if json_data.url.eq("cdn_service/cdn_get_image") {
+            //         handle_cdn_get_image(json_data, socket.clone()).await;
+            //     }
+            // }
+            let msg = pubsub.on_message().next().await.unwrap();
+            let json_data = match serde_json::from_str::<types::SenderData>(
+                &msg.get_payload::<String>().unwrap().as_str(),
+            ) {
+                Err(e) => {
+                    dbg!(&e);
+                    continue;
+                }
+                Ok(d) => d,
+            };
+            dbg!(&json_data);
+            if !json_data.message_type.eq("message") {
                 continue;
             }
-            Ok(d) => d,
-        };
-        if !json_data.message_type.eq("message") {
-            continue;
+            if json_data.url.eq("upload_token_registry/genToken") {
+                handle_gen_token(json_data, redis.clone()).await;
+            } else if json_data.url.eq("cdn_service/cdn_get_image") {
+                handle_cdn_get_image(json_data, redis.clone()).await;
+            }
         }
-        if json_data.url.eq("upload_token_registry/genToken") {
-            handle_gen_token(json_data, redis.clone()).await;
-        } else if json_data.url.eq("cdn_service/cdn_get_image") {
-            handle_cdn_get_image(json_data, redis.clone()).await;
-        }
-    }
+    })
+    .await;
 }
 
 async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
@@ -84,7 +89,7 @@ async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
             //     },
             // );
             redis
-                .get_async_connection()
+                .get_tokio_connection()
                 .await
                 .unwrap()
                 .json_set::<String, String, TokenStorageTableNode, bool>(
@@ -128,7 +133,7 @@ async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
         //     },
         // );
         redis
-            .get_async_connection()
+            .get_tokio_connection()
             .await
             .unwrap()
             .json_set::<String, String, TokenStorageTableNode, bool>(

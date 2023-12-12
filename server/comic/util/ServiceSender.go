@@ -12,7 +12,14 @@ import (
 func ServiceSender[T any, ht any](redis *redis.Client, message LocalTypes.ServiceRequest, listenRespond bool) (*LocalTypes.ServiceReturnData[T, ht], error) {
 	ctx := context.Background()
 	channel := message.Url
-	redis.Publish(ctx, channel, message)
+	message_byte, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+	err = redis.Publish(ctx, channel, string(message_byte)).Err()
+	if err != nil {
+		return nil, err
+	}
 	if listenRespond {
 		sub := redis.Subscribe(ctx, channel)
 		defer sub.Close()

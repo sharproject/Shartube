@@ -14,7 +14,7 @@ pub async fn send_uploaded_message(
 ) -> bool {
     // token_storage.lock().unwrap().get(&token)
     if let Ok(doc) = redis
-        .get_async_connection()
+        .get_tokio_connection()
         .await
         .unwrap()
         .json_get::<String, String, TokenStorageTableNode>(
@@ -131,12 +131,12 @@ pub async fn send_service_message(
     let channel = message.url.to_string();
     let message_str = serde_json::to_string(&message)?;
     let _ = redis
-        .get_async_connection()
+        .get_tokio_connection()
         .await
         .unwrap()
         .publish(channel.to_string(), message_str)
         .await?;
-    let mut pubsub = redis.get_async_connection().await.unwrap().into_pubsub();
+    let mut pubsub = redis.get_tokio_connection().await.unwrap().into_pubsub();
     if listen_response {
         pubsub.subscribe(channel).await?;
         loop {

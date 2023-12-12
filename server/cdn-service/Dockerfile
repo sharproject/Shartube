@@ -23,4 +23,5 @@ WORKDIR /home/app
 RUN apt-get update && apt-get install -y libssl-dev && apt-get clean
 
 COPY --from=rust-build /home/app/target/release/upload_service .
+ENV RUST_BACKTRACE=1
 CMD ["./upload_service"]

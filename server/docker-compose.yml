@@ -23,6 +23,8 @@ services:
       - shartube-net
     volumes: 
       - redis:/data
+    ports:
+      - 6379:6379
 
   shartube-graphql-gateway:
     container_name: shartube-graphql-gateway

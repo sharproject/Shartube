@@ -110,7 +110,7 @@ impl salvo::Handler for UploadFile {
                         //     .unwrap()
                         //     .remove(upload_token.as_str());
                         self.redis
-                            .get_async_connection()
+                            .get_tokio_connection()
                             .await
                             .unwrap()
                             .json_del::<String, String, bool>(

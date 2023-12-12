@@ -25,16 +25,9 @@ async fn main() {
         .unwrap(),
     );
 
-    {
-        let redis_client = redis_client.clone();
-        tokio::spawn(async move {
-            loop {
-                handle_socket_message(redis_client.clone()).await;
-            }
-        })
-        .await
-        .unwrap();
-    }
+    dbg!(&redis_client.get_connection_info().addr);
+
+    handle_socket_message(redis_client.clone()).await;
 
     println!("Server started on port 3000 🚀");
     let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
