@@ -23,7 +23,6 @@ type BaseReturn struct {
 }
 
 type AuthPayloadReturn struct {
-	BaseReturn
 	SessionData *AuthSessionDataReturn `json:"sessionData"`
 }
 

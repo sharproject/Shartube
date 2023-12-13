@@ -17,6 +17,8 @@ import { buildSubgraphSchema } from "@apollo/subgraph";
 import { parse as GraphqlParse } from "graphql"
 import { readFileSync } from "fs";
 import { createClient } from "redis";
+import { serviceRoute } from "./routes/service";
+import { ApolloServerPluginInlineTraceDisabled } from '@apollo/server/plugin/disabled';
 
 const typeDefs = readFileSync(path.join(__dirname, "./schema/output.graphql"), {
     encoding: "utf-8",
@@ -54,7 +56,8 @@ const main = async () => {
     await connect();
     const server = new ApolloServer<GraphQLContext>({
         schema: buildSubgraphSchema({ typeDefs: GraphqlParse(typeDefs), resolvers }),
-        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+        plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), ApolloServerPluginInlineTraceDisabled()],
+        introspection: true,
         csrfPrevention: false,
     });
 
@@ -65,9 +68,13 @@ const main = async () => {
             context: async (input) => await ParseGraphqlContext(input),
         }),
     );
+    // service route
+    app.use("/private", serviceRoute)
     app.get("/", (_req, res) => {
         res.send("Hello world");
     });
+
+
 
     const PORT = 8080;
     httpServer.listen(

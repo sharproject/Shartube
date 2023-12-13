@@ -66,7 +66,7 @@ func main() {
 	c := generated.Config{Resolvers: &resolver.Resolver{
 		Client: MongoDbClient, Redis: RedisClient,
 	}}
-	c.Directives.Auth = directives.AuthDirective(RedisClient)
+	c.Directives.Auth = directives.AuthDirective
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
 

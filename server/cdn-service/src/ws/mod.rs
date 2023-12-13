@@ -53,7 +53,6 @@ pub async fn handle_socket_message(redis: RedisClient) {
                 }
                 Ok(d) => d,
             };
-            dbg!(&json_data);
             if !json_data.message_type.eq("message") {
                 continue;
             }
