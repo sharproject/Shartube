@@ -20,5 +20,6 @@ juniper = "0.15.11"
 juniper_actix = "0.4.0"
 mongodb = { version = "2.6.0", features = ["tokio-runtime", "tokio-sync"] }
 redis = { version = "0.24.0", features = ["tokio", "tokio-comp", "json"] }
+reqwest = { version = "0.11.22", features = ["json"] }
 
 
