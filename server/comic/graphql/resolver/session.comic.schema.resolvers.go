@@ -104,12 +104,7 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 
 	if input.Thumbnail != nil && *input.Thumbnail {
 		requestId := uuid.New().String()
-		payload := struct {
-			ID        string                                        `json:"id"`
-			SaveData  LocalTypes.UploadSessionComicThumbnailPayload `json:"data"`
-			EmitTo    string                                        `json:"emit_to"`
-			EventName string                                        `json:"event_name"`
-		}{
+		payload := util.GenSingleUploadTokenPayload[LocalTypes.UploadSessionComicThumbnailPayload]{
 			ID: requestId,
 			SaveData: LocalTypes.UploadSessionComicThumbnailPayload{
 				ComicSessionId: comicSessionDoc.ID,
@@ -117,26 +112,31 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 			EmitTo:    "comic",
 			EventName: "SocketChangeComicSessionThumbnail",
 		}
-		requestData := LocalTypes.ServiceRequest{
-			Url:     "upload_token_registry/genToken",
-			Header:  nil,
-			Payload: &payload,
-			From:    "comic/addImages",
-			Type:    "message",
-			ID:      requestId,
-		}
-		data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// requestData := LocalTypes.ServiceRequest{
+		// 	Url:     "upload_token_registry/genToken",
+		// 	Header:  nil,
+		// 	Payload: &payload,
+		// 	From:    "comic/addImages",
+		// 	Type:    "message",
+		// 	ID:      requestId,
+		// }
+		// data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if data.Error != nil {
+		// 	return nil, &gqlerror.Error{
+		// 		Message: *data.Error,
+		// 	}
+		// }
+		uploadToken, err := util.GenSingleUploadToken(payload)
 		if err != nil {
 			return nil, err
 		}
-		if data.Error != nil {
-			return nil, &gqlerror.Error{
-				Message: *data.Error,
-			}
-		}
+
 		return &model.CreateComicSessionResponse{
 			ComicSession: comicSessionDoc,
-			UploadToken:  &data.Payload.Token,
+			UploadToken:  uploadToken,
 		}, nil
 
 		// requestDataBytes, err := json.Marshal(requestData)
@@ -229,12 +229,7 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 	}
 	if input.Thumbnail != nil && *input.Thumbnail {
 		requestId := uuid.New().String()
-		payload := struct {
-			ID        string                                        `json:"id"`
-			SaveData  LocalTypes.UploadSessionComicThumbnailPayload `json:"data"`
-			EmitTo    string                                        `json:"emit_to"`
-			EventName string                                        `json:"event_name"`
-		}{
+		payload := util.GenSingleUploadTokenPayload[LocalTypes.UploadSessionComicThumbnailPayload]{
 			ID: requestId,
 			SaveData: LocalTypes.UploadSessionComicThumbnailPayload{
 				ComicSessionId: comicSessionDoc.ID,
@@ -242,26 +237,30 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			EmitTo:    "comic",
 			EventName: "SocketChangeComicSessionThumbnail",
 		}
-		requestData := LocalTypes.ServiceRequest{
-			Url:     "upload_token_registry/genToken",
-			Header:  nil,
-			Payload: &payload,
-			From:    "comic/updateComicSession",
-			Type:    "message",
-			ID:      requestId,
-		}
-		data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// requestData := LocalTypes.ServiceRequest{
+		// 	Url:     "upload_token_registry/genToken",
+		// 	Header:  nil,
+		// 	Payload: &payload,
+		// 	From:    "comic/updateComicSession",
+		// 	Type:    "message",
+		// 	ID:      requestId,
+		// }
+		// data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if data.Error != nil {
+		// 	return nil, &gqlerror.Error{
+		// 		Message: *data.Error,
+		// 	}
+		// }
+		uploadToken, err := util.GenSingleUploadToken[LocalTypes.UploadSessionComicThumbnailPayload](payload)
 		if err != nil {
 			return nil, err
 		}
-		if data.Error != nil {
-			return nil, &gqlerror.Error{
-				Message: *data.Error,
-			}
-		}
 		return &model.UpdateComicSessionResponse{
 			ComicSession: comicSessionDoc,
-			UploadToken:  &data.Payload.Token,
+			UploadToken:  uploadToken,
 		}, nil
 		// requestDataBytes, err := json.Marshal(requestData)
 		// if err != nil {

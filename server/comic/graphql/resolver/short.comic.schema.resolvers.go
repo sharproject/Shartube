@@ -214,17 +214,17 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 			UploadToken: nil,
 		}, nil
 	}
-	requestId := uuid.New().String()
-	type GenUploadTokenPayload struct {
-		ID        string                                              `json:"id"`
-		SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
-		EmitTo    string                                              `json:"emit_to"`
-		EventName string                                              `json:"event_name"`
-	}
-	payload := []GenUploadTokenPayload{}
+	// requestId := uuid.New().String()
+	// type GenUploadTokenPayload struct {
+	// 	ID        string                                              `json:"id"`
+	// 	SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
+	// 	EmitTo    string                                              `json:"emit_to"`
+	// 	EventName string                                              `json:"event_name"`
+	// }
+	payload := []util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{}
 	for _, v := range requestTokensList {
-		payload = append(payload, GenUploadTokenPayload{
-			ID: requestId,
+		payload = append(payload, util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{
+			ID: uuid.New().String(),
 			SaveData: LocalTypes.UploadComicThumbnailAndBackgroundPayload{
 				ComicId: ShortComicDoc.ID,
 			},
@@ -232,26 +232,36 @@ func (r *mutationResolver) UpdateShortComic(ctx context.Context, shortComicID st
 			EventName: fmt.Sprintf("SocketChangeComic%s", v),
 		})
 	}
-	requestData := LocalTypes.ServiceRequest{
-		Url:     "upload_token_registry/genToken",
-		Header:  nil,
-		Payload: &payload,
-		From:    "ShortComic/updateShortComic",
-		Type:    "message",
-		ID:      requestId,
-	}
-	data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *interface{}](r.Redis, requestData, true)
+	// requestData := LocalTypes.ServiceRequest{
+	// 	Url:     "upload_token_registry/genToken",
+	// 	Header:  nil,
+	// 	Payload: &payload,
+	// 	From:    "ShortComic/updateShortComic",
+	// 	Type:    "message",
+	// 	ID:      requestId,
+	// }
+	// data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *interface{}](r.Redis, requestData, true)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if data.Error != nil {
+	// 	return nil, &gqlerror.Error{
+	// 		Message: *data.Error,
+	// 	}
+	// }
+
+	uploadTokens, err := util.GenMultiUploadToken[LocalTypes.UploadComicThumbnailAndBackgroundPayload](payload)
 	if err != nil {
 		return nil, err
 	}
-	if data.Error != nil {
+	if uploadTokens == nil {
 		return nil, &gqlerror.Error{
-			Message: *data.Error,
+			Message: "500 Internal Server Error",
 		}
 	}
 	return &model.UpdateShortComicResponse{
 		ShortComic:  ShortComicDoc,
-		UploadToken: data.Payload.Token,
+		UploadToken: *uploadTokens,
 	}, nil
 	// requestDataBytes, err := json.Marshal(requestData)
 	// if err != nil {

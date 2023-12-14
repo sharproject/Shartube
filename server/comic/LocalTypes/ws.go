@@ -37,11 +37,9 @@ type ServiceReturnData[T any, ht any] struct {
 }
 
 type GetUploadTokenReturn struct {
-	BaseReturn
 	Token string `json:"token"`
 }
 type GetUploadTokensReturn struct {
-	BaseReturn
 	Token []string `json:"token"`
 }
 

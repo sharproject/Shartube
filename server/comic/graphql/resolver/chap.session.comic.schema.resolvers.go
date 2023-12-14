@@ -162,12 +162,7 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 	}
 
 	requestId := uuid.New().String()
-	payload := struct {
-		ID        string                                     `json:"id"`
-		SaveData  LocalTypes.UploadedChapImagesSocketPayload `json:"data"`
-		EmitTo    string                                     `json:"emit_to"`
-		EventName string                                     `json:"event_name"`
-	}{
+	payload := util.GenSingleUploadTokenPayload[LocalTypes.UploadedChapImagesSocketPayload]{
 		ID: requestId,
 		SaveData: LocalTypes.UploadedChapImagesSocketPayload{
 			ChapId: chapID,
@@ -175,52 +170,25 @@ func (r *mutationResolver) AddImageToChap(ctx context.Context, chapID string) (*
 		EmitTo:    "comic",
 		EventName: "SocketAddImagesToChap",
 	}
-	requestData := LocalTypes.ServiceRequest{
-		Url:     "upload_token_registry/genToken",
-		Header:  nil,
-		Payload: &payload,
-		From:    "comic/addImages",
-		Type:    "message",
-		ID:      requestId,
-	}
-	// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
-	data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
-	if err != nil {
-		return nil, err
-	}
-	if data.Error != nil {
-		return nil, &gqlerror.Error{
-			Message: *data.Error,
-		}
-	}
-	return &data.Payload.Token, nil
-
-	// for {
-	// 	_, message, err := r.Ws.ReadMessage()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	var data LocalTypes.WsReturnData[LocalTypes.GetUploadTokenReturn, *any]
-	// 	err = json.Unmarshal(message, &data)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	if data.Type == "rep" {
-	// 		if data.ID == requestId {
-	// 			if data.Error != nil {
-	// 				return nil, &gqlerror.Error{
-	// 					Message: *data.Error,
-	// 				}
-	// 			}
-	// 			return &data.Payload.Token, nil
-
-	// 			// return nil, &gqlerror.Error{
-	// 			// 	Message: "500 server error",
-	// 			// }
-
-	// 		}
+	// requestData := LocalTypes.ServiceRequest{
+	// 	Url:     "upload_token_registry/genToken",
+	// 	Header:  nil,
+	// 	Payload: &payload,
+	// 	From:    "comic/addImages",
+	// 	Type:    "message",
+	// 	ID:      requestId,
+	// }
+	// data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if data.Error != nil {
+	// 	return nil, &gqlerror.Error{
+	// 		Message: *data.Error,
 	// 	}
 	// }
+	// return &data.Payload.Token, nil
+	return util.GenSingleUploadToken(payload)
 }
 
 // UpdateChap is the resolver for the UpdateChap field.
@@ -319,7 +287,7 @@ func (r *mutationResolver) DeleteChapImage(ctx context.Context, chapID string, i
 	// 	return nil, err
 	// }
 	// r.Ws.WriteMessage(websocket.TextMessage, chapObject)
-	util.ServiceSender[any,any](r.Redis, chapObjectData, false)
+	util.ServiceSender[any, any](r.Redis, chapObjectData, false)
 
 	for _, v := range imageID {
 		imageIndex := slices.IndexFunc(comicChapDoc.Images, func(ir *model.ImageResult) bool {

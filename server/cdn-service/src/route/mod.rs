@@ -1,6 +1,6 @@
-use crate::types::RedisClient;
+use crate::types::{RedisClient, TokenStorageTableNode};
 use crate::upload_images;
-use crate::util::{broadcast_get_image, send_uploaded_message};
+use crate::util::{broadcast_get_image, gen_token, get_redis_key, send_uploaded_message};
 use hyper::StatusCode;
 use redis::JsonAsyncCommands;
 use salvo::logging::Logger;
@@ -18,11 +18,88 @@ pub fn route(redis: RedisClient) -> salvo::Router {
         redis: redis.clone(),
     }));
 
+    router = router.push(Router::with_path("/private/gen_token").post(GenToken {
+        redis: redis.clone(),
+    }));
+
     return router;
 }
 #[handler]
 async fn hello_world() -> &'static str {
     "Hello world"
+}
+
+struct GenToken {
+    pub redis: RedisClient,
+}
+
+#[salvo::async_trait]
+impl salvo::Handler for GenToken {
+    async fn handle(
+        &self,
+        req: &mut Request,
+        _depot: &mut Depot,
+        res: &mut Response,
+        _ctrl: &mut salvo::FlowCtrl,
+    ) {
+        let body = req.parse_body::<serde_json::Value>().await.unwrap();
+        let mut sender_data = None;
+        if let serde_json::Value::Array(a) = body {
+            let mut tokens = vec![];
+            for v in a {
+                let (id, data, emit_to, event_name) = (
+                    v.get("id").unwrap().as_str().unwrap(),
+                    v.get("data").unwrap(),
+                    v.get("emit_to").unwrap().as_str().unwrap(),
+                    v.get("event_name").unwrap().as_str().unwrap(),
+                );
+                let token = gen_token(id.to_string());
+
+                self.redis
+                    .get_tokio_connection()
+                    .await
+                    .unwrap()
+                    .json_set::<String, String, TokenStorageTableNode, bool>(
+                        get_redis_key(token.to_string()),
+                        "$".to_string(),
+                        &TokenStorageTableNode {
+                            data: data.clone(),
+                            emit_to: emit_to.to_string(),
+                            event_name: event_name.to_string(),
+                        },
+                    );
+                tokens.push(event_name.to_string());
+                tokens.push(token.clone());
+            }
+            sender_data = Some(serde_json::json! {{
+                "token":tokens
+            }});
+        } else if let serde_json::Value::Object(o) = body {
+            let (id, data, emit_to, event_name) = (
+                o.get("id").unwrap().as_str().unwrap(),
+                o.get("data").unwrap(),
+                o.get("emit_to").unwrap().as_str().unwrap(),
+                o.get("event_name").unwrap().as_str().unwrap(),
+            );
+            let token = gen_token(id.to_string());
+            self.redis
+                .get_tokio_connection()
+                .await
+                .unwrap()
+                .json_set::<String, String, TokenStorageTableNode, bool>(
+                    get_redis_key(token.to_string()),
+                    "$".to_string(),
+                    &TokenStorageTableNode {
+                        data: data.clone(),
+                        emit_to: emit_to.to_string(),
+                        event_name: event_name.to_string(),
+                    },
+                );
+            sender_data = Some(serde_json::json! {{"token":token.clone()}});
+        }
+        res.render(Json(sender_data.unwrap()));
+    }
+
 }
 
 struct GetImageData {

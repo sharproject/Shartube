@@ -79,14 +79,7 @@ async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
             );
             let token = gen_token(id.to_string());
 
-            // token_storage.lock().unwrap().insert(
-            //     token.to_string(),
-            //     TokenStorageTableNode {
-            //         data: data.clone(),
-            //         emit_to: emit_to.to_string(),
-            //         event_name: event_name.to_string(),
-            //     },
-            // );
+    
             redis
                 .get_tokio_connection()
                 .await
@@ -123,14 +116,6 @@ async fn handle_gen_token(json_data: SenderData, redis: RedisClient) {
             o.get("event_name").unwrap().as_str().unwrap(),
         );
         let token = gen_token(id.to_string());
-        // token_storage.lock().unwrap().insert(
-        //     token.to_string(),
-        //     TokenStorageTableNode {
-        //         data: data.clone(),
-        //         emit_to: emit_to.to_string(),
-        //         event_name: event_name.to_string(),
-        //     },
-        // );
         redis
             .get_tokio_connection()
             .await

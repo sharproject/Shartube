@@ -97,16 +97,15 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 			UploadToken: nil,
 		}, nil
 	}
-	requestId := uuid.New().String()
-	type GenUploadTokenPayload struct {
-		ID        string                                              `json:"id"`
-		SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
-		EmitTo    string                                              `json:"emit_to"`
-		EventName string                                              `json:"event_name"`
-	}
-	payload := []GenUploadTokenPayload{}
+	// type GenUploadTokenPayload struct {
+	// 	ID        string                                              `json:"id"`
+	// 	SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
+	// 	EmitTo    string                                              `json:"emit_to"`
+	// 	EventName string                                              `json:"event_name"`
+	// }
+	payload := []util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{}
 	for _, v := range requestTokensList {
-		payload = append(payload, GenUploadTokenPayload{
+		payload = append(payload, util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{
 			ID: uuid.NewString(),
 			SaveData: LocalTypes.UploadComicThumbnailAndBackgroundPayload{
 				ComicId: comicDoc.ID,
@@ -114,28 +113,36 @@ func (r *mutationResolver) CreateComic(ctx context.Context, input model.CreateCo
 			EmitTo:    "comic",
 			EventName: fmt.Sprintf("SocketChangeComic%s", v),
 		})
-
 	}
-	requestData := LocalTypes.ServiceRequest{
-		Url:     "upload_token_registry/genToken",
-		Header:  nil,
-		Payload: &payload,
-		From:    "comic/addImages",
-		Type:    "message",
-		ID:      requestId,
-	}
-	data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *any](r.Redis, requestData, true)
+	// requestData := LocalTypes.ServiceRequest{
+	// 	Url:     "upload_token_registry/genToken",
+	// 	Header:  nil,
+	// 	Payload: &payload,
+	// 	From:    "comic/addImages",
+	// 	Type:    "message",
+	// 	ID:      requestId,
+	// }
+	// data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *any](r.Redis, requestData, true)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if data.Error != nil {
+	// 	return nil, &gqlerror.Error{
+	// 		Message: *data.Error,
+	// 	}
+	// }
+	uploadTokens, err := util.GenMultiUploadToken(payload)
 	if err != nil {
 		return nil, err
 	}
-	if data.Error != nil {
+	if uploadTokens == nil {
 		return nil, &gqlerror.Error{
-			Message: *data.Error,
+			Message: "500 Internal Server Error",
 		}
 	}
 	return &model.CreateComicResponse{
 		Comic:       comicDoc,
-		UploadToken: data.Payload.Token,
+		UploadToken: *uploadTokens,
 	}, nil
 	// requestDataBytes, err := json.Marshal(requestData)
 	// if err != nil {
@@ -234,16 +241,16 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 			UploadToken: nil,
 		}, nil
 	}
-	requestId := uuid.New().String()
-	type GenUploadTokenPayload struct {
-		ID        string                                              `json:"id"`
-		SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
-		EmitTo    string                                              `json:"emit_to"`
-		EventName string                                              `json:"event_name"`
-	}
-	payload := []GenUploadTokenPayload{}
+	// requestId := uuid.New().String()
+	// type GenUploadTokenPayload struct {
+	// 	ID        string                                              `json:"id"`
+	// 	SaveData  LocalTypes.UploadComicThumbnailAndBackgroundPayload `json:"data"`
+	// 	EmitTo    string                                              `json:"emit_to"`
+	// 	EventName string                                              `json:"event_name"`
+	// }
+	payload := []util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{}
 	for _, v := range requestTokensList {
-		payload = append(payload, GenUploadTokenPayload{
+		payload = append(payload, util.GenSingleUploadTokenPayload[LocalTypes.UploadComicThumbnailAndBackgroundPayload]{
 			ID: uuid.NewString(),
 			SaveData: LocalTypes.UploadComicThumbnailAndBackgroundPayload{
 				ComicId: comicDoc.ID,
@@ -253,26 +260,37 @@ func (r *mutationResolver) UpdateComic(ctx context.Context, comicID string, inpu
 		})
 
 	}
-	requestData := LocalTypes.ServiceRequest{
-		Url:     "upload_token_registry/genToken",
-		Header:  nil,
-		Payload: &payload,
-		From:    "comic/updateComic",
-		Type:    "message",
-		ID:      requestId,
-	}
-	data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *any](r.Redis, requestData, true)
+	// requestData := LocalTypes.ServiceRequest{
+	// 	Url:     "upload_token_registry/genToken",
+	// 	Header:  nil,
+	// 	Payload: &payload,
+	// 	From:    "comic/updateComic",
+	// 	Type:    "message",
+	// 	ID:      requestId,
+	// }
+	// data, err := util.ServiceSender[LocalTypes.GetUploadTokensReturn, *any](r.Redis, requestData, true)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if data.Error != nil {
+	// 	return nil, &gqlerror.Error{
+	// 		Message: *data.Error,
+	// 	}
+	// }
+
+	uploadTokens, err := util.GenMultiUploadToken[LocalTypes.UploadComicThumbnailAndBackgroundPayload](payload)
 	if err != nil {
 		return nil, err
 	}
-	if data.Error != nil {
+	if uploadTokens == nil {
 		return nil, &gqlerror.Error{
-			Message: *data.Error,
+			Message: "500 server error",
 		}
 	}
+
 	return &model.UploadComicResponse{
 		Comic:       comicDoc,
-		UploadToken: data.Payload.Token,
+		UploadToken: *uploadTokens,
 	}, nil
 	// requestDataBytes, err := json.Marshal(requestData)
 	// if err != nil {
