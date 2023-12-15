@@ -1411,7 +1411,6 @@ dependencies = [
  "actix-cors",
  "actix-web",
  "env_logger",
- "futures-util",
  "juniper",
  "juniper_actix",
  "mongodb",

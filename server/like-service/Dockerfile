@@ -1,8 +1,9 @@
 FROM rust:alpine as rust-build
 WORKDIR /home/app
 
+# gcc musl-dev rustup
 RUN apk add git curl &&\
-      apk add pkgconfig openssl-dev gcc musl-dev rustup &&\
+      apk add pkgconfig openssl-dev musl-dev &&\
       rm -rf /var/cache/apk/*
 
 COPY Cargo.toml Cargo.lock ./
@@ -14,7 +15,7 @@ RUN rm -rf src
 
 COPY ./src ./src
 
-RUN rm -rf ./target/release/deps/like_service*
+# RUN rm -rf ./target/release/deps/like_service*
 RUN --mount=type=cache,target=/usr/local/cargo/registry cargo build --release
 
 FROM alpine

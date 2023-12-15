@@ -1,4 +1,4 @@
-use futures_util::StreamExt;
+use crate::juniper::futures::StreamExt;
 use redis::AsyncCommands;
 
 use crate::types::{RedisClient, SenderData};
@@ -12,12 +12,12 @@ pub async fn send_service_message<T: for<'a> serde::Deserialize<'a>>(
     let channel = message.url.to_string();
     let message_str = serde_json::to_string(&message)?;
     let _ = redis
-        .get_async_connection()
+        .get_tokio_connection()
         .await
         .unwrap()
         .publish(channel.to_string(), message_str)
         .await?;
-    let mut pubsub = redis.get_async_connection().await.unwrap().into_pubsub();
+    let mut pubsub = redis.get_tokio_connection().await.unwrap().into_pubsub();
     if listen_response {
         pubsub.subscribe(channel).await?;
         loop {

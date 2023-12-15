@@ -22,11 +22,9 @@ export class RedisListen<RedisModule extends RedisModules, RedisFunction extends
     onmessage: (this: typeof this.redisClient, message: string, channel: string, subscriber: typeof this.redisClient) => any
     eventHandle: string[];
     subscriber: typeof this.redisClient;
-    publisher: typeof this.redisClient;
     constructor(public redisClient: RedisClientType<RedisDefaultModules & RedisModule, RedisFunction, RedisScript>) {
         this.eventHandle = ["user/decodeToken", "user/updateUserComic", "user/DeleteComic", "user/UpdateUserShortComic", "user/UpdateUserStatus", "user/UpdateUserTeam"]
         this.subscriber = this.redisClient.duplicate();
-        this.publisher = this.redisClient.duplicate();
         this.subscriber.on('error', err => console.error(err));
 
         this.connect()
@@ -34,14 +32,13 @@ export class RedisListen<RedisModule extends RedisModules, RedisFunction extends
     }
     async connect() {
         await this.subscriber.connect();
-        await this.publisher.connect();
     }
     async handlers() {
 
         this.onmessage = async (message, channel) => {
             const data: SenderData = JSON.parse(message.toString())
             const send = (result: SenderData) =>
-                this.publisher.publish(channel, JSON.stringify(result))
+                this.redisClient.publish(channel, JSON.stringify(result))
 
             let result: SenderData | null = null
             if (data.url == 'user/decodeToken') {
