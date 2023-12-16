@@ -30,7 +30,8 @@ ARG TARGETPLATFORM
 
 # Install cross compilation build dependencies.
 RUN xx-apk add --no-cache musl-dev gcc
-RUN apk add pkgconfig openssl-dev openssl
+RUN xx-apk add pkgconfig openssl-dev openssl
+ENV OPENSSL_DIR=/usr
 
 # Build the application.
 # Leverage a cache mount to /usr/local/cargo/registry/
