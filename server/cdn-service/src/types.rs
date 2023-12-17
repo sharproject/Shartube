@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use redis::{from_redis_value, ErrorKind, FromRedisValue, RedisResult, Value};
 use serde::{Deserialize, Serialize};
@@ -69,8 +69,6 @@ impl FromRedisValue for TokenStorageTableNode {
         })
     }
 }
-// convert to db soon
-// pub type TokenStorageTable = Arc<Mutex<BTreeMap<String, TokenStorageTableNode>>>;
 pub enum WsError {
     DecodePayloadError,
 }
@@ -80,4 +78,4 @@ pub struct SendWsErrorMetaInput {
     pub id: String,
 }
 
-pub type RedisClient = Arc<redis::Client>;
+pub type RedisClient = redis::Client;
