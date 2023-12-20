@@ -18,7 +18,7 @@ pub fn route(redis: RedisClient) -> salvo::Router {
         redis: redis.clone(),
     }));
 
-    router = router.push(Router::with_path("/private/gen_token").post(GenToken {
+    router = router.push(Router::with_path("/gen_token").post(GenToken {
         redis: redis.clone(),
     }));
 
@@ -99,7 +99,6 @@ impl salvo::Handler for GenToken {
         }
         res.render(Json(sender_data.unwrap()));
     }
-
 }
 
 struct GetImageData {

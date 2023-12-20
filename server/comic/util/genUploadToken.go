@@ -8,7 +8,7 @@ import (
 	"github.com/Folody-Team/Shartube/LocalTypes"
 )
 
-var genTokenUrl = "http://shartube-upload-server:3000/private/gen_token"
+var genTokenUrl = "http://shartube-upload-server:3000/gen_token"
 
 type GenSingleUploadTokenPayload[T any] struct {
 	ID        string `json:"id"`

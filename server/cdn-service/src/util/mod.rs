@@ -1,4 +1,4 @@
-use crate::types::{RedisClient, SendWsErrorMetaInput, SenderData, TokenStorageTableNode, WsError};
+use crate::types::{RedisClient, SenderData, TokenStorageTableNode};
 use redis::{AsyncCommands, JsonAsyncCommands};
 use serde_json::json;
 use tokio_stream::StreamExt;
@@ -59,22 +59,6 @@ pub async fn send_uploaded_message(
         };
     }
     return false;
-}
-
-pub async fn send_ws_error(error: WsError, meta: SendWsErrorMetaInput, redis: &RedisClient) {
-    let sender_data = SenderData {
-        url: meta.from,
-        message_type: "rep".to_string(),
-        from: meta.url,
-        header: serde_json::Value::Null,
-        payload: serde_json::Value::Null,
-        error: serde_json::Value::String(match error {
-            WsError::DecodePayloadError => "decode payload error".to_string(),
-        }),
-        id: meta.id.to_string(),
-    };
-
-    let _ = send_service_message(redis, &sender_data, false).await;
 }
 
 pub fn gen_token(uuid: String) -> String {

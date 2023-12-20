@@ -3,13 +3,11 @@ mod types;
 mod upload_images;
 
 mod util;
-mod ws;
 
 use dotenv::dotenv;
 use salvo::prelude::TcpListener;
 use salvo::{Listener, Server};
 
-use crate::ws::handle_socket_message;
 mod route;
 
 #[tokio::main]
@@ -23,8 +21,6 @@ async fn main() {
     .unwrap();
 
     dbg!(&redis_client.get_connection_info().addr.to_string());
-
-    handle_socket_message(redis_client.clone()).await;
 
     println!("Server started on port 3000 🚀");
     let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;

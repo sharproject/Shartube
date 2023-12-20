@@ -69,13 +69,5 @@ impl FromRedisValue for TokenStorageTableNode {
         })
     }
 }
-pub enum WsError {
-    DecodePayloadError,
-}
-pub struct SendWsErrorMetaInput {
-    pub from: String,
-    pub url: String,
-    pub id: String,
-}
 
 pub type RedisClient = redis::Client;
