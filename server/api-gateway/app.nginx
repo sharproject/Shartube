@@ -8,7 +8,6 @@ server {
 
     location /api/graphql/ {
         # GRAPHQL_SERVER is http://shartube-graphql-gateway:2100
-        add_header Access-Control-Allow-Origin *;
         proxy_pass          http://shartube-graphql-gateway:2100/graphql; 
     }
 
