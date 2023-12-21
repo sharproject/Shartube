@@ -75,18 +75,22 @@ pub async fn upload_images(
         Err(e) => return Err(UploadImageError::ErrorGenData(e)),
     };
 
-    let req =
-        match Request::post("https://discord.com/api/v10/channels/1043368131390885968/messages")
-            .header(
-                CONTENT_TYPE,
-                &*format!("multipart/form-data; boundary={}", BOUNDARY),
-            )
-            .header(AUTHORIZATION, format!("Bot {}", token))
-            .body(data.into())
-        {
-            Ok(r) => r,
-            Err(_) => return Err(UploadImageError::ErrorCreateRequest),
-        };
+    let channel_id = std::env::var("CHANNEL_ID").unwrap();
+
+    let req = match Request::post(format!(
+        "https://discord.com/api/v10/channels/{}/messages",
+        channel_id
+    ))
+    .header(
+        CONTENT_TYPE,
+        &*format!("multipart/form-data; boundary={}", BOUNDARY),
+    )
+    .header(AUTHORIZATION, format!("Bot {}", token))
+    .body(data.into())
+    {
+        Ok(r) => r,
+        Err(_) => return Err(UploadImageError::ErrorCreateRequest),
+    };
 
     let response = match client
         .request(req)
