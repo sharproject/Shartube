@@ -23,8 +23,12 @@ async fn main() {
     dbg!(&redis_client.get_connection_info().addr.to_string());
 
     println!("Server started on port 3000 🚀");
+    let cors = salvo::cors::Cors::new()
+        .allow_origin(salvo::cors::AllowOrigin::any())
+        .allow_headers("authorization")
+        .into_handler();
     let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
-    Server::new(acceptor)
-        .serve(route::route(redis_client.clone()))
-        .await;
+    let service = salvo::Service::new(route::route(redis_client.clone()))
+        .catcher(salvo::catcher::Catcher::default().hoop(cors));
+    Server::new(acceptor).serve(service).await;
 }
