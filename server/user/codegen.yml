@@ -1,0 +1,24 @@
+overwrite: true
+schema: "./src/schema/schema.graphql"
+documents: null
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      # - "typescript-common"
+      # - "typescript-server"
+      - "typescript-resolvers"
+      # - "typescript-mongodb"
+    config:
+      federation: true
+      useIndexSignature: true
+      contextType: ../index#GraphQLContext
+  ./graphql.schema.json:
+    plugins:
+      - "introspection"
+  ./src/schema/output.graphql:
+    plugins:
+      - schema-ast
+    config:
+      includeDirectives: true
+      federation: true

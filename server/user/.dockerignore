@@ -1,0 +1,4 @@
+node_modules
+./src/schema/output.graphql
+src/generated/graphql.ts
+dist/

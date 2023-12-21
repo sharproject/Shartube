@@ -70,13 +70,13 @@ func (m *BaseModel[dt, rdt]) FindOne(input interface{}) (*rdt, error) {
 
 }
 
-func (db *BaseModel[dt, rdt]) Find(input interface{}) ([]*rdt, error) {
+func (db *BaseModel[dt, rdt]) Find(input interface{}, opts ...*options.FindOptions) ([]*rdt, error) {
 	db.ClearDB()
 	dbName := os.Getenv("DB_NAME")
 	ctx, cancel := context.WithTimeout(context.Background(), BaseCURDTimeOut*time.Second)
 	defer cancel()
 	collection := db.Client.Database(dbName).Collection(db.CollectionName)
-	cur, err := collection.Find(ctx, input)
+	cur, err := collection.Find(ctx, input, opts...)
 	if err != nil {
 		log.Println(err)
 		return nil, err

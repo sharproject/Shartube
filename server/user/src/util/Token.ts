@@ -1,84 +1,63 @@
-import { ObjectId } from 'https://deno.land/x/mongo@v0.31.0/mod.ts'
-import { MongoClient } from 'https://deno.land/x/mongo@v0.31.0/mod.ts'
-import {
-	create,
-	getNumericDate,
-	verify,
-} from 'https://deno.land/x/djwt@v2.7/mod.ts'
-import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
-import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
-config({
-	path: PathJoin(import.meta.url, '..', '..', '.env'),
-})
+import * as jose from 'jose'
+import { SessionModel } from '../model'
+import mongoose from 'mongoose'
+import path from "path"
+import { KeyObject } from "node:crypto"
+import { readFileSync, existsSync, writeFileSync } from "fs";
+import crypto from "crypto"
 
-interface SessionType {
-	_id: ObjectId
-	createdAt: Date
-	updatedAt: Date
-	userID: ObjectId
-}
 
-const key = await crypto.subtle.generateKey(
-	{ name: 'HMAC', hash: 'SHA-512' },
-	true,
-	['sign', 'verify']
-)
+const secret = (async () => {
+    const privateKeyDir = path.join(__dirname, "../secret/key.private")
+    if (existsSync(privateKeyDir)) {
+        const secretString = readFileSync(path.join(__dirname, "../secret/key.private"), "utf-8")
+        const key = crypto.subtle.importKey("jwk", JSON.parse(secretString), {
+            name: "HMAC",
+            hash: 'SHA-512',
+            length: 512
+        }, true, ["sign", "verify"])
+        return KeyObject.from(await key)
+    }
+    const key = await crypto.subtle.generateKey({
+        name: 'HMAC',
+        hash: 'SHA-512',
+        length: 512,
+    }, true, ['sign', 'verify']);
+    writeFileSync(privateKeyDir, JSON.stringify((await crypto.subtle.exportKey("jwk", key))),)
+    return KeyObject.from(key)
+})()
 
-export async function GenToken(
-	client: MongoClient,
-	userID: ObjectId,
-	DB_NAME: string
-) {
-	const db = client.database(DB_NAME)
-	const session = db.collection<SessionType>('session')
-	const timeByMinus = 180
-	const expireAfterSeconds = timeByMinus * 60
-	const expTime = new Date().getSeconds() + expireAfterSeconds
-	session.createIndexes({
-		indexes: [
-			{
-				name: 'createAt',
-				key: {
-					createAt: 1,
-				},
-				expireAfterSeconds,
-			},
-		],
-	})
-	await session.deleteMany({
-		userID: new ObjectId(userID),
-	})
-	const sessionID = await session.insertOne({
-		createdAt: new Date(expTime),
-		updatedAt: new Date(),
-		userID: new ObjectId(userID),
-	})
-	const exp = getNumericDate(expTime)
-	const jwt = await create(
-		{ alg: 'HS512', typ: 'JWT' },
-		{
-			sessionID: sessionID.toHexString(),
-			exp,
-		},
-		key
-	)
-	return jwt
+export async function GenToken(userID: string) {
+    // await SessionModel.deleteMany({
+    // 	userID: new mongoose.Types.ObjectId(userID),
+    // })
+
+    const session = await new SessionModel({
+        userID: new mongoose.Types.ObjectId(userID),
+    }).save()
+
+    const alg = 'HS512'
+
+    const jwt = await new jose.SignJWT({ sessionID: session._id })
+        .setProtectedHeader({ alg })
+        .setIssuedAt()
+        .setIssuer('shartube-user-server-token-gen')
+        .setAudience('shartube-user-server')
+        // .setExpirationTime('180h') // i think we should use the timeByMinus
+        .sign(await secret)
+    return jwt
 }
 
 async function VerifyToken(token: string) {
-	return await verify(token, key)
+    return await jose.jwtVerify(token, await secret, {
+        issuer: 'shartube-user-server-token-gen',
+        audience: 'shartube-user-server',
+    })
 }
 
-export async function DecodeToken(
-	token: string,
-	client: MongoClient,
-	DB_NAME: string
-) {
-	const payload = await VerifyToken(token)
-	const sessionID = payload.sessionID
-	const db = client.database(DB_NAME)
-	const session = db.collection<SessionType>('session')
-	return await session.findOne({
-		_id: new ObjectId(`${sessionID}`),
-	})
+export async function DecodeToken(token: string) {
+    const { payload, protectedHeader } = await VerifyToken(token)
+    console.log({ protectedHeader })
+    const sessionID = payload.sessionID
+    return await SessionModel.findById(sessionID)
 }

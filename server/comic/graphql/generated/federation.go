@@ -80,21 +80,41 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 		}()
 
 		switch typeName {
-		case "User":
-			resolverName, err := entityResolverNameForUser(ctx, rep)
+		case "Chap":
+			resolverName, err := entityResolverNameForChap(ctx, rep)
 			if err != nil {
-				return fmt.Errorf(`finding resolver for Entity "User": %w`, err)
+				return fmt.Errorf(`finding resolver for Entity "Chap": %w`, err)
 			}
 			switch resolverName {
 
-			case "findUserByID":
+			case "findChapByID":
 				id0, err := ec.unmarshalNID2string(ctx, rep["_id"])
 				if err != nil {
-					return fmt.Errorf(`unmarshalling param 0 for findUserByID(): %w`, err)
+					return fmt.Errorf(`unmarshalling param 0 for findChapByID(): %w`, err)
 				}
-				entity, err := ec.resolvers.Entity().FindUserByID(ctx, id0)
+				entity, err := ec.resolvers.Entity().FindChapByID(ctx, id0)
 				if err != nil {
-					return fmt.Errorf(`resolving Entity "User": %w`, err)
+					return fmt.Errorf(`resolving Entity "Chap": %w`, err)
+				}
+
+				list[idx[i]] = entity
+				return nil
+			}
+		case "Profile":
+			resolverName, err := entityResolverNameForProfile(ctx, rep)
+			if err != nil {
+				return fmt.Errorf(`finding resolver for Entity "Profile": %w`, err)
+			}
+			switch resolverName {
+
+			case "findProfileByCreateID":
+				id0, err := ec.unmarshalNID2string(ctx, rep["CreateID"])
+				if err != nil {
+					return fmt.Errorf(`unmarshalling param 0 for findProfileByCreateID(): %w`, err)
+				}
+				entity, err := ec.resolvers.Entity().FindProfileByCreateID(ctx, id0)
+				if err != nil {
+					return fmt.Errorf(`resolving Entity "Profile": %w`, err)
 				}
 
 				list[idx[i]] = entity
@@ -169,7 +189,7 @@ func (ec *executionContext) __resolve_entities(ctx context.Context, representati
 	}
 }
 
-func entityResolverNameForUser(ctx context.Context, rep map[string]interface{}) (string, error) {
+func entityResolverNameForChap(ctx context.Context, rep map[string]interface{}) (string, error) {
 	for {
 		var (
 			m   map[string]interface{}
@@ -181,7 +201,24 @@ func entityResolverNameForUser(ctx context.Context, rep map[string]interface{}) 
 		if _, ok = m["_id"]; !ok {
 			break
 		}
-		return "findUserByID", nil
+		return "findChapByID", nil
 	}
-	return "", fmt.Errorf("%w for User", ErrTypeNotFound)
+	return "", fmt.Errorf("%w for Chap", ErrTypeNotFound)
+}
+
+func entityResolverNameForProfile(ctx context.Context, rep map[string]interface{}) (string, error) {
+	for {
+		var (
+			m   map[string]interface{}
+			val interface{}
+			ok  bool
+		)
+		_ = val
+		m = rep
+		if _, ok = m["CreateID"]; !ok {
+			break
+		}
+		return "findProfileByCreateID", nil
+	}
+	return "", fmt.Errorf("%w for Profile", ErrTypeNotFound)
 }

@@ -1,349 +1,288 @@
-// deno-lint-ignore-file no-explicit-any
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.0/mod.ts'
-import { ObjectId } from 'https://deno.land/x/mongo/mod.ts'
-import { GQLError } from 'https://deno.land/x/oak_graphql@0.6.4/mod.ts'
-import { emailChecker } from '../function/emailChecker.ts'
-import { GenToken, DecodeToken } from '../util/Token.ts'
+import { Resolvers } from "../generated/graphql";
+import { UserModel, TeamModel, Team, User } from "../model"
+import { DecodeToken, GenToken } from "../util"
+import { BadRequest, UnauthorizedError, ServerError, NotFound } from "../error"
+import { ProfileModel } from "../model/Profile";
+import bcrypt from "bcrypt"
 
-import { join as PathJoin } from 'https://deno.land/std@0.149.0/path/mod.ts'
-import { config } from 'https://deno.land/x/dotenv@v3.2.0/mod.ts'
-import { TypeDefsString } from '../typeDefs/index.ts'
-import client from '../util/client.ts'
+const saltRound = Number(process.env.SALT_ROUND || 10)
 
-config({
-	path: PathJoin(import.meta.url, './../../.env'),
-})
-const DB_NAME = Deno.env.get('DB_NAME') || 'users'
-
-const ws = new WebSocket(
-	`ws://${Deno.env.get('WS_HOST')}:${Deno.env.get('WS_PORT')}`
-)
-
-ws.onopen = () => console.log('connect to ws success')
-ws.onmessage = async (message: MessageEvent<any>) => {
-	const data = JSON.parse(message.data)
-	if (data.url == 'user/decodeToken') {
-		let result
-		try {
-			const decodeData = await DecodeToken(data.payload.token, client, DB_NAME)
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					sessionData: decodeData,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: null,
-			}
-		} catch (error) {
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					sessionData: null,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: error.message,
-			}
-		}
-
-		ws.send(JSON.stringify(result))
-	}
-	if (data.url == 'user/GetUserById') {
-		let result
-		try {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			const user = await users.findOne({
-				_id: new ObjectId(data.payload.userID),
-			})
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: user,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: null,
-			}
-		} catch (error) {
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: null,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: error.message,
-			}
-		}
-
-		ws.send(JSON.stringify(result))
-	}
-	if (data.url == 'user/updateUserComic') {
-		let result
-		try {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			await users.updateOne(
-				{
-					_id: new ObjectId(data.payload.UserID),
-				},
-				{
-					$push: {
-						comicIDs: new ObjectId(data.payload._id),
-					},
-				}
-			)
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: await users.findOne({
-						_id: new ObjectId(data.payload.UserID),
-					}),
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: null,
-			}
-		} catch (error) {
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: null,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: error.message,
-			}
-		}
-		ws.send(JSON.stringify(result))
-	}
-	if (data.url == 'user/DeleteComic') {
-		let result
-		try {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			await users.updateOne(
-				{
-					_id: new ObjectId(data.payload.UserID),
-				},
-				{
-					$pull: {
-						comicIDs: new ObjectId(data.payload._id),
-					},
-				}
-			)
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: await users.findOne({
-						_id: new ObjectId(data.payload.UserID),
-					}),
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: null,
-			}
-		} catch (error) {
-			result = {
-				url: data.from,
-				header: null,
-				payload: {
-					user: null,
-					id: data.payload.id,
-				},
-				type: 'rep',
-				error: error.message,
-			}
-		}
-		ws.send(JSON.stringify(result))
-	}
-}
-
-export interface User {
-	_id: ObjectId
-	username: string
-	email: string
-	password: string
-	createdAt: Date
-	updatedAt: Date
-	comicIDs: ObjectId[]
-}
-interface UserLoginOrRegisterResponse {
-	user: User
-	accessToken: string
-}
-interface IResolvers {
-	Query: {
-		_service: (root: any) => {
-			sdl: string
-		}
-		_entities: (root: any, args: any) => Promise<any[]>
-		Me(root: any, args: any, context: any, info: any): Promise<User>
-	}
-	Mutation: {
-		Login: (
-			a: any,
-			input: {
-				input: {
-					UsernameOrEmail: string
-					password: string
-				}
-			}
-		) => PromiseOrType<UserLoginOrRegisterResponse>
-		Register: (
-			parter: any,
-			input: {
-				input: {
-					email: string
-					password: string
-					username: string
-				}
-			}
-		) => PromiseOrType<UserLoginOrRegisterResponse>
-	}
-	User: {
-		__resolveReference: (reference: any) => PromiseOrType<User | undefined>
-	}
-}
-
-type PromiseOrType<type> = Promise<type> | type
-export const resolvers: IResolvers = {
-	Query: {
-		_service: () => {
-			const stringResult = TypeDefsString
-			return { sdl: stringResult }
-		},
-		_entities: async (root: any, args: any) => {
-			const returnValue = []
-			for (const data of args.representations) {
-				const TypeObj = root[data.__typename as string]
-				const result = await TypeObj.__resolveReference(data)
-				returnValue.push({
-					...data,
-					...result,
-				})
-			}
-			return returnValue
-		},
-		Me: async (root: any, args: any, context: any, ...rest: any[]) => {
-			if (!context.request.headers.get('authorization')) {
-				throw new GQLError({
-					type: 'Unauthorized',
-					message: 'You are not authorized to access this resource',
-				})
-			}
-			const UserSession = await DecodeToken(
-				context.request.headers.get('authorization').replace('Bearer ', ''),
-				client,
-				DB_NAME
-			)
-			if (!UserSession) {
-				throw new GQLError({
-					type: 'Unauthorized',
-					message: 'You are not authorized to access this resource',
-				})
-			}
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			return {
-				...(await users.findOne({
-					_id: new ObjectId(UserSession.userID),
-				})),
-				password: '',
-			}
-		},
-	},
-	Mutation: {
-		async Login(_, args) {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			const user =
-				(await users.findOne({
-					email: args.input.UsernameOrEmail,
-				})) ||
-				(await users.findOne({
-					username: args.input.UsernameOrEmail,
-				}))
-			if (!user) {
-				throw new GQLError({
-					type: 'email or password or user name is incorrect',
-				})
-			}
-			const IsValidPassword = await bcrypt.compare(
-				args.input.password,
-				user.password
-			)
-			if (!IsValidPassword) {
-				throw new GQLError({
-					type: 'email or password or user name is incorrect',
-				})
-			}
-			user.password = ''
-			return {
-				accessToken: await GenToken(client, user._id, DB_NAME),
-				user: user,
-			}
-		},
-		async Register(_, args) {
-			// const isEmailValid = await emailChecker(args.input.email)
-			console.log(args.input.email)
-			// if (!isEmailValid) {
-			// throw new GQLError({ type: 'email invalid' })
-			// }
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-
-			const user =
-                (await users.findOne({
-                    email: args.input.email,
-                })) ||
-                (await users.findOne({
-                    username: args.input.username,
-                }))
-			
+export const resolvers: Resolvers = {
+    Query: {
+        Me: async (_r, _a, context) => {
+            const userToken = context.request.headers.get('authorization')
+            if (!userToken) {
+                throw new UnauthorizedError()
+            }
+            if (typeof userToken != "string") throw new UnauthorizedError()
+            const UserSession = await DecodeToken(
+                userToken.replace('Bearer ', '')
+            )
+            if (!UserSession) {
+                throw new UnauthorizedError()
+            }
+            const user = await UserModel.findById(UserSession.userID)
+            if (!user) {
+                throw new UnauthorizedError()
+            }
             if (user) {
-                throw new GQLError({
-                    type: 'username is already taken',
-                })
+                user.password = ''
             }
 
-			const insertId = await users.insertOne({
-				...args.input,
-				password: await bcrypt.hash(args.input.password),
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				comicIDs: [],
-			})
-			const returnValue = await users.findOne({
-				_id: insertId,
-			})
-			if (!returnValue) {
-				throw new GQLError({ type: 'Server Error' })
-			}
-			returnValue.password = ''
-			return {
-				accessToken: await GenToken(client, returnValue._id, DB_NAME),
-				user: returnValue,
-			}
-		},
-	},
-	User: {
-		__resolveReference: async (reference) => {
-			const db = client.database(DB_NAME)
-			const users = db.collection<User>('users')
-			const user = await users.findOne({
-				_id: new ObjectId(reference._id),
-			})
-			return user
-		},
-	},
+            console.log(user.toJSON())
+            return {
+                ...user.toObject(),
+                profile: null
+            }
+        },
+        PageFromId: async (_root, arg, _ctx) => {
+            const user =
+                (await UserModel.findById(arg.id))?.toObject<User>() ||
+                (await TeamModel.findById(arg.id))?.toObject<Team>()
+            if (!user) throw new NotFound()
+            return {
+                ...user.toObject(),
+                profile: null
+            }
+        },
+        FindProfileById: async (_root, arg, _ctx) => {
+            const profile = await ProfileModel.findOne({
+                CreateID: arg.UserOrTeamId
+            })
+            if (!profile) throw new NotFound()
+            return profile.toObject()
+        }
+    },
+    Mutation: {
+        async Login(_, args) {
+            const user =
+                (await UserModel.findOne({
+                    email: args.input.UsernameOrEmail,
+                })) ||
+                (await UserModel.findOne({
+                    name: args.input.UsernameOrEmail,
+                }))
+            if (!user) {
+                throw new BadRequest(
+                    'email or password or user name is incorrect',
+                )
+            }
+            const IsValidPassword = await bcrypt.compare(
+                args.input.password,
+                user.password
+            )
+            if (!IsValidPassword) {
+                throw new BadRequest(
+                    'email or password or user name is incorrect',
+                )
+            }
+            user.password = ''
+            return {
+                accessToken: await GenToken(user._id),
+                user: {
+                    ...user.toObject(),
+                    profile: null
+                },
+            }
+        },
+        async Register(_, args) {
+            // const isEmailValid = await emailChecker(args.input.email)
+            // console.log(args.input.email);
+            // if (!isEmailValid) {
+            // throw new GQLError({ type: 'email invalid' })
+            // }
+            const user =
+                (await UserModel.findOne({
+                    email: args.input.email,
+                })) ||
+                (await UserModel.findOne({
+                    name: args.input.name,
+                }))
+
+            if (user) {
+                throw new BadRequest(
+                    'username is already taken',
+                )
+            }
+
+            const User = new UserModel({
+                ...args.input,
+                ...{ password: await bcrypt.hash(args.input.password, saltRound) },
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                comicIDs: [],
+            })
+            const returnValue = await User.save()
+            if (!returnValue) {
+                throw new ServerError()
+            }
+            returnValue.password = ''
+            const profile = await (new ProfileModel({
+                CreateID: returnValue._id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).save())
+            return {
+                accessToken: await GenToken(returnValue._id),
+                user: {
+                    ...returnValue.toObject(),
+                    profile: profile.toObject()
+                },
+            }
+        },
+        async CreateTeam(_, args, context) {
+            const userToken = context.request.headers.get('authorization')
+            if (!userToken) {
+                throw new UnauthorizedError()
+            }
+            if (typeof userToken != "string") throw new UnauthorizedError()
+            const UserSession = await DecodeToken(
+                userToken.replace('Bearer ', '')
+            )
+            if (!UserSession) {
+                throw new UnauthorizedError()
+            }
+            const user = await UserModel.findOne({
+                _id: UserSession.userID,
+            })
+            if (!user) {
+                throw new UnauthorizedError()
+            }
+            const Team = new TeamModel({
+                ...args.input,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                comicIDs: [],
+                member: [user?._id],
+                owner: user?._id,
+            })
+            const returnValue = await Team.save()
+            const profile = await (new ProfileModel({
+                CreateID: returnValue._id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).save())
+            if (!returnValue) {
+                throw new ServerError()
+            }
+            return {
+                ...returnValue.toObject(),
+                profile: profile.toObject()
+            }
+        },
+        AddUserToTeam: async (_, args, context) => {
+            const userToken = context.request.headers.get('authorization')
+            if (!userToken) {
+                throw new UnauthorizedError()
+            }
+            if (typeof userToken != "string") throw new UnauthorizedError()
+            const UserSession = await DecodeToken(
+                userToken.replace('Bearer ', '')
+            )
+            if (!UserSession) {
+                throw new UnauthorizedError()
+            }
+            const user = await UserModel.findOne({
+                _id: UserSession.userID,
+            })
+            if (!user) {
+                throw new UnauthorizedError()
+            }
+            const TeamData = await TeamModel.findOne({
+                _id: args.input.TeamID,
+                owner: user?._id,
+            })
+            if (!TeamData) {
+                throw new UnauthorizedError()
+            }
+
+            const returnValue = await TeamModel.findOneAndUpdate(
+                {
+                    _id: args.input.TeamID,
+                },
+                {
+                    $push: {
+                        member: { $each: [args.input.UserID] },
+                    },
+                }
+            )
+            if (!returnValue) {
+                throw new ServerError()
+            }
+
+            return {
+                ...returnValue.toObject()
+                , profile: null
+            }
+        },
+        RemoveUserInTeam: async (_, args, context) => {
+            const userToken = context.request.headers.get('authorization')
+            if (!userToken) {
+                throw new UnauthorizedError()
+            }
+            if (typeof userToken != "string") throw new UnauthorizedError()
+            const UserSession = await DecodeToken(
+                userToken.replace('Bearer ', '')
+            )
+            if (!UserSession) {
+                throw new UnauthorizedError()
+            }
+            const user = await UserModel.findOne({
+                _id: UserSession.userID,
+            })
+            if (!user) {
+                throw new UnauthorizedError()
+            }
+            const TeamData = await TeamModel.findOne({
+                _id: args.input.TeamID,
+                owner: user?._id,
+            })
+            if (!TeamData) {
+                throw new UnauthorizedError()
+            }
+
+            const returnValue = await TeamModel.findOneAndUpdate(
+                {
+                    _id: args.input.TeamID,
+                },
+                {
+                    $pull: {
+                        member: args.input.UserID,
+                    },
+                }
+            )
+            if (!returnValue) {
+                throw new ServerError()
+            }
+            return {
+                ...returnValue.toObject(),
+                profile: null
+            }
+        },
+    },
+    User: {
+        __resolveReference: async (reference) => {
+            const UserId = reference._id
+            const user = await UserModel.findById(UserId)
+            if (!user) throw new ServerError()
+            return {
+                ...user.toObject(),
+                profile: null
+            }
+        },
+        profile: async (input) => {
+            return await ProfileModel.findOne({
+                CreateID: input._id
+            })
+        }
+    }, Profile: {
+        __resolveReference: async (reference) => {
+            const CreateID = reference.CreateID
+            const profile = await ProfileModel.findOne({
+                CreateID: CreateID
+            })
+            if (!profile) throw new ServerError()
+            return profile.toObject()
+        }
+    }
 }

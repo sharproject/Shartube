@@ -1,5 +1,3 @@
-node_modules/
+/target
+
 .env
-.env.local
-yarn.look
-package-look.json

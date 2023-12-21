@@ -1,0 +1,24 @@
+[package]
+name = "like-service"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-cors = "0.6.4"
+actix-web = "4.3.0"
+env_logger = "0.10.0"
+
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.93"
+url = "2.3.1"
+uuid = { version = "1.3.0", features = ["v4", "v8"] }
+tokio = { version = "1.25.0", features = ["full"] }
+juniper = "0.15.11"
+juniper_actix = "0.4.0"
+mongodb = { version = "2.6.0", features = ["tokio-runtime", "tokio-sync"] }
+redis = { version = "0.24.0", features = ["tokio", "tokio-comp", "json"] }
+reqwest = { version = "0.11.22", features = ["json"] }
+
+

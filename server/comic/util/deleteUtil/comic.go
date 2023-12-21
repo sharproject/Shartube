@@ -33,7 +33,7 @@ func DeleteComic(id string, client *mongo.Client) (bool, error) {
 				return false, err
 			}
 		}
-		DeleteSession(sessionID, client, false)
+		DeleteComicSession(sessionID, client, false)
 	}
 	_, err = ComicModel.FindOneAndDeleteById(id)
 	if err != nil {

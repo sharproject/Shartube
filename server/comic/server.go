@@ -11,10 +11,12 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/resolver"
 	GraphqlLog "github.com/Folody-Team/Shartube/middleware/log"
 	"github.com/Folody-Team/Shartube/middleware/passRequest"
+	"github.com/Folody-Team/Shartube/service_event"
 	"github.com/Folody-Team/Shartube/util/getClient"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
 )
 
@@ -26,10 +28,23 @@ func main() {
 	 */
 	// create a new router with mux
 	router := mux.NewRouter()
-	client, err := getClient.GetClient()
+	MongoDbClient, err := getClient.GetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("MongoDbClient connected")
+
+	redisOpts := redis.Options{
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"), // no password set
+		DB:       0,                           // use default DB
+
+	}
+
+	log.Println("RedisClient connected at ", redisOpts.Addr)
+
+	RedisClient := redis.NewClient(&redisOpts)
 	// middleware
 	router.Use(passRequest.PassMiddleware)
 	port := os.Getenv("PORT")
@@ -43,11 +58,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
+
+	go func() {
+		service_event.HandleServiceEvent(RedisClient, MongoDbClient)
+
+	}()
 	c := generated.Config{Resolvers: &resolver.Resolver{
-		Client: client,
+		Client: MongoDbClient, Redis: RedisClient,
 	}}
-	c.Directives.Auth = directives.Auth
-	c.Directives.EmailInput = directives.EmailInput
+	c.Directives.Auth = directives.AuthDirective
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(c))
 

@@ -1,0 +1,117 @@
+# version: "3.6"
+
+services:
+  shartube-graphql-gateway:
+    container_name: shartube-graphql-gateway
+    image: tritranduc11/shartube-graphql-gateway
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-comic-server
+      - shartube-user-server
+    env_file:
+      - ./.base.env
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: shartube-redis
+    restart: always
+    networks:
+      - shartube-net
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis:/data
+    expose:
+      - 6379
+
+
+  shartube-comic-server:
+    container_name: shartube-comic-server
+    image: tritranduc11/shartube-comic-server
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-user-server
+      - redis
+    environment:
+      - UserHost=shartube-user-server
+      - UploadServer=http://shartube-upload-server:3000/save
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+
+  shartube-user-server:
+    container_name: shartube-user-server
+    image: tritranduc11/shartube-user-server
+    networks:
+      - shartube-net
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    volumes:
+      - ./user/src/secret:/app/dist/secret
+
+  shartube-upload-server:
+    container_name: shartube-upload-server
+    image: tritranduc11/shartube-upload-server
+    networks:
+      - shartube-net
+    env_file:
+      - ./.cdn-service.env
+      - ./.base.env
+    restart: always
+    expose:
+      - 3000
+
+  shartube-api-gateway:
+    container_name: shartube-api-gateway
+    image: tritranduc11/shartube-api-gateway
+    networks:
+      - shartube-net
+    depends_on:
+      - shartube-graphql-gateway
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+    # ports:
+    #   - "8080:8080"
+
+  shartube-meme-server:
+    container_name: shartube-meme-server
+    image: tritranduc11/shartube-meme-server
+    networks:
+      - shartube-net
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+  shartube-like-server:
+    container_name: shartube-like-server
+    image: tritranduc11/shartube-like-server
+    networks:
+      - shartube-net
+    env_file:
+      - ./.base.env
+    restart: always
+    expose:
+      - 8080
+    environment:
+      - PORT=8080
+
+networks:
+  shartube-net:
+  redis:
+volumes:
+  redis:
