@@ -13,13 +13,11 @@ server {
 
     location /api/user {
         # USER_SERVER is http://shartube-user-server:8080/public
-        add_header Access-Control-Allow-Origin *;
         proxy_pass          http://shartube-user-server:8080/public;
     }
 
     location /api/meme/ {
         # MEME_SERVER is http://shartube-meme-server:8080 
-        add_header Access-Control-Allow-Origin *;
         proxy_pass http://shartube-meme-server:8080/;
     }
 
@@ -28,7 +26,6 @@ server {
         proxy_pass http://shartube-upload-server:3000/save;
     }
     location /cdn/image/ {
-        add_header Access-Control-Allow-Origin *;
         proxy_pass http://shartube-upload-server:3000/get_image/;
     }
 }
