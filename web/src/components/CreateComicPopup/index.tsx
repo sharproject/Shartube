@@ -18,6 +18,7 @@ import {
 	meQueryDocument,
 } from '../../util/rawSchemaDocument'
 import { MeQuery } from '../../generated/graphql/graphql'
+import { UploadUrl } from '../../constant'
 interface CreateComicPopupProps {
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
@@ -112,29 +113,29 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									? thumbnail.current?.files?.length > 0
 									: false,
 							},
-					},
-					update(cache, { data }) {
-						const comic = data?.createShortComic.ShortComic
-						if (!comic) return
-						const AuthData = cache.readQuery<MeQuery>({
-							query: meQueryDocument,
-						})
-						if (!AuthData) return
-						if (!AuthData?.Me.profile) return
-						// add comic to profile.comics
-						cache.writeQuery<MeQuery>({
-							query: meQueryDocument,
-							data: {
-								Me: {
-									...AuthData.Me,
-									profile: {
-										...AuthData.Me.profile,
-										ShortComics: [...AuthData.Me.profile.ShortComics, comic],
+						},
+						update(cache, { data }) {
+							const comic = data?.createShortComic.ShortComic
+							if (!comic) return
+							const AuthData = cache.readQuery<MeQuery>({
+								query: meQueryDocument,
+							})
+							if (!AuthData) return
+							if (!AuthData?.Me.profile) return
+							// add comic to profile.comics
+							cache.writeQuery<MeQuery>({
+								query: meQueryDocument,
+								data: {
+									Me: {
+										...AuthData.Me,
+										profile: {
+											...AuthData.Me.profile,
+											ShortComics: [...AuthData.Me.profile.ShortComics, comic],
+										},
 									},
 								},
-							},
-						})
-					}
+							})
+						},
 				  })
 
 		if (response.errors) {
@@ -142,23 +143,40 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 		}
 		if (response.data) {
 			const UploadToken = {
-				thumbnail: '',
-				background: '',
+				thumbnail: {
+					token: '',
+					element: thumbnail.current?.files && thumbnail.current?.files[0],
+				},
+				background: {
+					token: '',
+					element: background.current?.files && background.current?.files[0],
+				},
 			}
 			if ('createComic' in response.data) {
 				const UploadTokens = response.data.createComic.UploadToken
 				if (UploadTokens) {
-					UploadToken.thumbnail = UploadTokens[1] || ''
-					UploadToken.background = UploadTokens[3] || ''
+					UploadToken.thumbnail.token = UploadTokens[1] || ''
+					UploadToken.background.token = UploadTokens[3] || ''
 				}
 			} else {
 				const UploadTokens = response.data.createShortComic.UploadToken
 				if (UploadTokens) {
-					UploadToken.thumbnail = UploadTokens[1] || ''
-					UploadToken.background = UploadTokens[3] || ''
+					UploadToken.thumbnail.token = UploadTokens[1] || ''
+					UploadToken.background.token = UploadTokens[3] || ''
 				}
 			}
-			console.log(UploadToken)
+			for (const [key, value] of Object.entries(UploadToken)) {
+				if (value.element) {
+					const requestHeaders = new Headers()
+					requestHeaders.append('Authorization', value.token)
+					const result = await fetch(UploadUrl, {
+						body: value.element,
+						headers: requestHeaders,
+						method: 'POST',
+					})
+					console.log(result)
+				}
+			}
 			closeModal()
 		}
 	}

@@ -92,8 +92,6 @@ services:
     restart: always
     expose:
       - 3000
-    environment:
-      - CHANNEL_ID=1043368131390885968
   
   shartube-api-gateway:
     container_name: shartube-api-gateway

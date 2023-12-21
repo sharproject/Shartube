@@ -33,7 +33,6 @@ export default function MainDashboard() {
 			? [...AuthData?.Me.profile.comics, ...AuthData?.Me.profile.ShortComics]
 			: []
 	).sort((a, b) => a?.createdAt - b?.createdAt)
-	console.log(comicData)
 	return (
 		<div>
 			{AuthLoading ? (
