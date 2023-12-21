@@ -3,12 +3,14 @@ use crate::upload_images;
 use crate::util::{broadcast_get_image, gen_token, get_redis_key, send_uploaded_message};
 use hyper::StatusCode;
 use redis::JsonAsyncCommands;
+use salvo::cors::Cors;
 use salvo::logging::Logger;
 use salvo::writing::Json;
 use salvo::{handler, Depot, Request, Response, Router};
 use serde_json::json;
 pub fn route(redis: RedisClient) -> salvo::Router {
-    let mut router = salvo::Router::new().hoop(Logger::new());
+    let cors_handler = Cors::new().into_handler();
+    let mut router = salvo::Router::new().hoop(Logger::new()).hoop(cors_handler);
 
     router = router.get(hello_world);
     router = router.push(Router::with_path("/save").post(UploadFile {
