@@ -25,7 +25,6 @@ server {
 
     location /save {
         # CDN_SERVER ( save path ) is http://shartube-upload-server:3000/save 
-        add_header Access-Control-Allow-Origin *;
         proxy_pass http://shartube-upload-server:3000/save;
     }
     location /cdn/image/ {
