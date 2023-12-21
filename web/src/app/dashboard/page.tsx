@@ -49,7 +49,7 @@ export default function MainDashboard() {
 						handleCreateComicButton={() => setPopupOpen(true)}
 					/>
 					<div
-						className={`w-full h-[calc(100vh - ${height}px) max-h-${heightContain}px overflow-y-auto p-20`}
+						className={`w-full h-[calc(100vh - ${height}px) max-h-${heightContain}px overflow-y-auto p-5`}
 					>
 						<ListComicDashboard
 							data={comicData}

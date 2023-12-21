@@ -19,6 +19,7 @@ import {
 } from '../../util/rawSchemaDocument'
 import { MeQuery } from '../../generated/graphql/graphql'
 import { UploadUrl } from '../../constant'
+import { useRouter } from 'next/navigation'
 interface CreateComicPopupProps {
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
@@ -47,6 +48,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 	const background = useRef<HTMLInputElement>(null)
 	const comicName = useRef<HTMLInputElement>(null)
 	const comicDescription = useRef<HTMLInputElement>(null)
+	const router = useRouter()
 	const [errors, setErrors] = useState<
 		{
 			name: string
@@ -100,6 +102,12 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 								},
 							})
 						},
+						onError(error, clientOptions) {
+							if (error.message.includes('Access Denied')) {
+								console.log(clientOptions)
+								router.push('/login')
+							}
+						},
 				  })
 				: await createShortComic({
 						variables: {
@@ -136,11 +144,13 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 								},
 							})
 						},
+						onError(error, clientOptions) {
+							if (error.message.includes('Access Denied')) {
+								router.push('/login')
+							}
+						},
 				  })
 
-		if (response.errors) {
-			console.log(response.errors)
-		}
 		if (response.data) {
 			const UploadToken = {
 				thumbnail: {
