@@ -1,0 +1,9 @@
+fragment UserProfile on Profile {
+	_id
+	comics {
+		...ComicInfo
+	}
+	ShortComics {
+		...ShortComicInfo
+	}
+}

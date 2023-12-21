@@ -7,6 +7,7 @@ import styles from './page.module.css'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
 import { CreateComicPopup } from '../../components/CreateComicPopup'
 import { ComicCardDataInput } from '../../types'
+import MainWrapper from '../../components/Wrapper'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
@@ -32,6 +33,7 @@ export default function MainDashboard() {
 			? [...AuthData?.Me.profile.comics, ...AuthData?.Me.profile.ShortComics]
 			: []
 	).sort((a, b) => a?.createdAt - b?.createdAt)
+	console.log(comicData)
 	return (
 		<div>
 			{AuthLoading ? (
@@ -39,7 +41,7 @@ export default function MainDashboard() {
 					<LogoLoading />
 				</div>
 			) : (
-				<main className={styles.main}>
+				<MainWrapper>
 					<Navbar
 						height={height}
 						key='shar-secure'
@@ -59,7 +61,7 @@ export default function MainDashboard() {
 							setIsOpen={setPopupOpen}
 						></CreateComicPopup>
 					</div>
-				</main>
+				</MainWrapper>
 			)}
 		</div>
 	)

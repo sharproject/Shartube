@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { Dialog, RadioGroup, Transition } from '@headlessui/react'
 import {
 	Dispatch,
@@ -14,6 +14,7 @@ import { MdOutlineClear } from 'react-icons/md'
 import {
 	CreateComicMutationDocument,
 	CreateShortComicMutationDocument,
+	UserProfileDocument,
 	meQueryDocument,
 } from '../../util/rawSchemaDocument'
 import { MeQuery } from '../../generated/graphql/graphql'
@@ -76,17 +77,25 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									: false,
 							},
 						},
-						update(cache, result, option) {
-							if (!result.data?.createComic.comic) return
-							const meData = cache.readQuery({
+						update(cache, { data }) {
+							const comic = data?.createComic.comic
+							if (!comic) return
+							const AuthData = cache.readQuery<MeQuery>({
 								query: meQueryDocument,
 							})
-							if (!meData) return
-							meData.Me.profile?.comics.push(result.data?.createComic.comic)
-							cache.writeQuery({
+							if (!AuthData) return
+							if (!AuthData?.Me.profile) return
+							// add comic to profile.comics
+							cache.writeQuery<MeQuery>({
 								query: meQueryDocument,
 								data: {
-									Me: meData.Me,
+									Me: {
+										...AuthData.Me,
+										profile: {
+											...AuthData.Me.profile,
+											comics: [...AuthData.Me.profile.comics, comic],
+										},
+									},
 								},
 							})
 						},
@@ -103,24 +112,31 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 									? thumbnail.current?.files?.length > 0
 									: false,
 							},
-						},
-						update(cache, result, option) {
-							if (!result.data?.createShortComic.ShortComic) return
-							const meData = cache.readQuery({
-								query: meQueryDocument,
-							})
-							if (!meData) return
-							meData.Me.profile?.ShortComics.push(
-								result.data.createShortComic.ShortComic
-							)
-							cache.writeQuery({
-								query: meQueryDocument,
-								data: {
-									Me: meData.Me,
+					},
+					update(cache, { data }) {
+						const comic = data?.createShortComic.ShortComic
+						if (!comic) return
+						const AuthData = cache.readQuery<MeQuery>({
+							query: meQueryDocument,
+						})
+						if (!AuthData) return
+						if (!AuthData?.Me.profile) return
+						// add comic to profile.comics
+						cache.writeQuery<MeQuery>({
+							query: meQueryDocument,
+							data: {
+								Me: {
+									...AuthData.Me,
+									profile: {
+										...AuthData.Me.profile,
+										ShortComics: [...AuthData.Me.profile.ShortComics, comic],
+									},
 								},
-							})
-						},
+							},
+						})
+					}
 				  })
+
 		if (response.errors) {
 			console.log(response.errors)
 		}

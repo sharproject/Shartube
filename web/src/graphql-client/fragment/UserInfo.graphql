@@ -6,12 +6,6 @@ fragment UserInfo on User {
 	createdAt
 	password
 	profile {
-		_id
-		comics {
-			...ComicInfo
-		}
-		ShortComics {
-			...ShortComicInfo
-		}
+		...UserProfile
 	}
 }
