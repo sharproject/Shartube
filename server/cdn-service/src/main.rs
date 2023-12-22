@@ -28,6 +28,7 @@ async fn main() {
         .allow_headers(salvo::cors::AllowHeaders::any())
         // .allow_credentials(true)
         .allow_methods(salvo::cors::AllowMethods::any())
+        .expose_headers(salvo::cors::ExposeHeaders::any())
         .into_handler();
     let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
     let service = salvo::Service::new(route::route(redis_client.clone()))

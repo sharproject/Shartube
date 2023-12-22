@@ -118,7 +118,7 @@ impl salvo::Handler for GetImageData {
         let image_id = req.param::<String>("id").unwrap();
 
         // Second mutable borrow
-        let auth_header = match req.headers_mut().get("Authorization") {
+        let auth_header = match req.headers_mut().get("authorization") {
             Some(v) => v.to_str().unwrap_or("").to_string(),
             None => "".to_string(),
         };
