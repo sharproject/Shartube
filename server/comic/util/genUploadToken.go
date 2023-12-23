@@ -17,31 +17,15 @@ type GenSingleUploadTokenPayload[T any] struct {
 	EventName string `json:"event_name"`
 }
 
-
 func GenSingleUploadToken[T any](payload GenSingleUploadTokenPayload[T]) (*string, error) {
-	jsonBody, err := json.Marshal(payload)
+	tokens, err := GenMultiUploadToken[T]([]GenSingleUploadTokenPayload[T]{payload})
 	if err != nil {
 		return nil, err
 	}
-	bodyReader := bytes.NewReader(jsonBody)
-	req, err := http.NewRequest(http.MethodPost, genTokenUrl, bodyReader)
-	if err != nil {
+	if tokens == nil || len(*tokens) == 0 {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != 200 {
-		return nil, err
-	}
-	var data LocalTypes.GetUploadTokenReturn
-	err = json.NewDecoder(res.Body).Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-	return &data.Token, nil
+	return &(*tokens)[0], nil
 }
 
 func GenMultiUploadToken[T any](payload []GenSingleUploadTokenPayload[T]) (*([]string), error) {

@@ -6,7 +6,7 @@ use actix_multipart::form::MultipartForm;
 use actix_web::{get, post, web, HttpRequest, HttpResponse};
 use redis::JsonAsyncCommands;
 
-use serde_json::{json, Value};
+use serde_json::json;
 pub fn route(redis: RedisClient) -> actix_web::Scope {
     let router = actix_web::Scope::new("/")
         .app_data(web::Data::new(redis.clone()))
@@ -34,48 +34,14 @@ async fn hello_world() -> &'static str {
 async fn gen_token_handler(
     _req: HttpRequest,
     redis: web::Data<RedisClient>,
-    body: web::Json<Value>,
+    body: web::Json<Vec<crate::types::GenTokenNode>>,
 ) -> std::io::Result<HttpResponse> {
     // let body: serde_json::Value = req.parse_body::<serde_json::Value>().await.unwrap();
-    let mut sender_data = None;
-    if let actix_web::web::Json(serde_json::Value::Array(a)) = body {
-        let mut tokens = vec![];
-        for v in a {
-            let (id, data, emit_to, event_name) = (
-                v.get("id").unwrap().as_str().unwrap(),
-                v.get("data").unwrap(),
-                v.get("emit_to").unwrap().as_str().unwrap(),
-                v.get("event_name").unwrap().as_str().unwrap(),
-            );
-            let token = gen_token(id.to_string());
-
-            redis
-                .get_tokio_connection()
-                .await
-                .unwrap()
-                .json_set::<String, String, TokenStorageTableNode, bool>(
-                    get_redis_key(token.to_string()),
-                    "$".to_string(),
-                    &TokenStorageTableNode {
-                        data: data.clone(),
-                        emit_to: emit_to.to_string(),
-                        event_name: event_name.to_string(),
-                    },
-                );
-            tokens.push(event_name.to_string());
-            tokens.push(token.clone());
-        }
-        sender_data = Some(serde_json::json! {{
-            "token":tokens
-        }});
-    } else if let actix_web::web::Json(serde_json::Value::Object(o)) = body {
-        let (id, data, emit_to, event_name) = (
-            o.get("id").unwrap().as_str().unwrap(),
-            o.get("data").unwrap(),
-            o.get("emit_to").unwrap().as_str().unwrap(),
-            o.get("event_name").unwrap().as_str().unwrap(),
-        );
+    let mut tokens = vec![];
+    for v in body.0 {
+        let (id, data, emit_to, event_name) = (v.id, v.data, v.emit_to, v.event_name);
         let token = gen_token(id.to_string());
+
         redis
             .get_tokio_connection()
             .await
@@ -89,8 +55,13 @@ async fn gen_token_handler(
                     event_name: event_name.to_string(),
                 },
             );
-        sender_data = Some(serde_json::json! {{"token":token.clone()}});
+        tokens.push(event_name.to_string());
+        tokens.push(token.clone());
     }
+    let sender_data = serde_json::json! {{
+        "token":tokens
+    }};
+
     return Ok(HttpResponse::Ok().json(sender_data));
 }
 

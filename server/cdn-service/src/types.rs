@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use redis::{from_redis_value, ErrorKind, FromRedisValue, RedisResult, Value};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default, Clone)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone)]
 pub struct SenderData {
     pub url: String,
     pub header: serde_json::Value,
@@ -17,7 +17,7 @@ pub struct SenderData {
 }
 
 // TODO: impl this by type in api-gateway
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct WsRequestMessage {
     pub headers: HashMap<String, String>,
     #[serde(rename = "requestID")]
@@ -25,7 +25,7 @@ pub struct WsRequestMessage {
     pub message: Vec<u8>,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Default)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 pub struct GetImageMessageType {
     pub id: String,
 }
@@ -36,6 +36,7 @@ pub struct TokenStorageTableNode {
     pub emit_to: String,
     pub event_name: String,
 }
+
 impl FromRedisValue for TokenStorageTableNode {
     fn from_redis_value(v: &Value) -> RedisResult<Self> {
         // Try to convert the value into a map of strings
@@ -68,6 +69,15 @@ impl FromRedisValue for TokenStorageTableNode {
             event_name,
         })
     }
+}
+
+
+#[derive(Deserialize, Serialize)]
+pub struct GenTokenNode {
+    pub id: String,
+    pub data: serde_json::Value,
+    pub emit_to: String,
+    pub event_name: String,
 }
 
 pub type RedisClient = redis::Client;
