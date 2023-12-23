@@ -95,7 +95,7 @@ pub async fn upload_images(
     let response = match client
         .request(req)
         .await
-        .map_err(|e| println!("request error: {}", e))
+        .map_err(|e| log::error!("request error: {}", e))
     {
         Ok(r) => r,
         Err(_) => return Err(UploadImageError::ReadResponseError),

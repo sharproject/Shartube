@@ -7,6 +7,7 @@ mod util;
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use dotenv::dotenv;
+use log::info;
 
 mod route;
 
@@ -22,7 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     dbg!(&redis_client.get_connection_info().addr.to_string());
 
-    println!("Server started on port 3000 🚀");
+    info!("Server started on port 3000 🚀");
 
     // let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
     // let service = salvo::Service::new(route::route(redis_client.clone()));

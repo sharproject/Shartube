@@ -5,6 +5,7 @@ use actix_multipart::form::tempfile::TempFile;
 use actix_multipart::form::MultipartForm;
 use actix_web::{get, post, web, HttpRequest, HttpResponse};
 use redis::JsonAsyncCommands;
+use log::info;
 
 use serde_json::json;
 pub fn route(redis: RedisClient) -> actix_web::Scope {
@@ -42,6 +43,8 @@ async fn gen_token_handler(
         let (id, data, emit_to, event_name) = (v.id, v.data, v.emit_to, v.event_name);
         let token = gen_token(id.to_string());
 
+        info!("Generated token: {}", token); // Logging statement
+
         redis
             .get_tokio_connection()
             .await
@@ -62,6 +65,8 @@ async fn gen_token_handler(
         "token":tokens
     }};
 
+    info!("Sender data: {:?}", sender_data); // Logging statement
+
     return Ok(HttpResponse::Ok().json(sender_data));
 }
 
@@ -74,16 +79,25 @@ async fn get_image_data_handler(
     // First mutable borrow scoped
     let image_id = path.into_inner();
 
+    // Add logging statement
+    info!("Image ID: {}", image_id);
+
     // Second mutable borrow
     let auth_header = match req.headers().get("authorization") {
         Some(v) => v.to_str().unwrap_or("").to_string(),
         None => "".to_string(),
     };
 
+    // Add logging statement
+    info!("Authorization header: {}", auth_header);
+
     let image_url = broadcast_get_image(image_id.to_string(), auth_header, &redis).await;
 
+    // Add logging statement
+    info!("Image URL: {:?}", image_url);
+
     Ok(HttpResponse::Ok().json(json!({
-        "image_url":image_url.clone()
+        "image_url": image_url.clone()
     })))
 }
 
@@ -115,12 +129,7 @@ async fn upload_file_handler(
         {
             Ok(u) => u,
             Err(_) => {
-                // res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
-                // res.render(Json(serde_json::json! {{
-                //     "success":false,
-                //     "message":"server error",
-                //     "status":500
-                // }}));
+                log::error!("Error uploading image");
                 return Ok(
                     HttpResponse::InternalServerError().json(serde_json::json! {{
                         "success":false,
@@ -136,15 +145,12 @@ async fn upload_file_handler(
     match req.headers().get("upload_token") {
         Some(d) => {
             let upload_token = d.to_str().unwrap().to_string();
-            println!("have header upload token ");
+            log::info!("Have header upload token");
 
             send_uploaded_message(upload_token.clone(), msgs.clone(), &redis.clone()).await;
             if let Some(data) = req.headers().get("remove_token") {
                 if data == "true" {
-                    // self.token_storage
-                    //     .lock()
-                    //     .unwrap()
-                    //     .remove(upload_token.as_str());
+                    log::debug!("Removing token");
                     redis
                         .get_tokio_connection()
                         .await
@@ -157,6 +163,7 @@ async fn upload_file_handler(
             }
         }
         None => {
+            log::warn!("No upload token header found");
             dbg!(&req.headers());
         }
     }
