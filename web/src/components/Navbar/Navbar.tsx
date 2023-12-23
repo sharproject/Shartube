@@ -8,7 +8,6 @@ import styles from './page.module.css'
 import { usePathname } from 'next/navigation'
 
 type Props = {
-	height: string | number
 	userInfo: MeQuery | undefined
 	search?: boolean
 	handleCreateComicButton?: (
@@ -27,7 +26,6 @@ declare global {
 	}
 }
 export const Navbar = ({
-	height,
 	userInfo,
 	search = true,
 	handleCreateComicButton,
@@ -35,10 +33,8 @@ export const Navbar = ({
 	const pathname = usePathname()
 	return (
 		<div
-			className={`w-[100%] h-[${height}px] bg-[#18191D] flex`}
+			className={`bg-[#18191D] flex w-dvw h-16 items-center`}
 			style={{
-				width: '100%',
-				height: `${height}px`,
 				backgroundColor: '#18191D',
 				borderBottom: '1px solid #2E2E2E',
 				justifyContent: 'space-between',

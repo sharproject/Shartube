@@ -6,11 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+actix-cors = "0.6.5"
+actix-web = "4.4.0"
 dotenv = "0.15.0"
 hyper = { version = "0.14.27", features = ["full"] }
 hyper-tls = "0.5.0"
 redis = { version = "0.24.0", features = ["tokio", "tokio-comp", "json"] }
-salvo = { version = "0.59.0", features = ["logging", "cors"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 tokio = { version = "1.25.0", features = ["full"] }

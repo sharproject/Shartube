@@ -15,20 +15,8 @@ import MainWrapper from '../components/Wrapper'
 
 export default function Home() {
 	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
-	const [height, setHeight] = useState(0)
 	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
-
-	useEffect(() => {
-		if (window !== undefined) {
-			window.addEventListener('resize', () => {
-				setHeight((window.innerHeight * 1) / 11.5)
-				setHeightContain(window.innerHeight - height)
-			})
-			setHeight((window.innerHeight * 1) / 11.5)
-			setHeightContain(window.innerHeight - height)
-		}
-	}, [height])
 
 	const { data: comics, loading: comicsLoading } = useQuery(
 		TopViewComicsQueryDocument
@@ -45,20 +33,12 @@ export default function Home() {
 				</div>
 			) : (
 				<MainWrapper>
-					<Navbar
-						height={height}
-						key='shar-secure'
-						userInfo={AuthData}
-						search={false}
-					/>
+					<Navbar key='shar-secure' userInfo={AuthData} search={false} />
 					<div
-						style={{
-							width: '100%',
-							height: `calc(100vh - ${height}px)`,
-							maxHeight: `${heightContain}px`,
-							overflowY: 'auto',
-							padding: '20px',
-						}}
+					// style={{
+					// 	overflowY: 'auto',
+					// 	padding: '20px',
+					// }}
 					>
 						{/* <div className='flex content-center justify-center'>
 							<DefaultComicCard></DefaultComicCard>
@@ -100,7 +80,7 @@ function ListComic(props: {
 		<>
 			{result.map((value, key) => {
 				return (
-					<div className='flex content-center justify-center' key={key}>
+					<div className='flex content-center' key={key}>
 						{value}
 					</div>
 				)
