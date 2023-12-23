@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 actix-cors = "0.6.5"
+actix-multipart = "0.6.1"
 actix-web = "4.4.0"
 dotenv = "0.15.0"
 hyper = { version = "0.14.27", features = ["full"] }

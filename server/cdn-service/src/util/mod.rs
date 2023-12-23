@@ -1,4 +1,5 @@
 use crate::types::{RedisClient, SenderData, TokenStorageTableNode};
+use actix_web::web;
 use redis::{AsyncCommands, JsonAsyncCommands};
 use serde_json::json;
 use tokio_stream::StreamExt;
@@ -72,7 +73,7 @@ pub fn get_image_url(id: String) -> Option<String> {
 pub async fn broadcast_get_image(
     image_id: String,
     authorization_header: String,
-    redis: &RedisClient,
+    redis: &web::Data<RedisClient>,
 ) -> Option<String> {
     let image_url = get_image_url(image_id.clone());
     if image_url.is_none() {

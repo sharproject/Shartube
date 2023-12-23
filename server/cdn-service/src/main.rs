@@ -4,14 +4,14 @@ mod upload_images;
 
 mod util;
 
+use actix_cors::Cors;
+use actix_web::{App, HttpServer};
 use dotenv::dotenv;
-use salvo::prelude::TcpListener;
-use salvo::{Listener, Server};
 
 mod route;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> std::io::Result<()> {
     dotenv().ok();
     let redis_client = redis::Client::open(format!(
         "redis://{}:{}",
@@ -23,15 +23,23 @@ async fn main() {
     dbg!(&redis_client.get_connection_info().addr.to_string());
 
     println!("Server started on port 3000 🚀");
-    let cors = salvo::cors::Cors::new()
-        .allow_origin(salvo::cors::AllowOrigin::any())
-        .allow_headers(salvo::cors::AllowHeaders::any())
-        // .allow_credentials(true)
-        .allow_methods(salvo::cors::AllowMethods::any())
-        .expose_headers(salvo::cors::ExposeHeaders::any())
-        .into_handler();
-    let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
-    let service = salvo::Service::new(route::route(redis_client.clone()))
-        .catcher(salvo::catcher::Catcher::default().hoop(cors));
-    Server::new(acceptor).serve(service).await;
+
+    // let acceptor = TcpListener::new("0.0.0.0:3000").bind().await;
+    // let service = salvo::Service::new(route::route(redis_client.clone()));
+    // Server::new(acceptor).serve(service).await;
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+        App::new()
+            .wrap(cors)
+            .service(route::route(redis_client.clone()))
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await?;
+
+    Ok(())
 }
