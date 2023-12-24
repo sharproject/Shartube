@@ -9,7 +9,7 @@ use redis::JsonAsyncCommands;
 
 use serde_json::json;
 pub fn route(redis: RedisClient) -> actix_web::Scope {
-    let router = actix_web::Scope::new("/")
+    let router = actix_web::Scope::new("")
         .app_data(web::Data::new(redis.clone()))
         .service(hello_world)
         .service(gen_token_handler)
@@ -173,5 +173,13 @@ async fn upload_file_handler(
         "message":"success",
         "status":200,
         "urls":msgs
+    }}))
+}
+
+pub async fn not_found_handler() -> std::io::Result<HttpResponse> {
+    Ok(HttpResponse::NotFound().json(serde_json::json! {{
+        "success":false,
+        "message":"not found",
+        "status":404
     }}))
 }

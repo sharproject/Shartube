@@ -5,7 +5,7 @@ mod upload_images;
 mod util;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use log::info;
 
@@ -35,7 +35,9 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
         App::new()
             .wrap(cors)
+            .wrap(actix_web::middleware::Logger::default())
             .service(route::route(redis_client.clone()))
+            .default_service(web::route().to(route::not_found_handler))
     })
     .bind(("0.0.0.0", 3000))?
     .run()
