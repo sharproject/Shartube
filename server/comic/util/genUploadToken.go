@@ -17,6 +17,10 @@ type GenSingleUploadTokenPayload[T any] struct {
 	EventName string `json:"event_name"`
 }
 
+type GenUploadTokenHttpPayload[T any] struct {
+	Payload []GenSingleUploadTokenPayload[T] `json:"payload"`
+}
+
 func GenSingleUploadToken[T any](payload GenSingleUploadTokenPayload[T]) (*string, error) {
 	tokens, err := GenMultiUploadToken[T]([]GenSingleUploadTokenPayload[T]{payload})
 	if err != nil {
@@ -29,7 +33,11 @@ func GenSingleUploadToken[T any](payload GenSingleUploadTokenPayload[T]) (*strin
 }
 
 func GenMultiUploadToken[T any](payload []GenSingleUploadTokenPayload[T]) (*([]string), error) {
-	jsonBody, err := json.Marshal(payload)
+	jsonBody, err := json.Marshal(
+		GenUploadTokenHttpPayload[T]{
+			Payload: payload,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}

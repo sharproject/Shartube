@@ -4,8 +4,8 @@ use crate::util::{broadcast_get_image, gen_token, get_redis_key, send_uploaded_m
 use actix_multipart::form::tempfile::TempFile;
 use actix_multipart::form::MultipartForm;
 use actix_web::{get, post, web, HttpRequest, HttpResponse};
-use redis::JsonAsyncCommands;
 use log::info;
+use redis::JsonAsyncCommands;
 
 use serde_json::json;
 pub fn route(redis: RedisClient) -> actix_web::Scope {
@@ -35,11 +35,11 @@ async fn hello_world() -> &'static str {
 async fn gen_token_handler(
     _req: HttpRequest,
     redis: web::Data<RedisClient>,
-    body: web::Json<Vec<crate::types::GenTokenNode>>,
+    body: web::Json<crate::types::GenTokenPayload>,
 ) -> std::io::Result<HttpResponse> {
     // let body: serde_json::Value = req.parse_body::<serde_json::Value>().await.unwrap();
     let mut tokens = vec![];
-    for v in body.0 {
+    for v in body.payload.clone() {
         let (id, data, emit_to, event_name) = (v.id, v.data, v.emit_to, v.event_name);
         let token = gen_token(id.to_string());
 

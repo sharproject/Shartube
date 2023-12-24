@@ -71,8 +71,7 @@ impl FromRedisValue for TokenStorageTableNode {
     }
 }
 
-
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default, Clone)]
 pub struct GenTokenNode {
     pub id: String,
     pub data: serde_json::Value,
@@ -81,3 +80,8 @@ pub struct GenTokenNode {
 }
 
 pub type RedisClient = redis::Client;
+
+#[derive(Deserialize, Serialize)]
+pub struct GenTokenPayload {
+    pub payload: Vec<crate::types::GenTokenNode>,
+}
