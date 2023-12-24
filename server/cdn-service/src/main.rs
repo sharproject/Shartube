@@ -5,7 +5,7 @@ mod upload_images;
 mod util;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
+use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 use log::info;
 
@@ -32,7 +32,9 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allow_any_origin()
             .allow_any_method()
-            .allow_any_header();
+            .allow_any_header()
+            .supports_credentials()
+            .disable_preflight();
         App::new()
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())

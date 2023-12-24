@@ -104,7 +104,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 						},
 						onError(error, clientOptions) {
 							if (error.message.includes('Access Denied')) {
-								console.log(clientOptions)
+								console.log(clientOptions?.client)
 								router.push('/login')
 							}
 						},
@@ -178,9 +178,13 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 			for (const [key, value] of Object.entries(UploadToken)) {
 				if (value.element) {
 					const requestHeaders = new Headers()
-					requestHeaders.append('Authorization', value.token)
+					requestHeaders.append('upload_token', value.token)
+					requestHeaders.append('Content-Type', 'multipart/form-data')
+					requestHeaders.append('remove_token', 'true')
+					const body = new FormData()
+					body.append('file', value.element)
 					const result = await fetch(UploadUrl, {
-						body: value.element,
+						body,
 						headers: requestHeaders,
 						method: 'POST',
 					})
