@@ -33,7 +33,7 @@ export default function Home() {
 				</div>
 			) : (
 				<MainWrapper>
-					<Navbar key='shar-secure' userInfo={AuthData} search={false} />
+					<Navbar key='shar-secure' userInfo={AuthData} search={true} />
 					<div
 					// style={{
 					// 	overflowY: 'auto',
@@ -77,14 +77,14 @@ function ListComic(props: {
 		}
 	})
 	return (
-		<>
+		<div className='mt-4'>
 			{result.map((value, key) => {
 				return (
-					<div className='flex content-center' key={key}>
+					<div className='flex items-center justify-center' key={key}>
 						{value}
 					</div>
 				)
 			})}
-		</>
+		</div>
 	)
 }

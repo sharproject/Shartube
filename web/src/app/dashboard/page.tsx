@@ -13,7 +13,6 @@ export default function MainDashboard() {
 		unAuthRedirectTo: '/login',
 		authRedirectTo: '/dashboard',
 	})
-	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
 	const [isPopupOpen, setPopupOpen] = useState(false)
 
@@ -76,7 +75,7 @@ function ListComicDashboard(props: {
 		}
 	})
 	return (
-		<>
+		<div className='mt-4'>
 			{result.map((value, key) => {
 				return (
 					<div className='flex content-center justify-center' key={key}>
@@ -84,6 +83,6 @@ function ListComicDashboard(props: {
 					</div>
 				)
 			})}
-		</>
+		</div>
 	)
 }

@@ -38,7 +38,6 @@ export default function RootLayout({
 			) : (
 				<MainWrapper>
 					<Navbar
-						height={height}
 						key='shar-secure'
 						userInfo={AuthData}
 						search={false}

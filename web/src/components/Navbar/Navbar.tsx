@@ -44,7 +44,7 @@ export const Navbar = ({
 		>
 			<Link
 				href={'/'}
-				className='flex content-center justify-center h-full py-2 ml-2 '
+				className='flex content-center justify-center ml-4 h-4/5'
 			>
 				<Logo></Logo>
 			</Link>
@@ -52,6 +52,7 @@ export const Navbar = ({
 				style={{
 					padding: '8.5px 8px',
 				}}
+				className='h-full'
 			>
 				{search && (
 					<div
@@ -88,7 +89,7 @@ export const Navbar = ({
 				}}
 			>
 				{userInfo ? (
-					<div className='flex content-center justify-center h-full'>
+					<div className='flex items-center justify-center h-full'>
 						{pathname != '/dashboard' ? (
 							<div className='m-3'>
 								<Link href={'/dashboard'}>
@@ -117,7 +118,10 @@ export const Navbar = ({
 								borderRadius: '50%',
 								background: '#25272E',
 							}}
-						></div>
+							className='m-3'
+						>
+							abc
+						</div>
 					</div>
 				) : (
 					<p>
