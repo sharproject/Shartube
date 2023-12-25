@@ -3,3 +3,10 @@
 @tailwind utilities;
 @tailwind variants;
 /* @import url('https://cdn.jsdelivr.net/gh/Folody-Team/patery-scrollbar-css/dark.css'); */
+
+/* haha */
+@layer base {
+    body {
+        @apply bg-[#141518]
+    }
+}

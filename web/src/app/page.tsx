@@ -15,8 +15,26 @@ import MainWrapper from '../components/Wrapper'
 
 export default function Home() {
 	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
-	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
+	// calculate comic card per line by screen width
+	useEffect(() => {
+		// on change screen width
+		// set comic card per line
+		// 1, 2, 3, 4
+		// 768, 1024, 1280, 1536
+		window.addEventListener('resize', () => {
+			const screenWidth = window.innerWidth
+			if (screenWidth <= 768) {
+				setComicCardPerLine(1)
+			} else if (screenWidth <= 1024) {
+				setComicCardPerLine(2)
+			} else if (screenWidth <= 1280) {
+				setComicCardPerLine(3)
+			} else if (screenWidth <= 1536) {
+				setComicCardPerLine(4)
+			}
+		})
+	}, [])
 
 	const { data: comics, loading: comicsLoading } = useQuery(
 		TopViewComicsQueryDocument
@@ -26,7 +44,7 @@ export default function Home() {
 	).sort((a, b) => a?.createdAt - b?.createdAt)
 
 	return (
-		<div className={styles.container}>
+		<div>
 			{AuthLoading || comicsLoading ? (
 				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
 					<LogoLoading />

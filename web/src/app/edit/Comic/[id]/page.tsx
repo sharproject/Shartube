@@ -7,7 +7,7 @@ import { useCheckAuth } from '../../../../hooks/useCheckAuth'
 import { ComicCardDashboard } from '../../../../components/ComicCardDashboard'
 
 // list session vs chap
-export default function ShortComicEditPage({
+export default function ComicEditPage({
 	params,
 }: {
 	params: { id: string }
@@ -45,7 +45,7 @@ export default function ShortComicEditPage({
 				</div>
 			) : (
 				<div className='grid grid-cols-6 gap-1 pt-5'>
-					<div className='col-span-3 p-4 rounded-lg'>
+					<div className='col-span-4 p-4 rounded-lg'>
 						{/* <ShowPlaylistField playlist={playlist}></ShowPlaylistField> */}
 					</div>
 					<div className='flex items-center justify-center col-span-2 p-4 text-center rounded-lg'>
