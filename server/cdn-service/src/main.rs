@@ -29,12 +29,7 @@ async fn main() -> std::io::Result<()> {
     // let service = salvo::Service::new(route::route(redis_client.clone()));
     // Server::new(acceptor).serve(service).await;
     HttpServer::new(move || {
-        let cors = Cors::default()
-            .allow_any_origin()
-            .allow_any_method()
-            .allow_any_header()
-            .supports_credentials()
-            .disable_preflight();
+        let cors = Cors::permissive();
         App::new()
             .wrap(cors)
             .wrap(actix_web::middleware::Logger::default())
