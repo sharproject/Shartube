@@ -36,7 +36,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	ThumbnailUrl := ""
 	BackgroundUrl := ""
 
-	ShortcomicID, err := ShortComicModel.New(&model.CreateShortComicInputModel{
+	ShortComicID, err := ShortComicModel.New(&model.CreateShortComicInputModel{
 		CreatedByID: CreateID,
 		Name:        input.Name,
 		Description: input.Description,
@@ -52,7 +52,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 		Url:    "user/UpdateUserShortShortComic",
 		Header: nil,
 		Payload: bson.M{
-			"_id":    ShortcomicID.Hex(),
+			"_id":    ShortComicID.Hex(),
 			"UserID": CreateID,
 		},
 		From: "ShortShortComic/createShortComic",
@@ -68,7 +68,7 @@ func (r *mutationResolver) CreateShortComic(ctx context.Context, input model.Cre
 	// }
 	// r.Ws.WriteMessage(websocket.TextMessage, []byte(ShortComicObject))
 	// get data from Shortcomic model
-	ShortComicDoc, err := ShortComicModel.FindById(ShortcomicID.Hex())
+	ShortComicDoc, err := ShortComicModel.FindById(ShortComicID.Hex())
 	if err != nil {
 		return nil, err
 	}
