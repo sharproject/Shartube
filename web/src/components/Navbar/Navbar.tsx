@@ -1,3 +1,4 @@
+'use client'
 import { AiOutlineSearch, AiOutlineFileAdd } from 'react-icons/ai'
 import { SiReasonstudios } from 'react-icons/si'
 import * as React from 'react'
@@ -6,77 +7,72 @@ import { Logo } from '../logo'
 import Link from 'next/link'
 import styles from './page.module.css'
 import { usePathname } from 'next/navigation'
+import { AiOutlineMenu } from 'react-icons/ai'
+import { SidebarNavbarContext } from '../../context/SidebarNavbar'
 
-type Props = {
-	userInfo: MeQuery | undefined
-	search?: boolean
-	handleCreateComicButton?: (
-		e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-	) => any
-}
-
-declare global {
-	namespace JSX {
-		interface IntrinsicElements {
-			sharinput: React.DetailedHTMLProps<
-				React.HTMLAttributes<HTMLElement>,
-				HTMLElement
-			>
-		}
-	}
-}
-export const Navbar = ({
-	userInfo,
-	search = true,
-	handleCreateComicButton,
-}: Props) => {
+export const Navbar = () => {
 	const pathname = usePathname()
+	const { setCreateComicPopupOpen, setSidebarOpen, userInfo, searchInput } =
+		React.useContext(SidebarNavbarContext)
 	return (
 		<div
-			className={`bg-[#18191D] flex w-dvw h-16 items-center`}
+			className={`bg-[#18191D] flex w-dvw h-16 items-center text-white`}
 			style={{
-				backgroundColor: '#18191D',
+				// backgroundColor: '#18191D',
 				borderBottom: '1px solid #2E2E2E',
 				justifyContent: 'space-between',
 				// alignItems: 'center',
 				minHeight: '50px',
 			}}
 		>
-			<Link
-				href={'/'}
-				className='flex content-center justify-center ml-4 h-4/5'
-			>
-				<Logo></Logo>
-			</Link>
+			<div className='flex items-center content-center justify-center h-full ml-4 '>
+				{/* side bar toggle */}
+				<div className='mx-2 mr-4 text-2xl text-white cursor-pointer'>
+					<AiOutlineMenu
+						onClick={(e) => {
+							e.stopPropagation()
+							setSidebarOpen(true)
+						}}
+					/>
+				</div>
+				{/* logo */}
+				<Link
+					href={'/'}
+					className='flex items-center content-center justify-center h-4/5 min-w-16'
+				>
+					<Logo></Logo>
+				</Link>
+			</div>
+
 			<div
 				style={{
 					padding: '8.5px 8px',
 				}}
 				className='h-full'
 			>
-				{search && (
+				{searchInput && (
 					<div
-						style={{
-							display: 'flex',
-							height: '100%',
-							alignItems: 'center',
-						}}
-						className={styles.inputSearchContainer}
+						// style={{
+						// 	display: 'flex',
+						// 	height: '100%',
+						// 	alignItems: 'center',
+						// }}
+						className={`flex h-full items-center ${styles.inputSearchContainer}`}
 					>
 						<input placeholder='Search' className={styles.inputSearch} />
 						<span
 							style={{
-								height: '100%',
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'center',
+								// height: '100%',
+								// display: 'flex',
+								// alignItems: 'center',
+								// justifyContent: 'center',
 								padding: '0px 9px',
 								borderRadius: '0px 8px 8px 0px',
 								borderLeft: '1px solid #3D3D3D',
-								textAlign: 'center',
+								// textAlign: 'center',
 								width: '40vw',
 							}}
-							className={styles.inputSearchIconContainer}
+							className={`h-full flex justify-center items-center text-center max-w-2xl ${styles.inputSearchIconContainer}`}
 						>
 							<AiOutlineSearch className={styles.inputSearchIcon} />
 						</span>
@@ -84,9 +80,10 @@ export const Navbar = ({
 				)}
 			</div>
 			<div
-				style={{
-					padding: '8px',
-				}}
+				// style={{
+				// 	padding: '8px',
+				// }}
+				className='h-full p-2'
 			>
 				{userInfo ? (
 					<div className='flex items-center justify-center h-full'>
@@ -103,24 +100,27 @@ export const Navbar = ({
 								<button
 									className='text-white hover:bg-slate-500 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
 									type='button'
-									onClick={(e) =>
-										handleCreateComicButton && handleCreateComicButton(e)
-									}
+									onClick={(e) => {
+										e.stopPropagation()
+										setCreateComicPopupOpen(true)
+									}}
 								>
 									<AiOutlineFileAdd size={28}></AiOutlineFileAdd>
 								</button>
 							</>
 						)}
 						<div
-							style={{
-								height: '100%',
-								aspectRatio: '1',
-								borderRadius: '50%',
-								background: '#25272E',
-							}}
-							className='m-3'
+							style={
+								{
+									// height: '100%',
+									// aspectRatio: '1',
+									// borderRadius: '50%',
+									// background: '#25272E',
+								}
+							}
+							className='m-3 h-full bg-[#25272E] aspect-square rounded-full flex items-center justify-center min-w-10'
 						>
-							abc
+							{userInfo.Me.name && userInfo.Me.name.slice(0, 1).toUpperCase()}
 						</div>
 					</div>
 				) : (

@@ -14,7 +14,6 @@ import { ComicCardDataInput } from '../types'
 import MainWrapper from '../components/Wrapper'
 
 export default function Home() {
-	const { data: AuthData, loading: AuthLoading } = useQuery(meQueryDocument)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
 	// calculate comic card per line by screen width
 	useEffect(() => {
@@ -45,13 +44,12 @@ export default function Home() {
 
 	return (
 		<div>
-			{AuthLoading || comicsLoading ? (
-				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
+			{comicsLoading ? (
+				<div className='w-100 h-full flex justify-center items-center bg-[#141518]'>
 					<LogoLoading />
 				</div>
 			) : (
 				<MainWrapper>
-					<Navbar key='shar-secure' userInfo={AuthData} search={true} />
 					<div
 					// style={{
 					// 	overflowY: 'auto',

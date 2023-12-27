@@ -1,10 +1,10 @@
-'use client';
+'use client'
 import { useEffect, useState } from 'react'
 import { CreateComicPopup } from '../../components/CreateComicPopup'
 import { Navbar } from '../../components/Navbar/Navbar'
 import { LogoLoading } from '../../components/logo'
 import { useCheckAuth } from '../../hooks/useCheckAuth'
-import MainWrapper from '../../components/Wrapper';
+import MainWrapper from '../../components/Wrapper'
 
 export default function RootLayout({
 	children,
@@ -16,7 +16,6 @@ export default function RootLayout({
 	})
 	const [height, setHeight] = useState(0)
 	const [heightContain, setHeightContain] = useState(0)
-	const [isPopupOpen, setPopupOpen] = useState(false)
 
 	useEffect(() => {
 		if (window !== undefined) {
@@ -37,12 +36,6 @@ export default function RootLayout({
 				</div>
 			) : (
 				<MainWrapper>
-					<Navbar
-						key='shar-secure'
-						userInfo={AuthData}
-						search={false}
-						handleCreateComicButton={() => setPopupOpen(true)}
-					/>
 					<div
 						style={{
 							width: '100%',
@@ -53,10 +46,7 @@ export default function RootLayout({
 						}}
 					>
 						{children}
-						<CreateComicPopup
-							isOpen={isPopupOpen}
-							setIsOpen={setPopupOpen}
-						></CreateComicPopup>
+						<CreateComicPopup></CreateComicPopup>
 					</div>
 				</MainWrapper>
 			)}

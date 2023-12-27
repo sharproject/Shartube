@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from '@apollo/client'
+'use client'
+import { useMutation } from '@apollo/client'
 import { Dialog, RadioGroup, Transition } from '@headlessui/react'
-import {
+import React, {
 	Dispatch,
 	FormEvent,
 	Fragment,
@@ -14,17 +15,14 @@ import { MdOutlineClear } from 'react-icons/md'
 import {
 	CreateComicMutationDocument,
 	CreateShortComicMutationDocument,
-	UserProfileDocument,
 	meQueryDocument,
 } from '../../util/rawSchemaDocument'
 import { MeQuery } from '../../generated/graphql/graphql'
 import { UploadUrl } from '../../constant'
 import { useRouter } from 'next/navigation'
-interface CreateComicPopupProps {
-	isOpen: boolean
-	setIsOpen: Dispatch<SetStateAction<boolean>>
-}
-const plans = [
+import { SidebarNavbarContext } from '../../context/SidebarNavbar'
+
+const comicType = [
 	{
 		name: 'Comic',
 		description: 'the comic have lot of session',
@@ -41,9 +39,10 @@ const plans = [
 	id: 'Comic' | 'ShortComic'
 }[]
 
-export function CreateComicPopup(props: CreateComicPopupProps) {
-	const { isOpen, setIsOpen } = props
-	const [comicTypeSelect, setComicTypeSelect] = useState(plans[0])
+export function CreateComicPopup() {
+	const { createComicPopupOpen, setCreateComicPopupOpen } =
+		React.useContext(SidebarNavbarContext)
+	const [comicTypeSelect, setComicTypeSelect] = useState(comicType[0])
 	const thumbnail = useRef<HTMLInputElement>(null)
 	const background = useRef<HTMLInputElement>(null)
 	const comicName = useRef<HTMLInputElement>(null)
@@ -57,7 +56,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 	>([])
 
 	function closeModal() {
-		setIsOpen(false)
+		setCreateComicPopupOpen(false)
 	}
 
 	const [createComic] = useMutation(CreateComicMutationDocument)
@@ -197,7 +196,7 @@ export function CreateComicPopup(props: CreateComicPopupProps) {
 
 	return (
 		<>
-			<Transition appear show={isOpen} as={Fragment}>
+			<Transition appear show={createComicPopupOpen} as={Fragment}>
 				<Dialog as='div' className='relative z-10' onClose={closeModal}>
 					<Transition.Child
 						as={Fragment}
@@ -374,10 +373,10 @@ export function CreateComicPopupChooseComicType<T>(props: {
 				>
 					<RadioGroup.Label className='sr-only'>Type Of Comic</RadioGroup.Label>
 					<div className='space-y-2'>
-						{plans.map((plan) => (
+						{comicType.map((cType) => (
 							<RadioGroup.Option
-								key={plan.name}
-								value={plan}
+								key={cType.name}
+								value={cType}
 								className={({ active, checked }) =>
 									`${
 										active
@@ -401,7 +400,7 @@ export function CreateComicPopupChooseComicType<T>(props: {
 														as='p'
 														className={`font-medium text-white`}
 													>
-														{plan.name}
+														{cType.name}
 													</RadioGroup.Label>
 													<RadioGroup.Description
 														as='span'
@@ -409,7 +408,7 @@ export function CreateComicPopupChooseComicType<T>(props: {
 															checked ? 'text-sky-100' : 'text-gray-400'
 														}`}
 													>
-														<span>{plan.description}</span>{' '}
+														<span>{cType.description}</span>{' '}
 													</RadioGroup.Description>
 												</div>
 											</div>

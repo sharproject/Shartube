@@ -1,11 +1,8 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useCheckAuth } from '../../hooks/useCheckAuth'
-import { Navbar } from '../../components/Navbar/Navbar'
 import { LogoLoading } from '../../components/logo'
-import styles from './page.module.css'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
-import { CreateComicPopup } from '../../components/CreateComicPopup'
 import { ComicCardDataInput } from '../../types'
 import MainWrapper from '../../components/Wrapper'
 export default function MainDashboard() {
@@ -54,12 +51,6 @@ export default function MainDashboard() {
 				</div>
 			) : (
 				<MainWrapper>
-					<Navbar
-						key='shar-secure'
-						userInfo={AuthData}
-						search={false}
-						handleCreateComicButton={() => setPopupOpen(true)}
-					/>
 					<div
 					// className={`overflow-y-auto p-5`}
 					>
@@ -67,10 +58,7 @@ export default function MainDashboard() {
 							data={comicData}
 							comicCardPerLine={comicCardPerLine}
 						></ListComicDashboard>
-						<CreateComicPopup
-							isOpen={isPopupOpen}
-							setIsOpen={setPopupOpen}
-						></CreateComicPopup>
+						
 					</div>
 				</MainWrapper>
 			)}
