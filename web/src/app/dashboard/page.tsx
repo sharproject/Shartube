@@ -1,10 +1,10 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useCheckAuth } from '../../hooks/useCheckAuth'
-import { LogoLoading } from '../../components/logo'
 import { ComicCardDashboard } from '../../components/ComicCardDashboard'
 import { ComicCardDataInput } from '../../types'
 import MainWrapper from '../../components/Wrapper'
+import { LoadingScreen } from '../../components/LoadingScreen'
 export default function MainDashboard() {
 	const { data: AuthData, loading: AuthLoading } = useCheckAuth({
 		unAuthRedirectTo: '/login',
@@ -16,7 +16,6 @@ export default function MainDashboard() {
 	useEffect(() => {
 		// remove all event listener
 		window.removeEventListener
-		
 
 		// on change screen width
 		// set comic card per line
@@ -36,7 +35,6 @@ export default function MainDashboard() {
 		})
 	}, [])
 	console.log(comicCardPerLine)
-	const [isPopupOpen, setPopupOpen] = useState(false)
 
 	const comicData = (
 		AuthData?.Me.profile
@@ -46,9 +44,7 @@ export default function MainDashboard() {
 	return (
 		<div>
 			{AuthLoading ? (
-				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
-					<LogoLoading />
-				</div>
+				<LoadingScreen></LoadingScreen>
 			) : (
 				<MainWrapper>
 					<div
@@ -58,7 +54,6 @@ export default function MainDashboard() {
 							data={comicData}
 							comicCardPerLine={comicCardPerLine}
 						></ListComicDashboard>
-						
 					</div>
 				</MainWrapper>
 			)}

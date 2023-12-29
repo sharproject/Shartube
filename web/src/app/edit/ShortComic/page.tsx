@@ -7,20 +7,8 @@ export default function ShortComic() {
 	const { data: AuthData } = useCheckAuth({
 		unAuthRedirectTo: '/login',
 	})
-	const [height, setHeight] = useState(0)
-	const [heightContain, setHeightContain] = useState(0)
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
 
-	useEffect(() => {
-		if (window !== undefined) {
-			window.addEventListener('resize', () => {
-				setHeight((window.innerHeight * 1) / 11.5)
-				setHeightContain(window.innerHeight - height)
-			})
-			setHeight((window.innerHeight * 1) / 11.5)
-			setHeightContain(window.innerHeight - height)
-		}
-	}, [height])
 	const comicData = AuthData?.Me.profile
 		? [...AuthData?.Me.profile.ShortComics]
 		: []

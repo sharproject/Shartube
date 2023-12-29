@@ -2,7 +2,7 @@ import './globals.css'
 import { Roboto } from 'next/font/google'
 import ApolloWrapper from '@/libs/apollo-wrapper'
 import { SidebarNavbarProvider } from '../context/SidebarNavbar'
-import { Navbar } from '../components/Navbar/Navbar'
+// import { Navbar } from '../components/Navbar/Navbar'
 
 const roboto = Roboto({
 	subsets: ['latin', 'vietnamese'],
@@ -25,7 +25,7 @@ export default function RootLayout({
 			<body className={`${roboto.className}`} suppressHydrationWarning={true}>
 				<ApolloWrapper>
 					<SidebarNavbarProvider>
-						<Navbar key='shar-secure' />
+						{/* <Navbar key='shar-secure' /> */}
 						{children}
 					</SidebarNavbarProvider>
 				</ApolloWrapper>

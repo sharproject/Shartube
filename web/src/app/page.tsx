@@ -1,17 +1,12 @@
 'use client'
-import { Navbar } from '@/components/Navbar/Navbar'
-import styles from './page.module.css'
-import { useEffect, useState } from 'react'
-import { LogoLoading } from '../components/logo'
+import { useContext, useEffect, useState } from 'react'
 import { useQuery } from '@apollo/client'
-import {
-	TopViewComicsQueryDocument,
-	meQueryDocument,
-} from '../util/rawSchemaDocument'
+import { TopViewComicsQueryDocument } from '../util/rawSchemaDocument'
 import { ComicCard } from '../components/ComicCard'
 import { DefaultComicCard } from '../components/DefaultComicCard'
 import { ComicCardDataInput } from '../types'
 import MainWrapper from '../components/Wrapper'
+import { LoadingScreen } from '../components/LoadingScreen'
 
 export default function Home() {
 	const [comicCardPerLine, setComicCardPerLine] = useState(4)
@@ -45,9 +40,7 @@ export default function Home() {
 	return (
 		<div>
 			{comicsLoading ? (
-				<div className='w-100 h-full flex justify-center items-center bg-[#141518]'>
-					<LogoLoading />
-				</div>
+				<LoadingScreen></LoadingScreen>
 			) : (
 				<MainWrapper>
 					<div

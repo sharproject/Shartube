@@ -3,14 +3,19 @@ import { useQuery } from '@apollo/client'
 import { EditPageComicByIDQueryDocument } from '../../../../util/rawSchemaDocument'
 import { useRouter } from 'next/navigation'
 import { useCheckAuth } from '../../../../hooks/useCheckAuth'
-import { ComicCardDashboard } from '../../../../components/ComicCardDashboard'
 import { LoadingScreen } from '../../../../components/LoadingScreen'
 import { useContext } from 'react'
 import { SidebarNavbarContext } from '../../../../context/SidebarNavbar'
-import { Sidebar } from '../../../../components/Sidebar'
+import { EditComicPageSidebar } from '../../../../components/Sidebar'
 
 // list session vs chap
-export default function ComicEditPage({ params }: { params: { id: string } }) {
+export default function ComicEditPage({
+	params,
+	children,
+}: {
+	params: { id: string }
+	children: React.ReactNode
+}) {
 	const { SidebarOpen } = useContext(SidebarNavbarContext)
 	const {
 		data: ComicQueryResult,
@@ -21,6 +26,7 @@ export default function ComicEditPage({ params }: { params: { id: string } }) {
 			id: params.id,
 		},
 	})
+	const { data: AuthUser } = useCheckAuth()
 	const router = useRouter()
 	if (error) {
 		return <div>Error: {error.message}</div>
@@ -28,23 +34,26 @@ export default function ComicEditPage({ params }: { params: { id: string } }) {
 	if (!ComicLoading && (!ComicQueryResult?.ComicByID || !ComicQueryResult)) {
 		return router.back()
 	}
-	const comic = ComicQueryResult?.ComicByID!
-	console.log({ Comic: ComicQueryResult })
+	if (
+		!ComicLoading &&
+		ComicQueryResult?.ComicByID?.CreatedByID != AuthUser?.Me._id
+	) {
+		return router.back()
+	}
 	return (
-		<>
-			<div className='m-4 rounded-lg '>
-				Lorem, ipsum dolor sit amet consectetur adipisicing elit. Veritatis odio
-				expedita cum quasi neque eum veniam eaque corporis obcaecati eos
-				asperiores ipsam voluptatum dolorem, nulla, amet praesentium. Magni,
-				officiis quos.
-			</div>
-			<div className='m-4 text-center rounded-lg min-w-96'>
-				<h1>Comic Card Show here</h1>
-				<ComicCardDashboard
-					useButton={false}
-					comic={comic}
-				></ComicCardDashboard>
-			</div>
-		</>
+		<div>
+			{ComicLoading ? (
+				<LoadingScreen></LoadingScreen>
+			) : (
+				<div className='flex justify-center pt-5'>
+					{SidebarOpen && (
+						<div className='max-w-80 md:min-w-16 lg:min-w-80'>
+							<EditComicPageSidebar></EditComicPageSidebar>
+						</div>
+					)}
+					{children}
+				</div>
+			)}
+		</div>
 	)
 }

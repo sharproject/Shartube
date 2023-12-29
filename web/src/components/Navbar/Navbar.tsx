@@ -9,14 +9,20 @@ import styles from './page.module.css'
 import { usePathname } from 'next/navigation'
 import { AiOutlineMenu } from 'react-icons/ai'
 import { SidebarNavbarContext } from '../../context/SidebarNavbar'
+import { CheckPathname } from '../Sidebar'
 
 export const Navbar = () => {
 	const pathname = usePathname()
-	const { setCreateComicPopupOpen, setSidebarOpen, userInfo, searchInput } =
-		React.useContext(SidebarNavbarContext)
+	const {
+		setCreateComicPopupOpen,
+		setSidebarOpen,
+		userInfo,
+		searchInput,
+		SidebarOpen,
+	} = React.useContext(SidebarNavbarContext)
 	return (
 		<div
-			className={`bg-[#18191D] flex w-dvw h-16 items-center text-white`}
+			className={`bg-[#18191D] flex min-w-full h-16 items-center text-white`}
 			style={{
 				// backgroundColor: '#18191D',
 				borderBottom: '1px solid #2E2E2E',
@@ -27,14 +33,19 @@ export const Navbar = () => {
 		>
 			<div className='flex items-center content-center justify-center h-full ml-4 '>
 				{/* side bar toggle */}
-				<div className='mx-2 mr-4 text-2xl text-white cursor-pointer'>
-					<AiOutlineMenu
-						onClick={(e) => {
-							e.stopPropagation()
-							setSidebarOpen(true)
-						}}
-					/>
-				</div>
+				{CheckPathname(pathname) ? (
+					<div className='mx-2 mr-4 text-2xl text-white cursor-pointer'>
+						<AiOutlineMenu
+							onClick={(e) => {
+								e.stopPropagation()
+								setSidebarOpen(!SidebarOpen)
+							}}
+						/>
+					</div>
+				) : (
+					<></>
+				)}
+
 				{/* logo */}
 				<Link
 					href={'/'}

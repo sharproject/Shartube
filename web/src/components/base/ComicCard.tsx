@@ -22,9 +22,10 @@ export function BaseComicCard(name: 'ComicCard' | 'ComicCardDashboard') {
 					// marginBottom: '19px',
 					// color: '#fff',
 					// margin: '0.25rem',
-					background: `url(${comic.background}) repeat, no-repeat 0, 0`,
+					background:  `url(${comic.background}) repeat, no-repeat 0, 0`
+						
 				}}
-				className={`p-5 w-full max-w-md h-40 rounded-2xl mb-5 text-white m-1 ${styles.comicCard}`}
+				className={`p-5 w-full max-w-md min-w-48 h-40 rounded-2xl mb-5 text-white m-1 ${styles.comicCard}`}
 			>
 				<h2>{comic.name}</h2>
 				<span

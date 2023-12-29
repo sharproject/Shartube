@@ -1,9 +1,9 @@
 'use client'
 
 import { createContext, useState } from 'react'
+import { Sidebar } from '../components/Sidebar'
 import { MeQuery } from '../generated/graphql/graphql'
 import { useCheckAuth } from '../hooks/useCheckAuth'
-import { LogoLoading } from '../components/logo'
 
 export interface ISidebarNavbarContext {
 	SidebarOpen: boolean
@@ -20,7 +20,7 @@ export const SidebarNavbarContext = createContext<ISidebarNavbarContext>({
 	setSidebarOpen: (open: boolean) => {},
 	createComicPopupOpen: false,
 	setCreateComicPopupOpen: (open: boolean) => {},
-	searchInput: false,
+	searchInput: true,
 	toggleSearchInput: (open: boolean) => {},
 	userInfo: undefined,
 })
@@ -32,8 +32,8 @@ export function SidebarNavbarProvider({
 }) {
 	const [SidebarOpen, setSidebarOpen] = useState(false)
 	const [createComicPopupOpen, setCreateComicPopupOpen] = useState(false)
-	const [searchInput, setSearchInput] = useState(false)
-	const { data: AuthData, loading: AuthLoading } = useCheckAuth()
+	const [searchInput, setSearchInput] = useState(true)
+	const { data: AuthData } = useCheckAuth()
 
 	const value = {
 		SidebarOpen,
@@ -46,13 +46,7 @@ export function SidebarNavbarProvider({
 	}
 	return (
 		<SidebarNavbarContext.Provider value={value}>
-			{AuthLoading ? (
-				<div className='w-100 h-[100vh] flex justify-center items-center bg-[#141518]'>
-					<LogoLoading />
-				</div>
-			) : (
-				children
-			)}
+			{children}
 		</SidebarNavbarContext.Provider>
 	)
 }

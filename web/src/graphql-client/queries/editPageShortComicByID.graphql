@@ -1,0 +1,5 @@
+query EditPageShortComicByID($id: String!) {
+	ShortComicByID(id: $id) {
+		...EditPageShortComicInfo
+	}
+}

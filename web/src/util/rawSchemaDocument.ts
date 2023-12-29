@@ -14,3 +14,4 @@ export const CreateShortComicMutationDocument = graphql(`mutation CreateShortCom
 export const EditPageComicByIDQueryDocument = graphql(`query EditPageComicByID($id: String!) {\n  ComicByID(ID: $id) {\n    ...EditPageComicInfo\n  }\n}`
 )
 export const UserProfileDocument = graphql(`fragment UserProfile on Profile {\n  _id\n  comics {\n    ...ComicInfo\n  }\n  ShortComics {\n    ...ShortComicInfo\n  }\n}`)
+export const EditPageShortComicByIDQueryDocument = graphql(`query EditPageShortComicByID($id: String!) {\n  ShortComicByID(id: $id) {\n    ...EditPageShortComicInfo\n  }\n}`)

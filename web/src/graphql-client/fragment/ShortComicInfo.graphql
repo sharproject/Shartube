@@ -10,3 +10,18 @@ fragment ShortComicInfo on ShortComic {
 	updatedAt
 	views
 }
+
+fragment EditPageShortComicInfo on ShortComic {
+	...ShortComicInfo
+	Chap {
+		_id
+		name
+		description
+		createdAt
+		updatedAt
+		views
+		CreatedByID
+		SessionID
+		ShortComicID
+	}
+}
