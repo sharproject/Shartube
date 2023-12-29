@@ -1,13 +1,10 @@
 'use client'
 import { useQuery } from '@apollo/client'
-import { EditPageComicByIDQueryDocument } from '../../../../util/rawSchemaDocument'
 import { useRouter } from 'next/navigation'
-import { useCheckAuth } from '../../../../hooks/useCheckAuth'
-import { ComicCardDashboard } from '../../../../components/ComicCardDashboard'
-import { LoadingScreen } from '../../../../components/LoadingScreen'
 import { useContext } from 'react'
+import { ComicCardDashboard } from '../../../../components/ComicCardDashboard'
 import { SidebarNavbarContext } from '../../../../context/SidebarNavbar'
-import { Sidebar } from '../../../../components/Sidebar'
+import { EditPageComicByIDQueryDocument } from '../../../../util/rawSchemaDocument'
 
 // list session vs chap
 export default function ComicEditPage({ params }: { params: { id: string } }) {

@@ -25,3 +25,4 @@ cors:
     - http://localhost:3000
     - https://studio.apollographql.com
     - https://shartube.vercel.app
+    - https://shartube-***.vercel.app
