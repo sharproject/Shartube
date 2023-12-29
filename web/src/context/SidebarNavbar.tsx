@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useState } from 'react'
-import { Sidebar } from '../components/Sidebar'
 import { MeQuery } from '../generated/graphql/graphql'
 import { useCheckAuth } from '../hooks/useCheckAuth'
 
