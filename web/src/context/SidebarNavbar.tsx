@@ -3,6 +3,7 @@
 import { createContext, useState } from 'react'
 import { MeQuery } from '../generated/graphql/graphql'
 import { useCheckAuth } from '../hooks/useCheckAuth'
+import { usePathname } from 'next/navigation'
 
 export interface ISidebarNavbarContext {
 	SidebarOpen: boolean
@@ -23,13 +24,16 @@ export const SidebarNavbarContext = createContext<ISidebarNavbarContext>({
 	toggleSearchInput: (open: boolean) => {},
 	userInfo: undefined,
 })
-
+const defaultSidebarOpenPage = ['/edit', '/dashboard']
 export function SidebarNavbarProvider({
 	children,
 }: {
 	children: React.ReactNode
 }) {
-	const [SidebarOpen, setSidebarOpen] = useState(false)
+	const pathname = usePathname()
+	const [SidebarOpen, setSidebarOpen] = useState(
+		!!defaultSidebarOpenPage.find((key) => pathname.startsWith(key))
+	)
 	const [createComicPopupOpen, setCreateComicPopupOpen] = useState(false)
 	const [searchInput, setSearchInput] = useState(true)
 	const { data: AuthData } = useCheckAuth()

@@ -2,6 +2,10 @@
 import { useContext } from 'react'
 import { SidebarNavbarContext } from '../../context/SidebarNavbar'
 import { BsFillArrowLeftSquareFill } from 'react-icons/bs'
+import { IoArrowBackOutline } from 'react-icons/io5'
+import Link from 'next/link'
+import Image from 'next/image'
+import { ComicCardDataInput } from '../../types'
 
 export const sidebarPathSupport = ['/edit/**/**']
 
@@ -12,14 +16,31 @@ export function CheckPathname(pathname: string) {
 	return matchedKey
 }
 
-export function EditComicPageSidebar() {
+export function EditComicPageSidebar({ comic }: { comic: ComicCardDataInput }) {
 	const { setSidebarOpen } = useContext(SidebarNavbarContext)
 	return (
-		<div className='relative z-20 h-full bg-[#16171a] shadow-sm max-w-52 text-white text-center border-r-2 border-[#2E2E2E] flex flex-col justify-between py-10 min-h-screen group'>
+		<div className='relative z-20 h-full bg-[#16171a] shadow-sm text-white text-center border-r-2 border-[#2E2E2E] flex flex-col justify-between py-10 min-h-screen group transition-all'>
 			<BsFillArrowLeftSquareFill
 				className='absolute hidden text-3xl cursor-pointer -right-4 top-10 group-hover:block'
 				onClick={() => setSidebarOpen(false)}
 			/>
+			<div>
+				<Link
+					href='/dashboard'
+					className='flex items-center content-center justify-center hover:text-[#6E6E6E] hover:bg-[#2E2E2E] p-2 rounded-lg w-full'
+				>
+					<IoArrowBackOutline className='text-3xl' />{' '}
+					<span className='ml-2 sm:hidden lg:block'>Back to Dashboard</span>
+				</Link>
+			</div>
+			<div>
+				<Image
+					src={comic.thumbnail || 'https://via.placeholder.com/300'}
+					alt={comic.name}
+					width={300}
+					height={300}
+				></Image>
+			</div>
 		</div>
 	)
 }

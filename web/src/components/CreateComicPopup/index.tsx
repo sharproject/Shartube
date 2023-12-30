@@ -180,8 +180,9 @@ export function CreateComicPopup() {
 					requestHeaders.append('upload_token', value.token)
 					requestHeaders.append('Content-Type', 'multipart/form-data')
 					requestHeaders.append('remove_token', 'true')
+					console.log(value.element)
 					const body = new FormData()
-					body.append('file', value.element)
+					body.append('file', value.element, value.element.name)
 					const result = await fetch(UploadUrl, {
 						body,
 						headers: requestHeaders,
