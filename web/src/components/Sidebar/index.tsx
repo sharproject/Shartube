@@ -19,27 +19,30 @@ export function CheckPathname(pathname: string) {
 export function EditComicPageSidebar({ comic }: { comic: ComicCardDataInput }) {
 	const { setSidebarOpen } = useContext(SidebarNavbarContext)
 	return (
-		<div className='relative z-20 h-full bg-[#16171a] shadow-sm text-white text-center border-r-2 border-[#2E2E2E] flex flex-col justify-between py-10 min-h-screen group transition-all'>
-			<BsFillArrowLeftSquareFill
+		<div className='relative z-20 h-full bg-[#16171a] shadow-sm text-white text-center border-r-2 border-[#2E2E2E] flex flex-col justify-between py-2 min-h-screen group transition-all'>
+			{/* <BsFillArrowLeftSquareFill
 				className='absolute hidden text-3xl cursor-pointer -right-4 top-10 group-hover:block'
 				onClick={() => setSidebarOpen(false)}
-			/>
+			/> */}
 			<div>
 				<Link
 					href='/dashboard'
-					className='flex items-center content-center justify-center hover:text-[#6E6E6E] hover:bg-[#2E2E2E] p-2 rounded-lg w-full'
+					className='mb-2 flex items-center content-center justify-center hover:text-[#6E6E6E] hover:bg-[#2E2E2E] p-2 rounded-lg w-full'
 				>
 					<IoArrowBackOutline className='text-3xl' />{' '}
 					<span className='ml-2 sm:hidden lg:block'>Back to Dashboard</span>
 				</Link>
-			</div>
-			<div>
-				<Image
-					src={comic.thumbnail || 'https://via.placeholder.com/300'}
-					alt={comic.name}
-					width={300}
-					height={300}
-				></Image>
+				{comic.thumbnail && (
+					<div>
+						<Image
+							src={comic.thumbnail}
+							alt='thumbnail'
+							width={200}
+							height={200}
+							className='object-contain max-w-full m-auto sm:px-1 max-h-50'
+						/>
+					</div>
+				)}
 			</div>
 		</div>
 	)

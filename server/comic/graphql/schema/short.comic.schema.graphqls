@@ -28,7 +28,7 @@ type ShortComic implements CreateShortComic {
   CreatedByID: String!
   name: String!
   description: String
-  ChapIDs: [String!]
+  ChapIDs: [String!]!
   Chap: [Chap!] @goField(forceResolver: true)
   thumbnail: String
   background: String

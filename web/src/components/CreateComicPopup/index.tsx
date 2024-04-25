@@ -178,17 +178,20 @@ export function CreateComicPopup() {
 				if (value.element) {
 					const requestHeaders = new Headers()
 					requestHeaders.append('upload_token', value.token)
-					requestHeaders.append('Content-Type', 'multipart/form-data')
 					requestHeaders.append('remove_token', 'true')
-					console.log(value.element)
 					const body = new FormData()
 					body.append('file', value.element, value.element.name)
-					const result = await fetch(UploadUrl, {
-						body,
-						headers: requestHeaders,
-						method: 'POST',
-					})
-					console.log(result)
+					while (true) {
+						const result = await fetch(UploadUrl, {
+							body,
+							headers: requestHeaders,
+							method: 'POST',
+							cache: 'no-cache',
+							mode: 'no-cors',
+						})
+						if (result.ok) break
+						await new Promise((resolve) => setTimeout(resolve, 1000))
+					}
 				}
 			}
 			closeModal()

@@ -23,32 +23,46 @@ import (
 )
 
 // Session is the resolver for the Session field.
-func (r *chapResolver) Session(ctx context.Context, obj *model.Chap) (*model.ComicSession, error) {
+func (r *chapResolver) Session(ctx context.Context, obj *model.Chap) ([]*model.ComicSession, error) {
 	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	if obj.SessionID == nil {
-		return nil, nil
+	result := []*model.ComicSession{}
+	for _, v := range obj.SessionID {
+		data, err := comicSessionModel.FindById(v)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, data)
 	}
-	return comicSessionModel.FindById(*obj.SessionID)
+	return result, nil
 }
 
 // ShortComic is the resolver for the ShortComic field.
-func (r *chapResolver) ShortComic(ctx context.Context, obj *model.Chap) (*model.ShortComic, error) {
+func (r *chapResolver) ShortComic(ctx context.Context, obj *model.Chap) ([]*model.ShortComic, error) {
 	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	if obj.SessionID == nil {
-		return nil, nil
+	result := []*model.ShortComic{}
+	for _, v := range obj.ShortComicID {
+		data, err := ShortComicModel.FindById(v)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, data)
 	}
-	return ShortComicModel.FindById(*obj.SessionID)
+	return result, nil
 }
 
 // CreateChap is the resolver for the CreateChap field.
 func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateChapInput) (*model.Chap, error) {
-	if input.ShortComicID == nil && input.SessionID == nil {
+	// TODO: check if no provider ShortComicID or SessionID
+	// if input.ShortComicID == nil && input.SessionID == nil {
+	// 	return nil, gqlerror.Errorf("you need provider ShorComicID or SessionID")
+	// }
+	if len(input.SessionID) == 0 && len(input.ShortComicID) == 0 {
 		return nil, gqlerror.Errorf("you need provider ShorComicID or SessionID")
 	}
 	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
@@ -64,34 +78,54 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 	if err != nil {
 		return nil, err
 	}
-	var comicSessionDoc *model.ComicSession
+	var comicSessionDoc []*model.ComicSession
 	if input.SessionID == nil {
 		comicSessionDoc = nil
 	} else {
-		comicSessionDoc, err = comicSessionModel.FindById(*input.SessionID)
-		if err != nil {
-			return nil, err
+		// comicSessionDoc, err = comicSessionModel.FindById(*input.SessionID)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		for _, v := range input.SessionID {
+			data, err := comicSessionModel.FindById(v)
+			if err != nil {
+				return nil, err
+			}
+			if data == nil {
+				return nil, gqlerror.Errorf("comic session not found")
+			}
+			if CreateID != data.CreatedByID {
+				return nil, gqlerror.Errorf("Access Denied")
+			}
+			comicSessionDoc = append(comicSessionDoc, data)
 		}
-		if comicSessionDoc == nil {
+		if len(comicSessionDoc) == 0 {
 			return nil, gqlerror.Errorf("comic session not found")
 		}
-		if CreateID != comicSessionDoc.CreatedByID {
-			return nil, gqlerror.Errorf("Access Denied")
-		}
 	}
-	var ShortComicDoc *model.ShortComic
+	var ShortComicDoc []*model.ShortComic
 	if input.ShortComicID == nil {
 		ShortComicDoc = nil
 	} else {
-		ShortComicDoc, err = ShortComicModel.FindById(*input.ShortComicID)
-		if err != nil {
-			return nil, err
+		// ShortComicDoc, err = ShortComicModel.FindById(*input.ShortComicID)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		for _, v := range input.ShortComicID {
+			data, err := ShortComicModel.FindById(v)
+			if err != nil {
+				return nil, err
+			}
+			if data == nil {
+				return nil, gqlerror.Errorf("short comic not found")
+			}
+			if CreateID != data.CreatedByID {
+				return nil, gqlerror.Errorf("Access Denied")
+			}
+			ShortComicDoc = append(ShortComicDoc, data)
 		}
-		if ShortComicDoc == nil {
-			return nil, gqlerror.Errorf("comic session not found")
-		}
-		if CreateID != ShortComicDoc.CreatedByID {
-			return nil, gqlerror.Errorf("Access Denied")
+		if len(ShortComicDoc) == 0 {
+			return nil, gqlerror.Errorf("short comic not found")
 		}
 	}
 	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
@@ -111,12 +145,20 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 		return nil, err
 	}
 	if comicSessionDoc != nil {
-		ComicSessionObjectId, err := primitive.ObjectIDFromHex(comicSessionDoc.ID)
-		if err != nil {
-			return nil, err
+		// ComicSessionObjectIds, err := primitive.ObjectIDFromHex(comicSessionDoc.ID)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		ComicSessionObjectIds := []primitive.ObjectID{}
+		for _, v := range comicSessionDoc {
+			ComicSessionObjectId,err := primitive.ObjectIDFromHex(v.ID)
+			if err != nil {
+				return nil, err
+			}
+			ComicSessionObjectIds = append(ComicSessionObjectIds,ComicSessionObjectId)
 		}
 		comicSessionModel.UpdateOne(bson.M{
-			"_id": ComicSessionObjectId,
+			"_id": ComicSessionObjectIds,
 		}, bson.M{
 			"$push": bson.M{
 				"ChapIds": ChapID,
@@ -124,12 +166,20 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 		})
 	}
 	if ShortComicDoc != nil {
-		ShortComicObjectId, err := primitive.ObjectIDFromHex(ShortComicDoc.ID)
-		if err != nil {
-			return nil, err
+		// ShortComicObjectId, err := primitive.ObjectIDFromHex(ShortComicDoc.ID)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		ShortComicObjectIds := []primitive.ObjectID{}
+		for _, v := range ShortComicDoc {
+			ShortComicObjectId,err := primitive.ObjectIDFromHex(v.ID)
+			if err != nil {
+				return nil, err
+			}
+			ShortComicObjectIds = append(ShortComicObjectIds,ShortComicObjectId)
 		}
 		ShortComicModel.UpdateOne(bson.M{
-			"_id": ShortComicObjectId,
+			"_id": ShortComicObjectIds,
 		}, bson.M{
 			"$push": bson.M{
 				"ChapIds": ChapID,

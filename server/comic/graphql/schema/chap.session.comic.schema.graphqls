@@ -1,21 +1,21 @@
 interface CreateChap {
   name: String!
   description: String
-  SessionID: String
-  ShortComicID: String
+  SessionID: [String!]!
+  ShortComicID: [String!]!
 }
 input CreateChapInput {
   name: String!
   description: String
-  SessionID: String
-  ShortComicID: String
+  SessionID: [String!]!
+  ShortComicID: [String!]!
 }
 type CreateChapInputModel implements CreateChap {
   name: String!
   description: String
   CreatedByID: String!
-  SessionID: String
-  ShortComicID: String
+  SessionID: [String!]!
+  ShortComicID: [String!]!
   views: Int!
 }
 type ImageResult {
@@ -29,10 +29,10 @@ type Chap implements CreateChap @key(fields: "_id") {
   CreatedByID: String!
   name: String!
   description: String
-  SessionID: String
-  ShortComicID: String
-  Session: ComicSession @goField(forceResolver: true)
-  ShortComic: ShortComic @goField(forceResolver: true)
+  SessionID: [String!]!
+  ShortComicID: [String!]!
+  Session: [ComicSession]! @goField(forceResolver: true)
+  ShortComic: [ShortComic]! @goField(forceResolver: true)
   Images: [ImageResult!]!
   views: Int!
 }

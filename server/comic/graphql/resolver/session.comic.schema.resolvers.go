@@ -22,12 +22,20 @@ import (
 )
 
 // Comic is the resolver for the Comic field.
-func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSession) (*model.Comic, error) {
+func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSession) ([]*model.Comic, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	return comicModel.FindById(obj.ComicID)
+	AllComics := []*model.Comic{}
+	for _, ComicId := range obj.ComicID {
+		data, err := comicModel.FindById(ComicId)
+		if err != nil {
+			return nil, err
+		}
+		AllComics = append(AllComics, data)
+	}
+	return AllComics, nil
 }
 
 // Chaps is the resolver for the Chaps field.
@@ -62,15 +70,32 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if err != nil {
 		return nil, err
 	}
-	comicDoc, err := comicModel.FindById(input.ComicID)
-	if err != nil {
-		return nil, err
+	// comicDoc, err := comicModel.FindById(input.ComicID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if comicDoc == nil {
+	// 	return nil, gqlerror.Errorf("comic not found")
+	// }
+	// if CreateID != comicDoc.CreatedByID {
+	// 	return nil, gqlerror.Errorf("Access Denied")
+	// }
+	comicDocs := []*model.Comic{}
+	for _, v := range input.ComicID {
+		data, err := comicModel.FindById(v)
+		if err != nil {
+			return nil, err
+		}
+		if data == nil {
+			return nil, gqlerror.Errorf("comic not found")
+		}
+		if CreateID != data.CreatedByID {
+			return nil, gqlerror.Errorf("Access Denied")
+		}
+		comicDocs = append(comicDocs, data)
 	}
-	if comicDoc == nil {
+	if len(comicDocs) == 0 {
 		return nil, gqlerror.Errorf("comic not found")
-	}
-	if CreateID != comicDoc.CreatedByID {
-		return nil, gqlerror.Errorf("Access Denied")
 	}
 	ThumbnailUrl := ""
 
@@ -85,13 +110,22 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if err != nil {
 		return nil, err
 	}
-	ComicObjectId, err := primitive.ObjectIDFromHex(input.ComicID)
+	// ComicObjectId, err := primitive.ObjectIDFromHex(input.ComicID)
 
-	if err != nil {
-		return nil, err
+	// if err != nil {
+	// 	return nil, err
+	// }
+	ComicObjectIds := []primitive.ObjectID{}
+	for _, v := range comicDocs {
+		ComicObjectId, err := primitive.ObjectIDFromHex(v.ID)
+		if err != nil {
+			return nil, err
+		}
+		ComicObjectIds = append(ComicObjectIds, ComicObjectId)
 	}
+
 	comicModel.UpdateOne(bson.M{
-		"_id": ComicObjectId,
+		"_id": ComicObjectIds,
 	}, bson.M{
 		"$push": bson.M{
 			"sessionId": sessionID,

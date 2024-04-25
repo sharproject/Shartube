@@ -5,6 +5,7 @@ interface CreateComic {
   description: String
   thumbnail: String
   background: String
+  originalAuthor: String
 }
 
 input CreateComicInput {
@@ -12,6 +13,7 @@ input CreateComicInput {
   description: String
   thumbnail: Boolean
   background: Boolean
+  originalAuthor: String
 }
 
 type CreateComicInputModel implements CreateComic {
@@ -21,6 +23,7 @@ type CreateComicInputModel implements CreateComic {
   thumbnail: String
   background: String
   views: Int!
+  originalAuthor: String
 }
 
 type Comic implements CreateComic {
@@ -35,6 +38,7 @@ type Comic implements CreateComic {
   thumbnail: String
   background: String
   views: Int!
+  originalAuthor: String
 }
 
 input UpdateComicInput {

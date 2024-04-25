@@ -23,35 +23,36 @@ type CreateShortComic interface {
 }
 
 type Chap struct {
-	ID           string         `json:"_id" bson:"_id"`
-	CreatedAt    time.Time      `json:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
-	CreatedByID  string         `json:"CreatedByID"`
-	Name         string         `json:"name"`
-	Description  *string        `json:"description"`
-	SessionID    *string        `json:"SessionID"`
-	ShortComicID *string        `json:"ShortComicID"`
-	Session      *ComicSession  `json:"Session"`
-	ShortComic   *ShortComic    `json:"ShortComic"`
-	Images       []*ImageResult `json:"Images"`
-	Views        int            `json:"views"`
+	ID           string          `json:"_id" bson:"_id"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	UpdatedAt    time.Time       `json:"updatedAt"`
+	CreatedByID  string          `json:"CreatedByID"`
+	Name         string          `json:"name"`
+	Description  *string         `json:"description"`
+	SessionID    []string        `json:"SessionID"`
+	ShortComicID []string        `json:"ShortComicID"`
+	Session      []*ComicSession `json:"Session"`
+	ShortComic   []*ShortComic   `json:"ShortComic"`
+	Images       []*ImageResult  `json:"Images"`
+	Views        int             `json:"views"`
 }
 
 func (Chap) IsCreateChap() {}
 func (Chap) IsEntity()     {}
 
 type Comic struct {
-	ID          string          `json:"_id" bson:"_id"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	UpdatedAt   time.Time       `json:"updatedAt"`
-	CreatedByID string          `json:"CreatedByID"`
-	Name        string          `json:"name"`
-	Description *string         `json:"description"`
-	SessionID   []string        `json:"sessionId"`
-	Session     []*ComicSession `json:"session"`
-	Thumbnail   *string         `json:"thumbnail"`
-	Background  *string         `json:"background"`
-	Views       int             `json:"views"`
+	ID             string          `json:"_id" bson:"_id"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	CreatedByID    string          `json:"CreatedByID"`
+	Name           string          `json:"name"`
+	Description    *string         `json:"description"`
+	SessionID      []string        `json:"sessionId"`
+	Session        []*ComicSession `json:"session"`
+	Thumbnail      *string         `json:"thumbnail"`
+	Background     *string         `json:"background"`
+	Views          int             `json:"views"`
+	OriginalAuthor *string         `json:"originalAuthor"`
 }
 
 func (Comic) IsCreateComic() {}
@@ -63,8 +64,8 @@ type ComicSession struct {
 	CreatedByID string    `json:"CreatedByID"`
 	Name        string    `json:"name"`
 	Description *string   `json:"description"`
-	ComicID     string    `json:"comicID"`
-	Comic       *Comic    `json:"Comic"`
+	ComicID     []string  `json:"comicID"`
+	Comic       []*Comic  `json:"Comic"`
 	Chaps       []*Chap   `json:"Chaps"`
 	ChapIds     []string  `json:"ChapIds"`
 	Thumbnail   *string   `json:"thumbnail"`
@@ -74,37 +75,39 @@ type ComicSession struct {
 func (ComicSession) IsCreateComicSession() {}
 
 type CreateChapInput struct {
-	Name         string  `json:"name"`
-	Description  *string `json:"description"`
-	SessionID    *string `json:"SessionID"`
-	ShortComicID *string `json:"ShortComicID"`
+	Name         string   `json:"name"`
+	Description  *string  `json:"description"`
+	SessionID    []string `json:"SessionID"`
+	ShortComicID []string `json:"ShortComicID"`
 }
 
 type CreateChapInputModel struct {
-	Name         string  `json:"name"`
-	Description  *string `json:"description"`
-	CreatedByID  string  `json:"CreatedByID"`
-	SessionID    *string `json:"SessionID"`
-	ShortComicID *string `json:"ShortComicID"`
-	Views        int     `json:"views"`
+	Name         string   `json:"name"`
+	Description  *string  `json:"description"`
+	CreatedByID  string   `json:"CreatedByID"`
+	SessionID    []string `json:"SessionID"`
+	ShortComicID []string `json:"ShortComicID"`
+	Views        int      `json:"views"`
 }
 
 func (CreateChapInputModel) IsCreateChap() {}
 
 type CreateComicInput struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	Thumbnail   *bool   `json:"thumbnail"`
-	Background  *bool   `json:"background"`
+	Name           string  `json:"name"`
+	Description    *string `json:"description"`
+	Thumbnail      *bool   `json:"thumbnail"`
+	Background     *bool   `json:"background"`
+	OriginalAuthor *string `json:"originalAuthor"`
 }
 
 type CreateComicInputModel struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	CreatedByID string  `json:"CreatedByID"`
-	Thumbnail   *string `json:"thumbnail"`
-	Background  *string `json:"background"`
-	Views       int     `json:"views"`
+	Name           string  `json:"name"`
+	Description    *string `json:"description"`
+	CreatedByID    string  `json:"CreatedByID"`
+	Thumbnail      *string `json:"thumbnail"`
+	Background     *string `json:"background"`
+	Views          int     `json:"views"`
+	OriginalAuthor *string `json:"originalAuthor"`
 }
 
 func (CreateComicInputModel) IsCreateComic() {}
@@ -115,19 +118,19 @@ type CreateComicResponse struct {
 }
 
 type CreateComicSessionInput struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	ComicID     string  `json:"comicID"`
-	Thumbnail   *bool   `json:"thumbnail"`
+	Name        string   `json:"name"`
+	Description *string  `json:"description"`
+	ComicID     []string `json:"comicID"`
+	Thumbnail   *bool    `json:"thumbnail"`
 }
 
 type CreateComicSessionInputModel struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	CreatedByID string  `json:"CreatedByID"`
-	ComicID     string  `json:"comicID"`
-	Thumbnail   *string `json:"thumbnail"`
-	Views       int     `json:"views"`
+	Name        string   `json:"name"`
+	Description *string  `json:"description"`
+	CreatedByID string   `json:"CreatedByID"`
+	ComicID     []string `json:"comicID"`
+	Thumbnail   *string  `json:"thumbnail"`
+	Views       int      `json:"views"`
 }
 
 func (CreateComicSessionInputModel) IsCreateComicSession() {}

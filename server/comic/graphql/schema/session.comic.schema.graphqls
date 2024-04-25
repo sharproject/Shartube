@@ -1,14 +1,14 @@
 interface CreateComicSession {
   name: String!
   description: String
-  comicID: String!
+  comicID: [String!]!
   thumbnail: String
 }
 
 input CreateComicSessionInput {
   name: String!
   description: String
-  comicID: String!
+  comicID: [String!]!
   thumbnail: Boolean
 }
 
@@ -16,7 +16,7 @@ type CreateComicSessionInputModel implements CreateComicSession {
   name: String!
   description: String
   CreatedByID: String!
-  comicID: String!
+  comicID: [String!]!
   thumbnail: String
   views: Int!
 }
@@ -28,8 +28,8 @@ type ComicSession implements CreateComicSession {
   CreatedByID: String!
   name: String!
   description: String
-  comicID: String!
-  Comic: Comic! @goField(forceResolver: true)
+  comicID: [String!]!
+  Comic: [Comic!]! @goField(forceResolver: true)
   Chaps: [Chap!] @goField(forceResolver: true)
   ChapIds: [String!]
   thumbnail: String
