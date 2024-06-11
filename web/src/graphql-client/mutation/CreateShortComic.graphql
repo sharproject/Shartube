@@ -1,0 +1,8 @@
+mutation CreateShortComic($input: CreateShortComicInput!) {
+	createShortComic(input: $input) {
+		ShortComic {
+			...ShortComicInfo
+		}
+		UploadToken
+	}
+}

@@ -1,0 +1,5 @@
+query EditPageComicByID($id: String!) {
+	ComicByID(ID: $id) {
+		...EditPageComicInfo
+	}
+}

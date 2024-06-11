@@ -1,0 +1,11 @@
+fragment UserInfo on User {
+	_id
+	email
+	name
+	updatedAt
+	createdAt
+	password
+	profile {
+		...UserProfile
+	}
+}

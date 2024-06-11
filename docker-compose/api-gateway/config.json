@@ -1,0 +1,27 @@
+{
+  "http": [
+    {
+      "endpoint": "/graphql/*",
+      "url": "env_GRAPHQL_SERVER"
+    },
+    {
+      "endpoint": "/user/*",
+      "url": "env_USER_SERVER"
+    },
+    {
+      "endpoint": "/meme/*",
+      "url": "env_MEME_SERVER"
+    },
+    {
+      "endpoint": "/save",
+      "url": "env_CDN_SERVER"
+    }
+  ],
+  "ws": [
+    {
+      "endpoint": "/cdn",
+      "sendTo": "cdn_service/cdn_get_image",
+      "headers": ["Authorization"]
+    }
+  ]
+}

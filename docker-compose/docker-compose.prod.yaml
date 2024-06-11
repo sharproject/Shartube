@@ -1,0 +1,6 @@
+# docker compose -f docker-compose.yml -f docker-compose.db.yml -f docker-compose.prod.yaml up -d
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  shartube-api-gateway:
+    ports:
+      - "${PORT}:8080"

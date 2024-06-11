@@ -1,0 +1,27 @@
+supergraph:
+  # The socket address and port to listen on
+  listen: 0.0.0.0:2100
+  path: /graphql
+  introspection: true
+
+homepage:
+  enabled: true
+
+include_subgraph_errors:
+  all: true # Propagate errors from all subgraphs
+
+headers:
+  all: # Header rules for all subgraphs
+    request:
+      - propagate:
+          matching: .*
+
+plugins:
+  experimental.expose_query_plan: true
+
+cors:
+  allow_credentials: true
+  origins:
+    - http://localhost:3000
+    - https://studio.apollographql.com
+    - https://shartube.vercel.app

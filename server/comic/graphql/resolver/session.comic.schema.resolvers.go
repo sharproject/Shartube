@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 
+	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
 	"github.com/Folody-Team/Shartube/database/comic_model"
 	"github.com/Folody-Team/Shartube/database/comic_session_model"
@@ -14,15 +15,11 @@ import (
 	"github.com/Folody-Team/Shartube/graphql/model"
 	"github.com/Folody-Team/Shartube/util"
 	"github.com/Folody-Team/Shartube/util/deleteUtil"
+	"github.com/google/uuid"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// CreatedBy is the resolver for the CreatedBy field.
-func (r *comicSessionResolver) CreatedBy(ctx context.Context, obj *model.ComicSession) (*model.User, error) {
-	return util.GetUserByID(obj.CreatedByID)
-}
 
 // Comic is the resolver for the Comic field.
 func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSession) (*model.Comic, error) {
@@ -34,12 +31,12 @@ func (r *comicSessionResolver) Comic(ctx context.Context, obj *model.ComicSessio
 }
 
 // Chaps is the resolver for the Chaps field.
-func (r *comicSessionResolver) Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.ComicChap, error) {
-	comicChapModel, err := comic_chap_model.InitComicChapModel(r.Client)
+func (r *comicSessionResolver) Chaps(ctx context.Context, obj *model.ComicSession) ([]*model.Chap, error) {
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	AllChaps := []*model.ComicChap{}
+	AllChaps := []*model.Chap{}
 	for _, ChapId := range obj.ChapIds {
 		data, err := comicChapModel.FindById(ChapId)
 		if err != nil {
@@ -51,7 +48,7 @@ func (r *comicSessionResolver) Chaps(ctx context.Context, obj *model.ComicSessio
 }
 
 // CreateComicSession is the resolver for the CreateComicSession field.
-func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.CreateComicSessionInput) (*model.ComicSession, error) {
+func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.CreateComicSessionInput) (*model.CreateComicSessionResponse, error) {
 	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -60,8 +57,8 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
-	userIDObject, err := primitive.ObjectIDFromHex(userID)
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
+	CreateIDObject, err := primitive.ObjectIDFromHex(CreateID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,23 +69,18 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 	if comicDoc == nil {
 		return nil, gqlerror.Errorf("comic not found")
 	}
-	if userID != comicDoc.CreatedByID {
+	if CreateID != comicDoc.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
 	ThumbnailUrl := ""
-	if input.Thumbnail != nil {
-		ThumbnailUrlPointer, err := util.UploadImageForGraphql(*input.Thumbnail)
-		if err != nil {
-			return nil, err
-		}
-		ThumbnailUrl = *ThumbnailUrlPointer
-	}
+
 	sessionID, err := comicSessionModel.New(&model.CreateComicSessionInputModel{
 		Name:        input.Name,
 		Description: input.Description,
-		CreatedByID: userIDObject.Hex(),
+		CreatedByID: CreateIDObject.Hex(),
 		ComicID:     input.ComicID,
 		Thumbnail:   &ThumbnailUrl,
+		Views:       0,
 	}).Save()
 	if err != nil {
 		return nil, err
@@ -105,16 +97,102 @@ func (r *mutationResolver) CreateComicSession(ctx context.Context, input model.C
 			"sessionId": sessionID,
 		},
 	})
-	return comicSessionModel.FindById(sessionID.Hex())
+	comicSessionDoc, err := comicSessionModel.FindById(sessionID.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := util.GenSingleUploadTokenPayload[LocalTypes.UploadSessionComicThumbnailPayload]{
+			ID: requestId,
+			SaveData: LocalTypes.UploadSessionComicThumbnailPayload{
+				ComicSessionId: comicSessionDoc.ID,
+			},
+			EmitTo:    "comic",
+			EventName: "SocketChangeComicSessionThumbnail",
+		}
+		// requestData := LocalTypes.ServiceRequest{
+		// 	Url:     "upload_token_registry/genToken",
+		// 	Header:  nil,
+		// 	Payload: &payload,
+		// 	From:    "comic/addImages",
+		// 	Type:    "message",
+		// 	ID:      requestId,
+		// }
+		// data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if data.Error != nil {
+		// 	return nil, &gqlerror.Error{
+		// 		Message: *data.Error,
+		// 	}
+		// }
+		uploadToken, err := util.GenSingleUploadToken(payload)
+		if err != nil {
+			return nil, err
+		}
+
+		return &model.CreateComicSessionResponse{
+			ComicSession: comicSessionDoc,
+			UploadToken:  uploadToken,
+		}, nil
+
+		// requestDataBytes, err := json.Marshal(requestData)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		// for {
+		// 	_, message, err := r.Ws.ReadMessage()
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	var tmp_data LocalTypes.ServiceReturnData[any, *any]
+		// 	err = json.Unmarshal(message, &tmp_data)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	if tmp_data.Type == "rep" {
+		// 		if tmp_data.ID == requestId && tmp_data.From == requestData.Url {
+		// 			var data LocalTypes.ServiceReturnData[LocalTypes.GetUploadTokenReturn, *any]
+		// 			err = json.Unmarshal(message, &data)
+		// 			if err != nil {
+		// 				return nil, err
+		// 			}
+		// 			if data.Error != nil {
+		// 				return nil, &gqlerror.Error{
+		// 					Message: *data.Error,
+		// 				}
+		// 			}
+		// 			return &model.CreateComicSessionResponse{
+		// 				ComicSession: comicSessionDoc,
+		// 				UploadToken:  &data.Payload.Token,
+		// 			}, nil
+
+		// 			// return nil, &gqlerror.Error{
+		// 			// 	Message: "500 server error",
+		// 			// }
+
+		// 		}
+		// 	}
+		// }
+	} else {
+		return &model.CreateComicSessionResponse{
+			ComicSession: comicSessionDoc,
+			UploadToken:  nil,
+		}, nil
+	}
 }
 
 // UpdateComicSession is the resolver for the updateComicSession field.
-func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID string, input *model.UpdateComicSessionInput) (*model.ComicSession, error) {
+func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID string, input *model.UpdateComicSessionInput) (*model.UpdateComicSessionResponse, error) {
 	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 
 	comicSession, err := comicSessionModel.FindById(sessionID)
 	if err != nil {
@@ -125,12 +203,106 @@ func (r *mutationResolver) UpdateComicSession(ctx context.Context, sessionID str
 			Message: "comic session not found",
 		}
 	}
-	if userID != comicSession.CreatedByID {
+	if CreateID != comicSession.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
-	return comicSessionModel.FindOneAndUpdate(bson.M{
-		"_id": comicSession.ID,
-	}, input)
+
+	updateData := bson.M{}
+	if input.Description != nil {
+		updateData["description"] = input.Description
+	}
+	if input.Name != nil {
+		updateData["name"] = input.Name
+	}
+
+	comicSessionObjectId, err := primitive.ObjectIDFromHex(comicSession.ID)
+	if err != nil {
+		return nil, err
+	}
+	comicSessionDoc, err := comicSessionModel.FindOneAndUpdate(bson.M{
+		"_id": comicSessionObjectId,
+	}, bson.M{
+		"$set": updateData,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if input.Thumbnail != nil && *input.Thumbnail {
+		requestId := uuid.New().String()
+		payload := util.GenSingleUploadTokenPayload[LocalTypes.UploadSessionComicThumbnailPayload]{
+			ID: requestId,
+			SaveData: LocalTypes.UploadSessionComicThumbnailPayload{
+				ComicSessionId: comicSessionDoc.ID,
+			},
+			EmitTo:    "comic",
+			EventName: "SocketChangeComicSessionThumbnail",
+		}
+		// requestData := LocalTypes.ServiceRequest{
+		// 	Url:     "upload_token_registry/genToken",
+		// 	Header:  nil,
+		// 	Payload: &payload,
+		// 	From:    "comic/updateComicSession",
+		// 	Type:    "message",
+		// 	ID:      requestId,
+		// }
+		// data, err := util.ServiceSender[LocalTypes.GetUploadTokenReturn, *any](r.Redis, requestData, true)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// if data.Error != nil {
+		// 	return nil, &gqlerror.Error{
+		// 		Message: *data.Error,
+		// 	}
+		// }
+		uploadToken, err := util.GenSingleUploadToken[LocalTypes.UploadSessionComicThumbnailPayload](payload)
+		if err != nil {
+			return nil, err
+		}
+		return &model.UpdateComicSessionResponse{
+			ComicSession: comicSessionDoc,
+			UploadToken:  uploadToken,
+		}, nil
+		// requestDataBytes, err := json.Marshal(requestData)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// r.Ws.WriteMessage(websocket.TextMessage, requestDataBytes)
+		// for {
+		// 	_, message, err := r.Ws.ReadMessage()
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	var tmp_data LocalTypes.ServiceReturnData[any, *any]
+		// 	err = json.Unmarshal(message, &tmp_data)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	if tmp_data.Type == "rep" {
+		// 		if tmp_data.ID == requestId {
+		// 			var data LocalTypes.ServiceReturnData[LocalTypes.GetUploadTokenReturn, *any]
+		// 			err = json.Unmarshal(message, &data)
+		// 			if err != nil {
+		// 				return nil, err
+		// 			}
+		// 			if data.Error != nil {
+		// 				return nil, &gqlerror.Error{
+		// 					Message: *data.Error,
+		// 				}
+		// 			}
+		// 			return &model.UpdateComicSessionResponse{
+		// 				ComicSession: comicSession,
+		// 				UploadToken:  &data.Payload.Token,
+		// 			}, nil
+
+		// 		}
+		// 	}
+		// }
+	} else {
+		return &model.UpdateComicSessionResponse{
+			ComicSession: comicSessionDoc,
+			UploadToken:  nil,
+		}, nil
+	}
 }
 
 // DeleteComicSession is the resolver for the DeleteComicSession field.
@@ -139,7 +311,7 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 	if err != nil {
 		return nil, err
 	}
-	userID := ctx.Value(directives.AuthString("session")).(*directives.SessionDataReturn).UserID
+	CreateID := ctx.Value(directives.AuthString("session")).(*LocalTypes.AuthSessionDataReturn).CreatorID
 	comicSession, err := ComicSessionModel.FindById(sessionID)
 	if err != nil {
 		return nil, err
@@ -149,10 +321,10 @@ func (r *mutationResolver) DeleteComicSession(ctx context.Context, sessionID str
 			Message: "comic session not found",
 		}
 	}
-	if userID != comicSession.CreatedByID {
+	if CreateID != comicSession.CreatedByID {
 		return nil, gqlerror.Errorf("Access Denied")
 	}
-	success, err := deleteUtil.DeleteSession(sessionID, r.Client, true)
+	success, err := deleteUtil.DeleteComicSession(sessionID, r.Client, true)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +341,15 @@ func (r *queryResolver) SessionByComic(ctx context.Context, comicID string) ([]*
 		return nil, err
 	}
 	return comicSessionModel.Find(bson.M{"ComicID": comicID})
+}
+
+// SessionByID is the resolver for the SessionByID field.
+func (r *queryResolver) SessionByID(ctx context.Context, id string) (*model.ComicSession, error) {
+	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return comicSessionModel.FindById(id)
 }
 
 // ComicSession returns generated.ComicSessionResolver implementation.

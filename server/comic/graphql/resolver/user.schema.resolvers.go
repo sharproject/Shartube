@@ -5,50 +5,39 @@ package resolver
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"os"
 
 	"github.com/Folody-Team/Shartube/database/comic_model"
+	"github.com/Folody-Team/Shartube/database/short_comic_model"
 	"github.com/Folody-Team/Shartube/graphql/generated"
 	"github.com/Folody-Team/Shartube/graphql/model"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Comics is the resolver for the comics field.
-func (r *userResolver) Comics(ctx context.Context, obj *model.User) ([]*model.Comic, error) {
-	userHost := os.Getenv("UserHost")
-	// make http request to userHost
-	getUserPath := "/user/comics?id="
-	getUserUrl := "http://" + userHost + ":8080" + getUserPath + obj.ID
-	resp, err := http.Get(getUserUrl)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var comicIDs []*string
-	err = json.NewDecoder(resp.Body).Decode(&comicIDs)
-	if err != nil {
-		return nil, err
-	}
+func (r *profileResolver) Comics(ctx context.Context, obj *model.Profile) ([]*model.Comic, error) {
 	comicModel, err := comic_model.InitComicModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
-	AllComic := []*model.Comic{}
-	for _, v := range comicIDs {
-		if v != nil {
-			data, err := comicModel.FindById(*v)
-			if err != nil {
-				return nil, err
-			}
-			AllComic = append(AllComic, data)
-		}
 
-	}
-	return AllComic, nil
+	return comicModel.Find(bson.M{
+		"createdbyid": obj.CreateID,
+	})
 }
 
-// User returns generated.UserResolver implementation.
-func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
+// ShortComics is the resolver for the ShortComics field.
+func (r *profileResolver) ShortComics(ctx context.Context, obj *model.Profile) ([]*model.ShortComic, error) {
+	ShortComicModel, err := short_comic_model.InitShortComicModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
 
-type userResolver struct{ *Resolver }
+	return ShortComicModel.Find(bson.M{
+		"createdbyid": obj.CreateID,
+	})
+}
+
+// Profile returns generated.ProfileResolver implementation.
+func (r *Resolver) Profile() generated.ProfileResolver { return &profileResolver{r} }
+
+type profileResolver struct{ *Resolver }

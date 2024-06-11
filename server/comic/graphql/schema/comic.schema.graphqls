@@ -4,12 +4,14 @@ interface CreateComic {
   name: String!
   description: String
   thumbnail: String
+  background: String
 }
 
 input CreateComicInput {
   name: String!
   description: String
-  thumbnail: Upload
+  thumbnail: Boolean
+  background: Boolean
 }
 
 type CreateComicInputModel implements CreateComic {
@@ -17,25 +19,29 @@ type CreateComicInputModel implements CreateComic {
   description: String
   CreatedByID: String!
   thumbnail: String
+  background: String
+  views: Int!
 }
 
 type Comic implements CreateComic {
   _id: ID!
   createdAt: Time!
   updatedAt: Time!
-  CreatedBy: User @goField(forceResolver: true)
   CreatedByID: String!
   name: String!
   description: String
   sessionId: [String!]
   session: [ComicSession!] @goField(forceResolver: true)
   thumbnail: String
+  background: String
+  views: Int!
 }
 
 input UpdateComicInput {
   name: String
   description: String
-  thumbnail: Upload
+  background: Boolean
+  thumbnail: Boolean
 }
 
 type DeleteResult {
@@ -43,17 +49,27 @@ type DeleteResult {
   id: String!
 }
 
-type UpdateComicInputModel  {
+type UpdateComicInputModel {
   name: String
   description: String
   thumbnail: String
+  background: String
+}
+
+type CreateComicResponse {
+  comic: Comic!
+  UploadToken: [String!]
+}
+type UploadComicResponse {
+  comic: Comic!
+  UploadToken: [String!]
 }
 
 extend type Mutation {
-  createComic(input: CreateComicInput!): Comic!
+  createComic(input: CreateComicInput!): CreateComicResponse!
     @goField(forceResolver: true)
     @auth
-  updateComic(comicID: String!, input: UpdateComicInput!): Comic!
+  updateComic(comicID: String!, input: UpdateComicInput!): UploadComicResponse!
     @goField(forceResolver: true)
     @auth
   DeleteComic(comicID: String!): DeleteResult!
@@ -62,4 +78,6 @@ extend type Mutation {
 }
 extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
+  TopViewComic: [Comic]! @goField(forceResolver: true)
+  ComicByID(ID: String!): Comic @goField(forceResolver: true)
 }
