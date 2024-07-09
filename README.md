@@ -107,7 +107,7 @@ yarn web
 
 ```
 
-Go to the project directory
+- 1. Go to the project directory
 
 ```bash {"id":"01J2AWZ2VV87JBQ9DH6YJ0FV2G"}
   cd Shartube
@@ -115,10 +115,12 @@ Go to the project directory
 
 ```
 
-Start the server
+- 2. fill the env
+
+- 3. Start the server
 
 ```bash {"id":"01J2AWZ2VV87JBQ9DH721Y9J7V"}
-  go run github.com/cosmtrek/air
+docker compose up --build
 
 ```
 
