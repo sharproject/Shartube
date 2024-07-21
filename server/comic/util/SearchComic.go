@@ -52,7 +52,7 @@ func SearchComicFromNZ_Datalake(query string) []*model.Comic {
 		comic.Name = v.(map[string]interface{})["name"].(string)
 		comic.CreatedAt = jsDateStringToTime(v.(map[string]interface{})["createdDate"].(string))
 		comic.UpdatedAt = jsDateStringToTime(v.(map[string]interface{})["updatedDate"].(string))
-		comic.CreatedByID = "NZ_Datalake" + v.(map[string]interface{})["url"].(string)
+		comic.CreatedByID = "NZ_Datalake_" + v.(map[string]interface{})["id"].(string)
 		content := v.(map[string]interface{})["content"].(string)
 		comic.Description = &content
 		comic.SessionID = []string{}

@@ -6,6 +6,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_model"
@@ -24,6 +25,21 @@ import (
 
 // Session is the resolver for the session field.
 func (r *comicResolver) Session(ctx context.Context, obj *model.Comic) ([]*model.ComicSession, error) {
+	if strings.Contains(obj.CreatedByID, "NZ_Datalake_") {
+		return []*model.ComicSession{
+			&model.ComicSession{
+				ID:   "NZ_Datalake_" + obj.ID,
+				Name: "Session 1 of " + obj.Name,
+				CreatedAt: obj.CreatedAt,
+				UpdatedAt: obj.UpdatedAt,
+				ComicID: []string{obj.ID},
+				Description: obj.Description,
+				Thumbnail: obj.Thumbnail,
+				Views: obj.Views,
+				ChapIds: []string{},
+			},
+		}, nil
+	}
 	comicSessionModel, err := comic_session_model.InitComicSessionModel(r.Client)
 	if err != nil {
 		return nil, err
@@ -34,6 +50,7 @@ func (r *comicResolver) Session(ctx context.Context, obj *model.Comic) ([]*model
 		if err != nil {
 			return nil, err
 		}
+		data.ChapIds = []string{}
 		AllComicSession = append(AllComicSession, data)
 	}
 	return AllComicSession, nil
