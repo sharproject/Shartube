@@ -413,6 +413,11 @@ func (r *queryResolver) ComicByID(ctx context.Context, id string) (*model.Comic,
 	return comicModel.FindById(id)
 }
 
+// Search is the resolver for the Search field.
+func (r *queryResolver) Search(ctx context.Context, query string) ([]*model.Comic, error) {
+	return util.SearchComicFromNZ_Datalake(query), nil
+}
+
 // Comic returns generated.ComicResolver implementation.
 func (r *Resolver) Comic() generated.ComicResolver { return &comicResolver{r} }
 

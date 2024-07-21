@@ -196,6 +196,7 @@ type ComplexityRoot struct {
 		ChapBySession      func(childComplexity int, sessionID string) int
 		ComicByID          func(childComplexity int, id string) int
 		Comics             func(childComplexity int) int
+		Search             func(childComplexity int, query string) int
 		SessionByComic     func(childComplexity int, comicID string) int
 		SessionByID        func(childComplexity int, id string) int
 		ShortComicByID     func(childComplexity int, id string) int
@@ -301,6 +302,7 @@ type QueryResolver interface {
 	Comics(ctx context.Context) ([]*model.Comic, error)
 	TopViewComic(ctx context.Context) ([]*model.Comic, error)
 	ComicByID(ctx context.Context, id string) (*model.Comic, error)
+	Search(ctx context.Context, query string) ([]*model.Comic, error)
 	SessionByComic(ctx context.Context, comicID string) ([]*model.ComicSession, error)
 	SessionByID(ctx context.Context, id string) (*model.ComicSession, error)
 	ShortComics(ctx context.Context) ([]*model.ShortComic, error)
@@ -1079,6 +1081,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Comics(childComplexity), true
 
+	case "Query.Search":
+		if e.complexity.Query.Search == nil {
+			break
+		}
+
+		args, err := ec.field_Query_Search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Search(childComplexity, args["query"].(string)), true
+
 	case "Query.SessionByComic":
 		if e.complexity.Query.SessionByComic == nil {
 			break
@@ -1580,6 +1594,7 @@ extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
   TopViewComic: [Comic]! @goField(forceResolver: true)
   ComicByID(ID: String!): Comic @goField(forceResolver: true)
+  Search(query: String!): [Comic]! @goField(forceResolver: true)
 }
 `, BuiltIn: false},
 	{Name: "../schema/schema.graphqls", Input: `scalar Upload
@@ -2149,6 +2164,21 @@ func (ec *executionContext) field_Query_ComicByID_args(ctx context.Context, rawA
 		}
 	}
 	args["ID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_Search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["query"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("query"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["query"] = arg0
 	return args, nil
 }
 
@@ -7406,6 +7436,87 @@ func (ec *executionContext) fieldContext_Query_ComicByID(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_ComicByID_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_Search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_Search(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Search(rctx, fc.Args["query"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Comic)
+	fc.Result = res
+	return ec.marshalNComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComic(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_Comic__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Comic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Comic_updatedAt(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_Comic_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_Comic_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Comic_description(ctx, field)
+			case "sessionId":
+				return ec.fieldContext_Comic_sessionId(ctx, field)
+			case "session":
+				return ec.fieldContext_Comic_session(ctx, field)
+			case "thumbnail":
+				return ec.fieldContext_Comic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_Comic_background(ctx, field)
+			case "views":
+				return ec.fieldContext_Comic_views(ctx, field)
+			case "originalAuthor":
+				return ec.fieldContext_Comic_originalAuthor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Comic", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_Search_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -12783,6 +12894,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_ComicByID(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "Search":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_Search(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 

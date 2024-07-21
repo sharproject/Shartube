@@ -151,11 +151,11 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 		// }
 		ComicSessionObjectIds := []primitive.ObjectID{}
 		for _, v := range comicSessionDoc {
-			ComicSessionObjectId,err := primitive.ObjectIDFromHex(v.ID)
+			ComicSessionObjectId, err := primitive.ObjectIDFromHex(v.ID)
 			if err != nil {
 				return nil, err
 			}
-			ComicSessionObjectIds = append(ComicSessionObjectIds,ComicSessionObjectId)
+			ComicSessionObjectIds = append(ComicSessionObjectIds, ComicSessionObjectId)
 		}
 		comicSessionModel.UpdateOne(bson.M{
 			"_id": ComicSessionObjectIds,
@@ -172,11 +172,11 @@ func (r *mutationResolver) CreateChap(ctx context.Context, input model.CreateCha
 		// }
 		ShortComicObjectIds := []primitive.ObjectID{}
 		for _, v := range ShortComicDoc {
-			ShortComicObjectId,err := primitive.ObjectIDFromHex(v.ID)
+			ShortComicObjectId, err := primitive.ObjectIDFromHex(v.ID)
 			if err != nil {
 				return nil, err
 			}
-			ShortComicObjectIds = append(ShortComicObjectIds,ShortComicObjectId)
+			ShortComicObjectIds = append(ShortComicObjectIds, ShortComicObjectId)
 		}
 		ShortComicModel.UpdateOne(bson.M{
 			"_id": ShortComicObjectIds,
