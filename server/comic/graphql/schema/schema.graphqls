@@ -2,7 +2,6 @@ scalar Upload
 scalar Time
 directive @shareable on OBJECT | FIELD_DEFINITION
 
-
 directive @goField(
   forceResolver: Boolean
   name: String
@@ -19,3 +18,12 @@ directive @goTag(
 
 directive @auth on FIELD_DEFINITION
 directive @emailInput on INPUT_FIELD_DEFINITION
+
+type SearchResult {
+  ShortComics: [ShortComic!]!
+  Comics: [Comic!]!
+}
+
+extend type Query {
+  Search(query: String!): SearchResult! @goField(forceResolver: true)
+}

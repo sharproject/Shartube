@@ -181,6 +181,11 @@ type Profile struct {
 
 func (Profile) IsEntity() {}
 
+type SearchResult struct {
+	ShortComics []*ShortComic `json:"ShortComics"`
+	Comics      []*Comic      `json:"Comics"`
+}
+
 type ShortComic struct {
 	ID          string    `json:"_id" bson:"_id"`
 	CreatedAt   time.Time `json:"createdAt"`

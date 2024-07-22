@@ -56,4 +56,5 @@ extend type Mutation {
 extend type Query {
   ChapBySession(SessionID: String!): [Chap!] @goField(forceResolver: true)
   ChapByID(ID: String!): Chap @goField(forceResolver: true)
+  ChapByShortComic(ID:String!):[Chap!]! @goField(forceResolver: true)
 }

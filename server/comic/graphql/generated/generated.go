@@ -194,6 +194,7 @@ type ComplexityRoot struct {
 	Query struct {
 		ChapByID           func(childComplexity int, id string) int
 		ChapBySession      func(childComplexity int, sessionID string) int
+		ChapByShortComic   func(childComplexity int, id string) int
 		ComicByID          func(childComplexity int, id string) int
 		Comics             func(childComplexity int) int
 		Search             func(childComplexity int, query string) int
@@ -205,6 +206,11 @@ type ComplexityRoot struct {
 		TopViewShortComics func(childComplexity int) int
 		__resolve__service func(childComplexity int) int
 		__resolve_entities func(childComplexity int, representations []map[string]interface{}) int
+	}
+
+	SearchResult struct {
+		Comics      func(childComplexity int) int
+		ShortComics func(childComplexity int) int
 	}
 
 	ShortComic struct {
@@ -299,10 +305,11 @@ type ProfileResolver interface {
 type QueryResolver interface {
 	ChapBySession(ctx context.Context, sessionID string) ([]*model.Chap, error)
 	ChapByID(ctx context.Context, id string) (*model.Chap, error)
+	ChapByShortComic(ctx context.Context, id string) ([]*model.Chap, error)
 	Comics(ctx context.Context) ([]*model.Comic, error)
 	TopViewComic(ctx context.Context) ([]*model.Comic, error)
 	ComicByID(ctx context.Context, id string) (*model.Comic, error)
-	Search(ctx context.Context, query string) ([]*model.Comic, error)
+	Search(ctx context.Context, query string) (*model.SearchResult, error)
 	SessionByComic(ctx context.Context, comicID string) ([]*model.ComicSession, error)
 	SessionByID(ctx context.Context, id string) (*model.ComicSession, error)
 	ShortComics(ctx context.Context) ([]*model.ShortComic, error)
@@ -1062,6 +1069,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ChapBySession(childComplexity, args["SessionID"].(string)), true
 
+	case "Query.ChapByShortComic":
+		if e.complexity.Query.ChapByShortComic == nil {
+			break
+		}
+
+		args, err := ec.field_Query_ChapByShortComic_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ChapByShortComic(childComplexity, args["ID"].(string)), true
+
 	case "Query.ComicByID":
 		if e.complexity.Query.ComicByID == nil {
 			break
@@ -1168,6 +1187,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.__resolve_entities(childComplexity, args["representations"].([]map[string]interface{})), true
+
+	case "SearchResult.Comics":
+		if e.complexity.SearchResult.Comics == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.Comics(childComplexity), true
+
+	case "SearchResult.ShortComics":
+		if e.complexity.SearchResult.ShortComics == nil {
+			break
+		}
+
+		return e.complexity.SearchResult.ShortComics(childComplexity), true
 
 	case "ShortComic.background":
 		if e.complexity.ShortComic.Background == nil {
@@ -1506,6 +1539,7 @@ extend type Mutation {
 extend type Query {
   ChapBySession(SessionID: String!): [Chap!] @goField(forceResolver: true)
   ChapByID(ID: String!): Chap @goField(forceResolver: true)
+  ChapByShortComic(ID:String!):[Chap!]! @goField(forceResolver: true)
 }
 `, BuiltIn: false},
 	{Name: "../schema/comic.schema.graphqls", Input: `directive @inherits(type: String!) on OBJECT
@@ -1594,13 +1628,11 @@ extend type Query {
   Comics: [Comic!]! @goField(forceResolver: true)
   TopViewComic: [Comic]! @goField(forceResolver: true)
   ComicByID(ID: String!): Comic @goField(forceResolver: true)
-  Search(query: String!): [Comic]! @goField(forceResolver: true)
 }
 `, BuiltIn: false},
 	{Name: "../schema/schema.graphqls", Input: `scalar Upload
 scalar Time
 directive @shareable on OBJECT | FIELD_DEFINITION
-
 
 directive @goField(
   forceResolver: Boolean
@@ -1618,6 +1650,15 @@ directive @goTag(
 
 directive @auth on FIELD_DEFINITION
 directive @emailInput on INPUT_FIELD_DEFINITION
+
+type SearchResult {
+  ShortComics: [ShortComic!]!
+  Comics: [Comic!]!
+}
+
+extend type Query {
+  Search(query: String!): SearchResult! @goField(forceResolver: true)
+}
 `, BuiltIn: false},
 	{Name: "../schema/session.comic.schema.graphqls", Input: `interface CreateComicSession {
   name: String!
@@ -2149,6 +2190,21 @@ func (ec *executionContext) field_Query_ChapBySession_args(ctx context.Context, 
 		}
 	}
 	args["SessionID"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_ChapByShortComic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["ID"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ID"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ID"] = arg0
 	return args, nil
 }
 
@@ -7224,6 +7280,87 @@ func (ec *executionContext) fieldContext_Query_ChapByID(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_ChapByShortComic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_ChapByShortComic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ChapByShortComic(rctx, fc.Args["ID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Chap)
+	fc.Result = res
+	return ec.marshalNChap2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐChapᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_ChapByShortComic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_Chap__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Chap_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Chap_updatedAt(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_Chap_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_Chap_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Chap_description(ctx, field)
+			case "SessionID":
+				return ec.fieldContext_Chap_SessionID(ctx, field)
+			case "ShortComicID":
+				return ec.fieldContext_Chap_ShortComicID(ctx, field)
+			case "Session":
+				return ec.fieldContext_Chap_Session(ctx, field)
+			case "ShortComic":
+				return ec.fieldContext_Chap_ShortComic(ctx, field)
+			case "Images":
+				return ec.fieldContext_Chap_Images(ctx, field)
+			case "views":
+				return ec.fieldContext_Chap_views(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Chap", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_ChapByShortComic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_Comics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_Comics(ctx, field)
 	if err != nil {
@@ -7468,9 +7605,9 @@ func (ec *executionContext) _Query_Search(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Comic)
+	res := resTmp.(*model.SearchResult)
 	fc.Result = res
-	return ec.marshalNComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComic(ctx, field.Selections, res)
+	return ec.marshalNSearchResult2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐSearchResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7481,32 +7618,12 @@ func (ec *executionContext) fieldContext_Query_Search(ctx context.Context, field
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "_id":
-				return ec.fieldContext_Comic__id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Comic_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Comic_updatedAt(ctx, field)
-			case "CreatedByID":
-				return ec.fieldContext_Comic_CreatedByID(ctx, field)
-			case "name":
-				return ec.fieldContext_Comic_name(ctx, field)
-			case "description":
-				return ec.fieldContext_Comic_description(ctx, field)
-			case "sessionId":
-				return ec.fieldContext_Comic_sessionId(ctx, field)
-			case "session":
-				return ec.fieldContext_Comic_session(ctx, field)
-			case "thumbnail":
-				return ec.fieldContext_Comic_thumbnail(ctx, field)
-			case "background":
-				return ec.fieldContext_Comic_background(ctx, field)
-			case "views":
-				return ec.fieldContext_Comic_views(ctx, field)
-			case "originalAuthor":
-				return ec.fieldContext_Comic_originalAuthor(ctx, field)
+			case "ShortComics":
+				return ec.fieldContext_SearchResult_ShortComics(ctx, field)
+			case "Comics":
+				return ec.fieldContext_SearchResult_Comics(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Comic", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type SearchResult", field.Name)
 		},
 	}
 	defer func() {
@@ -8118,6 +8235,144 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchResult_ShortComics(ctx context.Context, field graphql.CollectedField, obj *model.SearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResult_ShortComics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ShortComics, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.ShortComic)
+	fc.Result = res
+	return ec.marshalNShortComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐShortComicᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchResult_ShortComics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_ShortComic__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_ShortComic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_ShortComic_updatedAt(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_ShortComic_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_ShortComic_name(ctx, field)
+			case "description":
+				return ec.fieldContext_ShortComic_description(ctx, field)
+			case "ChapIDs":
+				return ec.fieldContext_ShortComic_ChapIDs(ctx, field)
+			case "Chap":
+				return ec.fieldContext_ShortComic_Chap(ctx, field)
+			case "thumbnail":
+				return ec.fieldContext_ShortComic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_ShortComic_background(ctx, field)
+			case "views":
+				return ec.fieldContext_ShortComic_views(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ShortComic", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SearchResult_Comics(ctx context.Context, field graphql.CollectedField, obj *model.SearchResult) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SearchResult_Comics(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Comics, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Comic)
+	fc.Result = res
+	return ec.marshalNComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐComicᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SearchResult_Comics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SearchResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "_id":
+				return ec.fieldContext_Comic__id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Comic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Comic_updatedAt(ctx, field)
+			case "CreatedByID":
+				return ec.fieldContext_Comic_CreatedByID(ctx, field)
+			case "name":
+				return ec.fieldContext_Comic_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Comic_description(ctx, field)
+			case "sessionId":
+				return ec.fieldContext_Comic_sessionId(ctx, field)
+			case "session":
+				return ec.fieldContext_Comic_session(ctx, field)
+			case "thumbnail":
+				return ec.fieldContext_Comic_thumbnail(ctx, field)
+			case "background":
+				return ec.fieldContext_Comic_background(ctx, field)
+			case "views":
+				return ec.fieldContext_Comic_views(ctx, field)
+			case "originalAuthor":
+				return ec.fieldContext_Comic_originalAuthor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Comic", field.Name)
 		},
 	}
 	return fc, nil
@@ -12838,6 +13093,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "ChapByShortComic":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ChapByShortComic(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "Comics":
 			field := field
 
@@ -13091,6 +13369,41 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				return ec._Query___schema(ctx, field)
 			})
 
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var searchResultImplementors = []string{"SearchResult"}
+
+func (ec *executionContext) _SearchResult(ctx context.Context, sel ast.SelectionSet, obj *model.SearchResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, searchResultImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SearchResult")
+		case "ShortComics":
+
+			out.Values[i] = ec._SearchResult_ShortComics(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "Comics":
+
+			out.Values[i] = ec._SearchResult_Comics(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13766,6 +14079,50 @@ func (ec *executionContext) marshalNChap2githubᚗcomᚋFolodyᚑTeamᚋShartube
 	return ec._Chap(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNChap2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐChapᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Chap) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNChap2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐChap(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNChap2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐChap(ctx context.Context, sel ast.SelectionSet, v *model.Chap) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -14088,6 +14445,20 @@ func (ec *executionContext) marshalNProfile2ᚖgithubᚗcomᚋFolodyᚑTeamᚋSh
 		return graphql.Null
 	}
 	return ec._Profile(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSearchResult2githubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v model.SearchResult) graphql.Marshaler {
+	return ec._SearchResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNSearchResult2ᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.SearchResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SearchResult(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNShortComic2ᚕᚖgithubᚗcomᚋFolodyᚑTeamᚋShartubeᚋgraphqlᚋmodelᚐShortComic(ctx context.Context, sel ast.SelectionSet, v []*model.ShortComic) graphql.Marshaler {

@@ -5,6 +5,7 @@ package resolver
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Folody-Team/Shartube/LocalTypes"
 	"github.com/Folody-Team/Shartube/database/comic_chap_model"
@@ -372,11 +373,28 @@ func (r *queryResolver) ChapBySession(ctx context.Context, sessionID string) ([]
 
 // ChapByID is the resolver for the ChapByID field.
 func (r *queryResolver) ChapByID(ctx context.Context, id string) (*model.Chap, error) {
+	if strings.HasPrefix(id, "NZ_Datalake_") {
+		chapID := strings.TrimPrefix(id, "NZ_Datalake_")
+		return util.SearchChapFromNZ_Datalake(chapID)
+	}
 	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
 	if err != nil {
 		return nil, err
 	}
 	return comicChapModel.FindById(id)
+}
+
+// ChapByShortComic is the resolver for the ChapByShortComic field.
+func (r *queryResolver) ChapByShortComic(ctx context.Context, id string) ([]*model.Chap, error) {
+	if strings.HasPrefix(id, "NZ_Datalake_") {
+		comicID := strings.TrimPrefix(id, "NZ_Datalake_")
+		return util.SearchPreviewChapFromNZ_Datalake(comicID)
+	}
+	comicChapModel, err := comic_chap_model.InitChapModel(r.Client)
+	if err != nil {
+		return nil, err
+	}
+	return comicChapModel.Find(bson.M{"ShortComicID": id})
 }
 
 // Chap returns generated.ChapResolver implementation.
