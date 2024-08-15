@@ -44,21 +44,25 @@ func DeleteComicSession(id string, client *mongo.Client, update bool) (bool, err
 	}
 
 	if update {
-		ComicObjectId, err := primitive.ObjectIDFromHex(comicSession.ComicID)
-		if err != nil {
-			return false, err
+
+		for _, v := range comicSession.ComicID {
+			ComicObjectId, err := primitive.ObjectIDFromHex(v)
+			if err != nil {
+				return false, err
+			}
+
+			_, err = ComicModel.UpdateOne(bson.M{
+				"_id": ComicObjectId,
+			}, bson.M{
+				"$pull": bson.M{
+					"sessionId": ComicSessionObjectId,
+				},
+			})
+			if err != nil {
+				return false, nil
+			}
 		}
 
-		_, err = ComicModel.UpdateOne(bson.M{
-			"_id": ComicObjectId,
-		}, bson.M{
-			"$pull": bson.M{
-				"sessionId": ComicSessionObjectId,
-			},
-		})
-		if err != nil {
-			return false, nil
-		}
 	}
 
 	return true, nil

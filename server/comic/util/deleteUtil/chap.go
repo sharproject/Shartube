@@ -31,20 +31,22 @@ func DeleteChap(id string, client *mongo.Client, update bool) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		ComicSessionObjectID, err := primitive.ObjectIDFromHex(*chap.SessionID)
-		if err != nil {
-			return false, err
-		}
-		if update {
-			_, err = ComicSessionModel.UpdateOne(bson.M{
-				"_id": ComicSessionObjectID,
-			}, bson.M{
-				"$pull": bson.M{
-					"ChapIds": ComicChapObjectID,
-				},
-			})
+		for _, v := range chap.SessionID {
+			ComicSessionObjectID, err := primitive.ObjectIDFromHex(v)
 			if err != nil {
 				return false, err
+			}
+			if update {
+				_, err = ComicSessionModel.UpdateOne(bson.M{
+					"_id": ComicSessionObjectID,
+				}, bson.M{
+					"$pull": bson.M{
+						"ChapIds": ComicChapObjectID,
+					},
+				})
+				if err != nil {
+					return false, err
+				}
 			}
 		}
 	}
@@ -53,20 +55,24 @@ func DeleteChap(id string, client *mongo.Client, update bool) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		ShortComicObjectID, err := primitive.ObjectIDFromHex(*chap.ShortComicID)
-		if err != nil {
-			return false, err
-		}
-		if update {
-			_, err = ShortComicModel.UpdateOne(bson.M{
-				"_id": ShortComicObjectID,
-			}, bson.M{
-				"$pull": bson.M{
-					"ChapIds": ComicChapObjectID,
-				},
-			})
+
+		// update short comic
+		for _, v := range chap.ShortComicID {
+			ShortComicObjectID, err := primitive.ObjectIDFromHex(v)
 			if err != nil {
 				return false, err
+			}
+			if update {
+				_, err = ShortComicModel.UpdateOne(bson.M{
+					"_id": ShortComicObjectID,
+				}, bson.M{
+					"$pull": bson.M{
+						"ChapIds": ComicChapObjectID,
+					},
+				})
+				if err != nil {
+					return false, err
+				}
 			}
 		}
 	}
