@@ -26,3 +26,17 @@ cors:
     - https://studio.apollographql.com
     - https://shartube.vercel.app
     - https://shartube-***.vercel.app
+
+limits:
+  # Network-based limits
+  http_max_request_bytes: 2000000 # Default value: 2 MB
+
+  # Parser-based limits
+  parser_max_tokens: 15000 # Default value
+  parser_max_recursion: 500 # Default value
+
+  # Operation-based limits (Enterprise only)
+  max_depth: 100
+  max_height: 200
+  max_aliases: 30
+  max_root_fields: 20

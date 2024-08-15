@@ -178,5 +178,11 @@ func SearchChapFromNZ_Datalake(chapID string) (*model.Chap, error) {
 	chap.CreatedByID = "NZ_Datalake_" + data["id"].(string)
 	chap.Views = 0
 	chap.Images = []*model.ImageResult{}
+	for _, v := range data["images"].([]string) {
+		image := model.ImageResult{}
+		image.ID = v
+		image.URL = v
+		chap.Images = append(chap.Images, &image)
+	}
 	return &chap, nil
 }
